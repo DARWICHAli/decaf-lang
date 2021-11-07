@@ -1,0 +1,1 @@
+make && clear && ./decaf < test/arith_lex_test.txt ; make clean
