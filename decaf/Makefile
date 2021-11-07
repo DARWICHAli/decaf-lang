@@ -1,12 +1,20 @@
 CC=gcc
-CFLAGS = -g
-LDFLAGS = -std=c11 -Wpedantic -Wall -Wextra
+CFLAGS =
+LDFLAGS =-std=c11 -Wpedantic -Wall -Wextra
 
 LEXER=lexer
 PARSER=parser
 
 decaf: decaf.o decaf_lex.o
-	$(CC) $(CFLAGS) -o $@ $^
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^
+
+decaf.o: decaf.c
+	$(CC) $(CFLAGS) -o $@ -c $<
+
+decaf_lex.o: decaf_lex.c
+	$(CC) $(CFLAGS) -o $@ -c $<
+# %.o: %.c
+# 	$(CC) $(CFLAGS) -o $@ -c $<
 
 decaf_lex.c: $(LEXER)/decaf.lex
 	flex -s -o $@ $< 
