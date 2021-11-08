@@ -10,7 +10,7 @@ $ sh test/arith_lex_test.sh
 
 - [x] Analyse lexicale (flex) d'une grammaire arithmétique simple (uniquement décimaux et non hexadecimaux)
   - [x] Analyse simple - `printf`
-  - [ ] Analyse complète avec code de retour
+  - [x] Analyse complète avec code de retour
 - [ ] Analyse sémantique (bison) d'une grammaire arithmétique simple
 - [ ] ?
 - [ ] Génération de code intermédiaire
