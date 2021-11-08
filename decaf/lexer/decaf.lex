@@ -1,8 +1,10 @@
 %{
 #include <stdio.h>
-#include "lexer/token.h"
+#include "decaf.tab.h"
 
-int yyval_int;
+extern YYSTYPE yylval;
+extern char * yytext;
+
 %}
 
 %option nounput
@@ -13,19 +15,28 @@ int yyval_int;
 
 %%
     /* Hexadecimaux en premier, sinon (0)x(..) sont matcher comme étant 2 entiers  */
-0x[0-9a-fA-F]+ {
-    yyval_int = strtol(yytext, NULL, 16);
-    return HEXADECIMAL_CST;
-}
+    // 0x[0-9a-fA-F]+ {
+    // yylval.hex_literal = strtol(yytext, NULL, 16);
+    // return HEXADECIMAL_CST;
+    // }
 
-
-[+-]?[0-9]+ {
-    yyval_int = strtol(yytext, NULL, 10);
+    /* [+-]? */
+[0-9]+ {
+    yylval.int_literal = strtol(yytext, NULL, 10);
     return DECIMAL_CST;
 }
 
+"+" return PLUS;
+"-" return MINUS;
+"*" return MULT;
+
+    /*  "/" return DIVIDE;
+        "%" return MODULO;
+        "(" return OPAR;
+        ")" return CPAR; */
+
 
 [[:space:]] ;
-. return LEX_ERROR;
+. fprintf(stderr, "(lex) Caractère illégal (%d)\n", yytext[0]);
 
 %%
