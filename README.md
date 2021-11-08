@@ -21,3 +21,18 @@ $ sh test/arith_lex_test.sh
 ## Ressoures
 - https://www.enib.fr/~harrouet/Data/Courses/Flex_Bison.pdf
 - https://steemit.com/utopian-io/@drifter1/writing-a-simple-compiler-on-my-own-combine-flex-and-bison
+
+
+
+```bison
+expr:
+| expr bin_op expr
+
+bin_op:
+| arith_op
+
+arith_op:
+| PLUS
+| MINUS
+| MULT
+```

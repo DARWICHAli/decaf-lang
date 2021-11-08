@@ -15,14 +15,14 @@ extern char * yytext;
 
 %%
     /* Hexadecimaux en premier, sinon (0)x(..) sont matcher comme étant 2 entiers  */
-    // 0x[0-9a-fA-F]+ {
-    // yylval.hex_literal = strtol(yytext, NULL, 16);
-    // return HEXADECIMAL_CST;
-    // }
+0x[0-9a-fA-F]+ {
+    yylval._hex_literal = strtol(yytext, NULL, 16);
+    return HEXADECIMAL_CST;
+}
 
     /* [+-]? */
 [0-9]+ {
-    yylval.int_literal = strtol(yytext, NULL, 10);
+    yylval._int_literal = strtol(yytext, NULL, 10);
     return DECIMAL_CST;
 }
 

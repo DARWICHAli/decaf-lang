@@ -4,35 +4,37 @@ void yyerror(const char *msg);
 %}
 
 %union {
-    int int_literal;
-    int hex_literal;
+    int _int_literal;
+    int _hex_literal;
 }
-%token <int_literal> DECIMAL_CST
-%type <int_literal> expr
+%token <_int_literal> DECIMAL_CST HEXADECIMAL_CST
+
+%type <_int_literal> decimal_literal hex_literal
+%type <_int_literal> int_literal expr
 
 %token PLUS MINUS MULT
 %left PLUS MINUS
 %left MULT
 
+%start input
+
 %%
 
 input: expr {printf("%d\n", $1);}
 
-
 expr
-: expr PLUS expr {$$ = $1 + $3;}
-| expr MINUS expr {$$ = $1 - $3;}
-| expr MULT expr {$$ = $1 * $3;}
-| DECIMAL_CST {$$ = $1;}
+: int_literal PLUS int_literal {$$ = $1 + $3;}
+| int_literal MINUS int_literal {$$ = $1 - $3;}
+| int_literal MULT int_literal {$$ = $1 * $3;}
+| int_literal
 
-    // bin_op:
-    // | arith_op
 
-    // arith_op:
-    // | PLUS  {$$ = +;}
-    // | MINUS {$$ = -;}
-    // | MULT  {$$ = *;}
+int_literal
+: decimal_literal
+| hex_literal
 
+decimal_literal: DECIMAL_CST
+hex_literal: HEXADECIMAL_CST
 
 %%
 
