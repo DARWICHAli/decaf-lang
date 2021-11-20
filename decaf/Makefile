@@ -1,33 +1,57 @@
-CC=gcc
-CFLAGS =
-LDFLAGS =-std=c11 -Wpedantic -Wall -Wextra
+CC ?= gcc
+CFLAGS ?=-std=c11 -Wpedantic -Wall -Wextra
+LDFLAGS ?=
+BISONFLAGS ?= -t
+FLEXFLAGS ?= -s
 
-LEXER=lexer
-PARSER=parser
+.PHONY: clean test
 
-decaf: decaf.tab.o decaf.o decaf_lex.o
-	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^
-	rm *.o
+SRC_DIR=src
+INCLUDE_DIR=include
+BIN_DIR=bin
+OBJ_DIR=obj
+TEST_DIR=test
+UNIT_TEST_DIR=$(TEST_DIR)/unitary
+INTEGRATION_TEST_DIR=$(TEST_DIR)/integration
 
-decaf.o: decaf.c
-	$(CC) $(CFLAGS) -o $@ -c $<
+OBJ_MAIN=decaf.o
+OBJS_STAT=decaf.tab.o decaf_lex.o
+OBJS_DYN=$(patsubst $(SRC_DIR)/%.c,$(OBJ_DIR)/%.o,$(wildcard $(SRC_DIR)/*.c))
+OBJS=$(patsubst %,$(OBJ_DIR)/%,$(OBJS_STAT)) $(OBJS_DYN)
 
-decaf_lex.o: decaf_lex.c
-	$(CC) $(CFLAGS) -o $@ -c $<
-# %.o: %.c
-# 	$(CC) $(CFLAGS) -o $@ -c $<
+decaf: $(OBJS) | $(BIN_DIR)
+	$(CC) -I$(INCLUDE_DIR) $(CFLAGS) $(LDFLAGS) -o $(BIN_DIR)/$@ $^
 
-decaf_lex.c: $(LEXER)/decaf.lex
-	flex -s -o $@ $< 
+$(BIN_DIR):
+	mkdir -p $@
 
+$(OBJ_DIR):
+	mkdir -p $@
 
-decaf.tab.o: decaf.tab.c
-	$(CC) $(CFLAGS) -o $@ -c $<
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c | $(OBJ_DIR)
+	$(CC) -I$(INCLUDE_DIR) $(CFLAGS) -o $@ -c $<
 
-decaf.tab.c: $(PARSER)/decaf.y
-	bison -t -d $<
+$(SRC_DIR)/decaf_lex.c: $(SRC_DIR)/decaf.lex
+	flex $(FLEXFLAGS) -o $@ $<
 
+$(SRC_DIR)/decaf.tab.c: $(SRC_DIR)/decaf.y
+	bison $(BISONFLAGS) --defines=$(patsubst $(SRC_DIR)/%.c,$(INCLUDE_DIR)/%.h,$@) --output=$@ $<
 
-.PHONY: clean
+# Tests
+test: $(patsubst $(UNIT_TEST_DIR)/%.c,$(BIN_DIR)/$(TEST_DIR)/%,$(wildcard $(UNIT_TEST_DIR)/*.c)) decaf | $(BIN_DIR)/$(TEST_DIR)
+	sh $(UNIT_TEST_DIR)/launch.sh $(BIN_DIR)/$(TEST_DIR) && sh $(INTEGRATION_TEST_DIR)/launch.sh $(BIN_DIR)
+
+$(BIN_DIR)/$(TEST_DIR):
+	mkdir -p $@
+
+$(OBJ_DIR)/$(TEST_DIR):
+	mkdir -p $@
+
+$(BIN_DIR)/$(TEST_DIR)/%: $(patsubst %,$(OBJ_DIR)/$(TEST_DIR)/%.o,%) $(filter-out %$(OBJ_MAIN), $(OBJS)) | $(BIN_DIR)/$(TEST_DIR)
+	$(CC) -I$(INCLUDE_DIR) $(CFLAGS) $(LDFLAGS) -o $@ $^
+
+$(OBJ_DIR)/$(TEST_DIR)/%.o: $(UNIT_TEST_DIR)/%.c | $(OBJ_DIR)/$(TEST_DIR)
+	$(CC) -I$(INCLUDE_DIR) $(CFLAGS) -o $@ -c $<
+
 clean c:
-	rm -f decaf decaf_* *.o *.tab.*
+	rm -rf bin/ obj/ $(SRC_DIR)/decaf_lex.c $(SRC_DIR)/decaf.tab.c $(INCLUDE_DIR)/decaf.tab.h
