@@ -1,6 +1,6 @@
 #include <stdio.h>
 
-#include "lexer/token.h"
+#include "token.h"
 
 extern int yyparse();
 extern int yydebug;
