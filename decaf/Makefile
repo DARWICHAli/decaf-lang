@@ -4,7 +4,7 @@ LDFLAGS ?=
 BISONFLAGS ?= -t
 FLEXFLAGS ?= -s
 
-.PHONY: clean test
+.PHONY: clean test decaf
 
 SRC_DIR=src
 INCLUDE_DIR=include
@@ -19,8 +19,10 @@ OBJS_STAT=decaf.tab.o decaf_lex.o
 OBJS_DYN=$(patsubst $(SRC_DIR)/%.c,$(OBJ_DIR)/%.o,$(wildcard $(SRC_DIR)/*.c))
 OBJS=$(patsubst %,$(OBJ_DIR)/%,$(OBJS_STAT)) $(OBJS_DYN)
 
-decaf: $(OBJS) | $(BIN_DIR)
-	$(CC) -I$(INCLUDE_DIR) $(CFLAGS) $(LDFLAGS) -o $(BIN_DIR)/$@ $^
+decaf: $(BIN_DIR)/decaf
+
+$(BIN_DIR)/decaf: $(OBJS) | $(BIN_DIR)
+	$(CC) -I$(INCLUDE_DIR) $(CFLAGS) $(LDFLAGS) -o $@ $^
 
 $(BIN_DIR):
 	mkdir -p $@
@@ -39,7 +41,7 @@ $(SRC_DIR)/decaf.tab.c: $(SRC_DIR)/decaf.y
 
 # Tests
 test: $(patsubst $(UNIT_TEST_DIR)/%.c,$(BIN_DIR)/$(TEST_DIR)/%,$(wildcard $(UNIT_TEST_DIR)/*.c)) decaf | $(BIN_DIR)/$(TEST_DIR)
-	sh $(UNIT_TEST_DIR)/launch.sh $(BIN_DIR)/$(TEST_DIR) && sh $(INTEGRATION_TEST_DIR)/launch.sh $(BIN_DIR)
+	bash $(UNIT_TEST_DIR)/launch.sh $(BIN_DIR)/$(TEST_DIR) && bash $(INTEGRATION_TEST_DIR)/launch.sh $(BIN_DIR)
 
 $(BIN_DIR)/$(TEST_DIR):
 	mkdir -p $@
@@ -53,5 +55,5 @@ $(BIN_DIR)/$(TEST_DIR)/%: $(patsubst %,$(OBJ_DIR)/$(TEST_DIR)/%.o,%) $(filter-ou
 $(OBJ_DIR)/$(TEST_DIR)/%.o: $(UNIT_TEST_DIR)/%.c | $(OBJ_DIR)/$(TEST_DIR)
 	$(CC) -I$(INCLUDE_DIR) $(CFLAGS) -o $@ -c $<
 
-clean c:
-	rm -rf bin/ obj/ $(SRC_DIR)/decaf_lex.c $(SRC_DIR)/decaf.tab.c $(INCLUDE_DIR)/decaf.tab.h
+clean:
+	rm -rf bin/ obj/ $(SRC_DIR)/decaf_lex.c $(SRC_DIR)/decaf.tab.c $(INCLUDE_DIR)/decaf.tab.h html/ latex *.gcno *.gcda */.gcno */.gcda */*.gcno */*.gcda

@@ -6,6 +6,11 @@ Pour tester la phase 1, il suffit de se placer dans le répertoire decaf/ et de 
 ```bash
 $ sh test/arith_lex_test.sh
 ```
+
+## Documentation
+
+https://decaf.pages.unistra.fr/decaf-lang/
+
 ## Ordre des tâches
 
 - [x] Analyse lexicale (flex) d'une grammaire arithmétique simple (uniquement décimaux et non hexadecimaux)

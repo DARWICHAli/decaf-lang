@@ -1,0 +1,36 @@
+= Structure des fichiers du projet
+Léo Chéneau <leo.cheneau@etu.unistra.fr>
+v1.0, 2021-11-20
+
+Dans ce document figure les explications sur la structure de fichiers que nous avons adopté pour le dossier decaf.
+
+* **src/** : tous les fichiers sources C (_.c_) ainsi que les fichiers Bison (_.y_) et Flex (_.lex_) +
+	Les fichiers créés ici sont automatiquement ajouté au projet, les fichiers Flex/Bison génèreront leurs fichiers source dans ce même dossier. Tout fichier .c de ce dossier sera compilé dans un .o et ajouté à l'édition de lien finale.
+
+* **include/** : tous les fichiers d'en-tête C (_.h_). +
+	Les fichiers dans ce dossier seront accessibles dans tous les fichiers _.c_.
+
+* **obj/** : dossier généré à la compilation, fichiers objets _.o_ +
+	Tous les fichiers du dossier **src/** seront compilés en code objet dans ce dossier. 
+
+	** **obj/test/** : dossier généré à la compilation, fichiers objets des tests unitaires (_.o) +
+		Fichiers objets du dossier **test/unitary**.
+
+* **bin/** : dossier généré à la compilation, exécutable decaf +
+	Fichier exécutable, notamment _decaf_, notre compilateur.
+
+	** **bin/test/** : dossier généré à la compilation, tests unitaires +
+		Fichier exécutables des tests unitaires.
+
+* **test/** : dossier contenant tout ce qui est lié aux tests
+
+	**  **test/unitary/** : fichier sources C (_.c_) de tests unitaires +
+		Tout fichier _.c_ sera automatiquement ajouté au projet et transformé en un exécutable à l'appel de la cible _'test'_ du Makefile. Le fichier _launch.sh_ de ce dossier exécutera tous les tests générés.
+
+	** **test/integration/** : tests d'intégration
+		Le fichier _launch.sh_ lancera tous les tests d'intégration.
+
+		*** **test/integration/tests/** : scripts (_.sh_) de tests d'intégration
+
+		*** **test/integration/data/** : données utilisées pour les tests d'intégration
+
