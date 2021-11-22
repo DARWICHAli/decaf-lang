@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # Fichier lançant les tests unitaires
 # $1 : dossier où se trouvent les binaires des tests unitaires
 

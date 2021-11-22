@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # Fichier lançant les tests d'intégration
 # $1 : dossier où se trouve decaf
 
@@ -12,6 +12,8 @@ GRE='\033[0;32m'
 RED='\033[0;31m'
 NOR='\033[0m'
 
+printf "${RED}Test d'intégration désactivés, pensez à supprimer cette ligne et la suivante !!!\n"
+exit 0
 
 tests=($SUBTESTS_DIR/*)
 count=0
@@ -27,8 +29,8 @@ i=1
 ok=0
 for f in $tests; do
 	printf "Executing test $i of $count: $f... "
-	echo "sh $f $1 $DATA_DIR"
-	if OUTPUT=$(sh $f $1 $DATA_DIR 2>&1)
+
+	if OUTPUT=$(bash $f $1 $DATA_DIR 2>&1)
 	then
 		printf "${GRE}Ok!${NOR}\n"
 		ok=$((ok+1))

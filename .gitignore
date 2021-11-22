@@ -85,3 +85,11 @@ lib/
 decaf.tab.h
 decaf.tab.c
 decaf_lex.c
+
+# Doxygen
+html/
+latex/
+
+#cov
+*.gcno
+*.gcda

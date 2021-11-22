@@ -1,0 +1,114 @@
+image: $CI_REGISTRY/decaf/build-image:latest
+
+stages:
+  - build
+  - test
+  - deploy
+  - post-deploy
+
+build:
+  stage: build
+  before_script:
+    - cd decaf
+  script:
+    - make
+  artifacts: # Save artifacts so "test" job can use it
+    paths:
+      - decaf/bin/
+      - decaf/obj/
+      - decaf/src/
+      - decaf/include/
+    expire_in: 2 hours
+
+# run tests using the binary built
+test:
+  stage: test
+  dependencies:
+    - build # Download only build artifacts
+  before_script:
+    - cd decaf
+  script:
+    - make test
+
+#run coverage
+coverage:
+  stage: deploy
+  before_script:
+    - cd decaf
+    - make clean
+    - wget https://raw.githubusercontent.com/eriwen/lcov-to-cobertura-xml/master/lcov_cobertura/lcov_cobertura.py
+  script:
+    - export CFLAGS="--coverage -fprofile-arcs -ftest-coverage -Wall -Wextra -Wpedantic"
+    - make test
+    - gcov src/*.c
+    - lcov --directory . -c --output-file coverage.info
+    - lcov --remove coverage.info '*/test/*/*' -o coverage.info
+    - genhtml coverage.info --output-directory coverage_html
+    - python lcov_cobertura.py coverage.info
+  after_script:
+    - mv decaf/coverage.xml .
+    - mv decaf/coverage_html .
+  artifacts:
+    paths:
+      - coverage_html/
+    expire_in: 2 days
+    reports:
+      cobertura: coverage.xml
+  coverage: /\s*lines\.*:\s*(\d+\.?\d+%)/
+
+# Generate documentation (pdf)
+doc_pdf:
+  stage: deploy
+  script:
+    - asciidoctor-pdf doc/*.adoc
+  artifacts:
+    paths:
+      - "doc/*.pdf"
+    expire_in: 2 hours
+
+
+doc_html:
+  stage: deploy
+  script:
+    - asciidoctor doc/*.adoc
+  after_script:
+    - mkdir -p doc_html
+    - mv doc/*.html doc_html
+  artifacts:
+    paths:
+      - "doc_html/"
+    expire_in: 2 hours
+
+doxygen:
+  stage: deploy
+  before_script:
+    - cd decaf
+  script:
+    - doxygen
+  after_script:
+    - mv decaf/html doxygen
+  artifacts:
+    paths:
+      - "doxygen/"
+    expire_in: 2 hours
+
+# Upload to Gitlab pages (html)
+pages:
+  stage: post-deploy
+  dependencies:
+    - doc_html
+    - doxygen
+      #- coverage
+  script:
+    - mkdir -p public
+    - mv doc_html public/doc
+    - mv doxygen public/doxygen
+    - tree ./public -H '.' -T "Documentation" -P "*.html" -L 2 --noreport --charset utf-8 > ./public/index.html
+  artifacts:
+    paths:
+      - "public/"
+    expire_in: 2 days
+  only:
+    refs:
+      - main
+
