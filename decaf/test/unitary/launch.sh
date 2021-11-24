@@ -6,9 +6,9 @@ GRE='\033[0;32m'
 RED='\033[0;31m'
 NOR='\033[0m'
 
-tests=($1/*)
+tests=$1/*
 count=0
-for f in tests; do
+for f in $tests; do
 	count=$((count+1))
 done
 

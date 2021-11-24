@@ -15,13 +15,11 @@ NOR='\033[0m'
 printf "${RED}Test d'intégration désactivés, pensez à supprimer cette ligne et la suivante !!!\n"
 exit 0
 
-tests=($SUBTESTS_DIR/*)
+tests=$SUBTESTS_DIR/*
 count=0
-for f in tests; do
+for f in $tests; do
 	count=$((count+1))
 done
-
-echo $tests
 
 printf "Found $count tests...\n\n"
 
