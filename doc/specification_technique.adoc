@@ -1,0 +1,91 @@
+= Decaf: Spécification technique des fonctions C
+Léo Chéneau <leo.cheneayu@etu.unistra.fr>
+v1.0, 2021-11-25
+:toc:
+:homepage: https://git.unistra.fr/decaf/decaf-lang
+
+Ce document a pour but de détailler et d'offrir une vision claire de l'API C proposée au sein du compilateur Decaf et de ses différents modules.
+
+WARNING: Bien que cette API se veuille stable, cette dernière peut être amenée à changer si besoin. La dernière version disponible à l'adresse https://decaf.pages.unistra.fr/decaf-lang/doc/ faisant foi.
+
+== Génération de code intermédiaire
+
+=== Introduction
+
+Le but d'un compilateur est de traduire un programme d'un langage source, ici le _Decaf_ en un langage cible, ici l'assembleur _MIPS_. Cependant, pour faciliter ce procédé, gagner en fléxibilité, mais aussi permettre des optimisations, nous avons choisi de d'abord traduire dans un langage intermédiaire très simple basé sur le langage LLVM-IR.
+
+==== Fichiers
+
+Toutes les fonctions décrites ci-dessous sont accessibles via le fichier `ir.h`. Ce fichier regroupe les fichiers suivants :
+
+* `ir.h` : Regroupe ce qui à trait à la génération de code intermédiaire.
+
+** `quadops.h` : <<Quadruplets, Langage intermédiaire et quadruplets>> et fonctions associées.
+
+** `gencode.h` : <<Fonction de génération de code intermédiaire>>.
+
+** `incomplete.h` : <<Fonction associées à la gestion de quadruplets incomplets>>.
+
+=== Langage intermédiaire et quadruplets
+
+Le langage intermédiaire utilisé est un langage de programmation simplifié dont toutes les instructions sont des codes à **1 résultat, 2 opérandes et 1 opérateur**.
+
+```ir
+a = b + c
+```
+
+Ou bien des instructions à **deux opérandes, 1 opérateur et aucune affectation**.
+
+```ir
+if E then goto B
+```
+
+==== Opérateurs
+
+===== Quadruplets commplets: 1 résultat, 2 opérandes et 1 opérateur
+
+Les opérateurs suivants sont supportés dans les quadruplets complets :
+
+* _l'addition_ : *_Q_ADD_*
+
+* _la soustraction_ : *_Q_SUB_*
+
+* _la multiplication_ : *_Q_MUL_*
+
+* _la division_ : *_Q_DIV_*
+
+* _le modulo_ : *_Q_MOD_*
+
+===== Quadruplet 2 opérandes, 1 opérateur
+
+Ces quadruplets un peu spéciaux sont les suivants :
+
+* _le if-goto_ : *_Q_IFG_*
+
+* _l'affectation_ : *_Q_AFF_*
+
+==== Quadruplets en C
+
+En langage C, un **quadruplet** est une structure de données `struct quad` à 4 champs :
+
+* *_lhs*_ : _struct entry*_ -> Une entrée dans la table des symboles correspondant à l'opérande de **gauche** de l'opérateur.
+
+* *_rhs*_ : _struct entry*_ -> Une entrée dans la table des symboles correspondant à l'opérande de **droite** de l'opérateur.
+
+* *_op_* : _enum operator_ -> Un enum stockant l'opérateur dont l'alias est conforme à celui défini dans <<Opérateurs>>.
+
+* *_res_* : _struct entry*_ -> Une entrée dans la table des symboles ayant pour vocation de stocker le **résultat**.
+
+NOTE: *_res_* vaut `NULL` si le quadruplet est de type <<2 opérandes, 1 opérateur, Quadruplet 2 opérandes, 1 opérateur>>.
+
+===== Création rapide
+
+TIP: Un quadruplet peut être créé rapidement en utilisant https://en.cppreference.com/w/c/language/struct_initialization[l'initialisation entre accolades].
+
+```c
+struct quad = {x, y, Q_ADD, a}; // valide en C99
+struct quad = {bexp, gotrue, Q_IFG}; // valide en C99, res = 0 = NULL !
+```
+
+
+
