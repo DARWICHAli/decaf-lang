@@ -87,5 +87,41 @@ struct quad = {x, y, Q_ADD, a}; // valide en C99
 struct quad = {bexp, gotrue, Q_IFG}; // valide en C99, res = 0 = NULL !
 ```
 
+== Table des symboles
 
+=== Introduction
+Le but de la table des symboles est de garder en mémoire différentes informations concernant les identificateurs déclarées au fil du programme. Elle permet au reste du compilateur d'obtenir des informations sur chaque identificateurs pré-définis permettant de faciliter la prise de décision. Dans notre cas, elle servira principalement dans la phase d'analyse syntaxique pour effectuer de la vérification de type et assister la génération de code intermédiaire.
+
+
+=== Précisions
+La table des symboles est en fait une pile de table des symboles que l'on va appeller des *contextes*.
+
+La *table* est la structure contenant les identificateurs et leur informations associées.
+
+Chaque contexte possède une table, sous la forme d'une table de hash ou d'une liste chaîné. Par simplicité, la première version de la table des symboles sera une liste chaînée.
+
+La structure des entrées dans les tables est indépendante de la structure de la table. Un changement de fonctionnement de la table ne doit pas affecter la structure interne de ses entrées, et vice-versa.
+
+Chaque contexte réfère à un bloc d'instruction de code. Dès que nous entrons dans un nouveau bloc _(structure de contrôle, fonctions ...etc)_ un nouveau contexte est empilé sur sur la table des symboles.
+
+.Afficher schéma
+[%collapsible]
+====
+image:table_des_symboles.png[table des symboles,450,align="center"]
+====
+
+=== Structure des tables
+
+La structure des tables est générique, il faudra instancier un contexte de niveau 0 lors du processus de compilation, appellé *contexte global*.
+
+==== Contextes
+
+Chaque contexte possède un pointeur sur la table parent ainsi qu'une structure interne permettant de garder en mémoire les entrées, la *table*.
+Cette structure nous permet de construire un arbre de contextes puisque un contexte donnée peut avoir plusieurs enfants. 
+
+==== Entrée dans la table
+
+Chaque entrée associe un nom d'identificateur _(lexème)_, sous la forme d'une chaîne de caractères à un n-uplets.
+
+Ce n-uplets possède les information que l'on souhaite retenir sur l'identificateur, dans notre cas, le type de la valeur associé à celui-ci.
 
