@@ -133,6 +133,35 @@ Il est possible d'ajouter un quadruplet au tableau des quadruplets via la foncti
 
 === Patching et listes de quadruplets
 
+Lors de la traduction dirigée par la syntaxe nous devront créer des listes de quadruplets incomplets que nous devrons "patcher" ces derniers plus tard.
+
+Afin de faciliter ces tâches, des fonctions C sont mises à la disposition du pogrammeur.
+
+==== API C
+
+===== Liste de quadruplets
+
+anchor:quadlist[]
+Une liste de quadruplets est modélisée par le type `struct quad_list`. Pour interargir avec un obket de ce type il faut utiliser les fonctions présentées ci-dessous.
+
+===== Création de liste
+
+* *_NOM DE MORT DU TD_* : (_void_) -> _<<quadlist, struct quad_list>>_ : crée une liste de quadruplets *vide*.
+
+===== Ajout d'un élément
+
+* *_NOM DE MORT DU TD_* : (_<<quadlist, struct quad_list>>*_, _<<quad_id_t,quad_id_t>>_) -> _<<quadlist, struct quad_list>>*_ : Ajoute un quadruplet à la liste, puis renvoie un pointeur sur la liste.
+
+NOTE: le type de retour permet de faire des appels imbriqués.
+
+===== Patching
+
+Une liste de quadruplets **incomplets** peut être patchée avec la fonction suiante. C'est à dire que tous les <<quad021, quadruplets de type goto>> auront pour adresse d'arrivée le <<quadidt, _quad_id_t_>> en paramètre.
+
+* *_NOM DE MORT DU TD_* : (_<<quadlist, struct quad_list>>*_, _<<quadidt, quad_id_t>>_) -> _void_ : Patch les quadruplets de la liste par le quadruplet en argument.
+
+WARNING: Si la liste contient des quadruplets de mauvais type ou bien déjà patchés, le programme plantera avec une erreur.
+
 
 == Table des symboles
 
