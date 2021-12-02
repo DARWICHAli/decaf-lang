@@ -162,6 +162,7 @@ Une liste de quadruplets **incomplets** peut être patchée avec la fonction sui
 
 WARNING: Si la liste contient des quadruplets de mauvais type ou bien déjà patchés, le programme plantera avec une erreur.
 
+<<<
 
 == Table des symboles
 
@@ -201,3 +202,45 @@ Chaque entrée associe un nom d'identificateur _(lexème)_, sous la forme d'une 
 
 Ce n-uplets possède les information que l'on souhaite retenir sur l'identificateur, dans notre cas, le type de la valeur associé à celui-ci.
 
+<<<
+
+== Génération du code assembleur
+
+=== Introduction
+
+Une fois le code intermédiaire généré et éventuellement optimisé, ce dernier doit être converti en code machine afin d'être exécuté.
+
+Cette spécification se veut flexible et laisse la porte ouverte à plusieurs langages assembleur. Cependant, seul la conversion vers du MIPS sera implémentée.
+
+=== Fichiers
+
+* `asm.h` : En-tête regroupant toutes les fonctions utiles.
+
+** `genasm.h` : Fonctions de traduction
+
+=== API C
+
+==== Conversion générique
+
+La fonction suivante propose de traduire une représentation intermédiaire en assembleur choisi dans un fichier de sortie.
+
+La représentation intermédiaire correspond à une suite de <<quad, quadruplets>>, le fichier est un simple nom.
+
+Cette fonction a besoin de la table des symboles associée à la représentation intermédiaire.
+
+IMPORTANT: Le fichier en sortie est un *fichier source*. Il faudra encore assembler ce dernier pour obtenir un exécutable.
+
+* *_genasm_* : +
+(<<ASM_types, enum ASM_LANG>> lang, <<quad, struct quad>>* liste, _size_t_ liste_size, TODO:<<struct context*>> table_symboles, _const char*_ chemin_sortie) -> _void_ +
+Traduit dans le langage `lang` la suite de taille `liste_size` d'instructions intermédiaires `liste` et écrit le résultat dans le *chemin* `chemin_sortie`.
+
+WARNING: En cas d'erreur, le programme plantera avec un message d'erreur explicite.
+
+==== Langages assembleurs proposés
+
+anchor:ASM_types[]
+Les différents langages assembleurs disponible sont défins dans un `enum` :
+
+*_enum ASM_LANG_* :
+
+* _ASM_MIPS_ : assembleur MIPS.
