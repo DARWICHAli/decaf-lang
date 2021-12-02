@@ -20,9 +20,9 @@ Toutes les fonctions décrites ci-dessous sont accessibles via le fichier `ir.h`
 
 * `ir.h` : Regroupe ce qui à trait à la génération de code intermédiaire.
 
-** `quadops.h` : <<Quadruplets, Langage intermédiaire et quadruplets>> et fonctions associées.
+** `quadops.h` : <<Quadruplets en C, Langage intermédiaire et quadruplets>> et fonctions associées.
 
-** `gencode.h` : <<Fonction de génération de code intermédiaire>>.
+** `gencode.h` : <<Génération de code, Fonction de génération de code intermédiaire>>.
 
 ** `incomplete.h` : <<Fonction associées à la gestion de quadruplets incomplets>>.
 
@@ -44,6 +44,7 @@ if E then goto B
 
 ===== Quadruplets commplets: 1 résultat, 2 opérandes et 1 opérateur
 
+anchor:operator[]
 Les opérateurs suivants sont supportés dans les quadruplets complets :
 
 * _l'addition_ : *_Q_ADD_*
@@ -57,6 +58,7 @@ Les opérateurs suivants sont supportés dans les quadruplets complets :
 * _le modulo_ : *_Q_MOD_*
 
 ===== Quadruplet 2 opérandes, 1 opérateur
+anchor:quad021[]
 
 Ces quadruplets un peu spéciaux sont les suivants :
 
@@ -66,26 +68,64 @@ Ces quadruplets un peu spéciaux sont les suivants :
 
 ==== Quadruplets en C
 
+anchor:quad[]
 En langage C, un **quadruplet** est une structure de données `struct quad` à 4 champs :
 
-* *_lhs_* : _struct entry*_ -> Une entrée dans la table des symboles correspondant à l'opérande de **gauche** de l'opérateur.
+* *_lhs_* : _<<entry,struct entry*>>_ : Une entrée dans la table des symboles correspondant à l'opérande de **gauche** de l'opérateur.
 
-* *_rhs_* : _struct entry*_ -> Une entrée dans la table des symboles correspondant à l'opérande de **droite** de l'opérateur.
+* *_rhs_* : _<<entry,struct entry*>>_ : Une entrée dans la table des symboles correspondant à l'opérande de **droite** de l'opérateur.
 
-* *_op_* : _enum operator_ -> Un enum stockant l'opérateur dont l'alias est conforme à celui défini dans <<Opérateurs>>.
+* *_op_* : _<<operator,enum operator>>_ : Un enum stockant l'opérateur dont l'alias est conforme à celui défini dans <<Opérateurs>>.
 
-* *_res_* : _struct entry*_ -> Une entrée dans la table des symboles ayant pour vocation de stocker le **résultat**.
+* *_res_* : _<<entry,struct entry*>>_ : Une entrée dans la table des symboles ayant pour vocation de stocker le **résultat**.
 
-NOTE: *_res_* vaut `NULL` si le quadruplet est de type <<2 opérandes, 1 opérateur, Quadruplet 2 opérandes, 1 opérateur>>.
+NOTE: *_res_* vaut `NULL` si le quadruplet est de type <<quad021, Quadruplet 2 opérandes, 1 opérateur>>.
 
 ===== Création rapide
 
 TIP: Un quadruplet peut être créé rapidement en utilisant https://en.cppreference.com/w/c/language/struct_initialization[l'initialisation entre accolades].
 
 ```c
-struct quad = {x, y, Q_ADD, a}; // valide en C99
-struct quad = {bexp, gotrue, Q_IFG}; // valide en C99, res = 0 = NULL !
+struct quad a = {x, y, Q_ADD, a}; // valide en C99
+struct quad incomplet = {bexp, gotrue, Q_IFG}; // valide en C99, res = 0 = NULL !
 ```
+
+==== Génération de code
+
+Tout le code intermédiaire est généré à la volée et ajouté quadruplet par quadruplet à un tableau de quadruplets.
+
+===== API C
+
+====== Identifiant de quadruplet
+
+anchor:quadidt[]
+Chaque quadruplé est identifié de manière unique par un `quad_id_t`.
+
+====== nextquad, id du *_prochain_* quadruplet
+
+Une fonction `nextquad` renvoie l'identifiant du prochain quadruplet généré. Cet identifiant permettra d'accéder à ce quadruplet via la fonction <<getq, `getquad`>>.
+
+* *_nextquad_* : _(void)_ -> <<quadidt, _quad_id_t_>> : Identifiant du prochain quadruplet.
+
+====== getquad, récupérer un quadruplet
+
+anchor:getq[]
+La fonction `getquad` permet de récupérer un quadruplet généré précédemment.
+
+* *_getquad_* : (<<quadidt, _quad_id_t_>>) -> _<<quad,struct quad*>>_ : Récupère un pointeur sur un quadruplet.
+
+====== Ajout d'un quadruplet
+
+Il est possible d'ajouter un quadruplet au tableau des quadruplets via la fonction `gencode`.
+
+* *_gencode_* : (<<quad,_struct quad_>>) -> <<quadidt, _quad_id_t_>> : Ajoute le quadruplet et renvoie l'identifiant du quadruplet *généré*.
+
+[TIP]
+====
+* Vous pouvez générer des quadruplets incomplets ! 
+
+* Pensez à utiliser la <<Création rapide,création rapide>> de quadruplets pour gagner du temps !!
+====
 
 == Table des symboles
 
