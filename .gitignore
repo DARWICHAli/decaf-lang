@@ -93,3 +93,6 @@ latex/
 #cov
 *.gcno
 *.gcda
+
+# doc
+doc/*.pdf
