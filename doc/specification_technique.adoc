@@ -68,9 +68,9 @@ Ces quadruplets un peu spéciaux sont les suivants :
 
 En langage C, un **quadruplet** est une structure de données `struct quad` à 4 champs :
 
-* *_lhs*_ : _struct entry*_ -> Une entrée dans la table des symboles correspondant à l'opérande de **gauche** de l'opérateur.
+* *_lhs_* : _struct entry*_ -> Une entrée dans la table des symboles correspondant à l'opérande de **gauche** de l'opérateur.
 
-* *_rhs*_ : _struct entry*_ -> Une entrée dans la table des symboles correspondant à l'opérande de **droite** de l'opérateur.
+* *_rhs_* : _struct entry*_ -> Une entrée dans la table des symboles correspondant à l'opérande de **droite** de l'opérateur.
 
 * *_op_* : _enum operator_ -> Un enum stockant l'opérateur dont l'alias est conforme à celui défini dans <<Opérateurs>>.
 
