@@ -254,7 +254,7 @@ Le sommet actuel de la pile peut être accédé directement.
 
 Il est possible d'ajouter un identifiant à un contexte.
 
-* *_newname_* : (_<<context,struct context>>*_, _const char*_) -> _<<entry, struct entry>>*_ : Ajoute l'identifiant au contexte et récupère l'entrée correspondante.
+* *_newname_* : (_const char*_) -> _<<entry, struct entry>>*_ : Ajoute l'identifiant au contexte courant et récupère l'entrée correspondante.
 
 WARNING: L'entrée devra être complétée par la suite.
 
@@ -265,6 +265,26 @@ La recherche d'une entrée avec un certain identificateur se fait en parcourant 
 * *_lookup_* : (_const char*_) -> _<<entry, struct entry>>*_ : Recherche l'identifiant dans le contexte donné et ses contextes englobants.
 
 WARNING: **Si l'identifiant n'existe pas**, la fonction renvoie **NULL**.
+
+===== Nombre de symboles
+
+Il est possible de récupérer le nombre de symboles définis dans une table.
+
+* *_count_entries_* : (_ const <<context, struct context>>*_) -> size_t : _Calcule_ le nombre d'identifiants présents dans la table.
+
+===== Taille à réserver en octets
+
+Pour obtenir le nombre d'octets à allouer nécessaires à tous les identifiants, il est possible d'appeller la fonction suivante :
+
+* *_count_bytes_* : (_ const <<context, struct context>>*_) -> size_t : _Calcule_ le nombre d'octets nécessaires à allouer pour cette table.
+
+
+==== Entrée: struct entry
+
+anchor:entry[]
+Les entrées associent un identifiant `id` à des champs, pour l'instant seulement un `type`.
+
+
 
 <<<
 
