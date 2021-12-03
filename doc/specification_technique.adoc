@@ -179,6 +179,8 @@ Le but de la table des symboles est de garder en mémoire différentes informati
 
 ** `typedesc.h` : <<typedesc, descripteurs de type>> et fonction associées.
 
+** `typelist` : <<typelist, liste de types>> et fonctions associées.
+
 === Précisions
 La table des symboles est en fait une pile de table des symboles que l'on va appeller des *contextes*.
 
@@ -226,6 +228,8 @@ NOTE: Les identifiants sont des chaînes de caractères C `const char*`.
 ** `id` : _char*_ : Identifiant de l'entrée.
 
 ** `type` : _<<typedesc,struct typedesc>>_ : Descripteurs de types.
+
+* *_<<typedesc, struct typedesc>>_* : Descripteur de type, **opaque**.
 
 ==== Table des symboles: struct context
 
@@ -283,8 +287,99 @@ Pour obtenir le nombre d'octets à allouer nécessaires à tous les identifiants
 
 anchor:entry[]
 Les entrées associent un identifiant `id` à des champs, pour l'instant seulement un `type`.
+`id` et `type` sont des champs de chaque `struct entry`.
+
+* `id` : _char*_ : identifiant de l'entrée.
+
+* `type` : _<<typedesc, struct typedesc>>_ : type de l'entrée.
+
+WARNING: ne pas modifier `id` !
+
+===== Modifier le type
+
+Le type peut être modifié directement par une affectation.
+
+==== Typage
+
+===== Méta-types
+
+Il faut pouvoir discerner les fonctions des variables simples et des tableaux.
+
+Pour cela on respectera KISS avec des méta-types dans un `enum` *_MTYPE_* :
+
+* `MT_FUN` : Fonction.
+
+* `MT_VAR` : Variable simple.
+
+* `MT_TAB` : Tableau.
+
+===== Types primaires
+
+anchor:btype[]
+Les types de bases ou primaires sont définis statiquement dans un `enum` *_BTYPE_* :
+
+* `BT_BOOL` : Type booléen.
+
+* `BT_INT` : Type entier.
+
+===== Taille des types primaires
+
+La taille en octets des types primaires est obtenue via la fonction suivante :
+
+* *_bt_sizeof_* : (_<<btype, enum BTYPE>>_) -> size_t : Renvoie la taille du type de base.
+
+==== Descripteurs de type
+
+anchor:typedesc[]
+Afin d'être flexibles, les descripteurs de type sont encodés dans un structure `typedesc`.
+
+Cette dernière est opaque et il faut interargir avec elle via des fonctions.
+
+===== Fonction
+
+* *_typedesc_make_function_* : (_<<btype, enum BTYPE>>_, _const <<typelist, struct typelist>>*_) -> _<<typedesc, struct typedesc>>_ +
+Crée un nouveau descripteur de type à partir d'un type de retour et d'une liste de types.
+
+===== Tableau
+
+* *_typedesc_make_tab_* : (_<<btype, enum BTYPE>>_, size_t) -> _<<typedesc, struct typedesc>>_ +
+Crée un nouveau descripteur de type à partir d'un type de tableau et du nombre d'éléments.
+
+===== Variable
+
+* *_typedesc_make_var_* : (_<<btype, enum BTYPE>>_) -> _<<typedesc, struct typedesc>>_ +
+Crée un nouveau descripteur de type à partir d'un type primaire simple.
+
+===== Comparaison de descripteurs
+
+Il est possible de comparer deux descripteurs pour tester leur équivalence.
+
+* *_typedesc_equals_* : (const _<<typedesc, struct typedesc>>_*, const _<<typedesc, struct typedesc>>_*) -> bool : +
+Renvoie `true` si les deux descripteurs sont équivalents.
 
 
+==== Liste de types primaires
+
+anchor:typelist[]
+Afin de faciliter l'implémentation, l'API C fourni une liste de <<btype, enum BTYPE>> nommée `typelist`.
+
+===== Création de liste
+
+* *_typelist_new_* : (_void_) : _<<typelist,struct typelist>>*_ : Crée une nouvelle liste de types vide.
+
+===== Ajout d'un élément
+
+* *_typelist_append_* : (_<<typelist,struct typelist>>*_, _const <<btype,enum BTYPE>>_) ->  _<<typelist,struct typelist>>*_ : +
+Ajoute un type **à la fin** de la liste.
+
+===== Comparaison de listes
+
+* *_typelist_equals_* :  (_const <<typelist,struct typelist>>*_,  _const <<typelist,struct typelist>>*_) : +
+Compare deux listes et renvoie `true` si les deux listes sont équivalentes, c'est à dire si tous leurs types sont égaux.
+
+===== Un mot sur la mémoire
+
+IMPORTANT: **TOUTE typelist doit être liée à un et exactement un <<typedesc, struct typedesc>>.**
 
 <<<
 
