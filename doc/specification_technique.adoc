@@ -169,6 +169,15 @@ WARNING: Si la liste contient des quadruplets de mauvais type ou bien déjà pat
 === Introduction
 Le but de la table des symboles est de garder en mémoire différentes informations concernant les identificateurs déclarées au fil du programme. Elle permet au reste du compilateur d'obtenir des informations sur chaque identificateurs pré-définis permettant de faciliter la prise de décision. Dans notre cas, elle servira principalement dans la phase d'analyse syntaxique pour effectuer de la vérification de type et assister la génération de code intermédiaire.
 
+=== Fichiers
+
+* `symbols.h` : regroupe toutes les fonctions et structures mentionnées ici.
+
+** `entry.h` : Structure <<entry, entry>> contenant les entrées de la table et fonctions associées.
+
+** `context.h` : <<context, Table des symboles>> et fonctions associées.
+
+** `typedesc.h` : <<typedesc, descripteurs de type>> et fonction associées.
 
 === Précisions
 La table des symboles est en fait une pile de table des symboles que l'on va appeller des *contextes*.
@@ -179,7 +188,7 @@ Chaque contexte possède une table, sous la forme d'une table de hash ou d'une l
 
 La structure des entrées dans les tables est indépendante de la structure de la table. Un changement de fonctionnement de la table ne doit pas affecter la structure interne de ses entrées, et vice-versa.
 
-Chaque contexte réfère à un bloc d'instruction de code. Dès que nous entrons dans un nouveau bloc _(structure de contrôle, fonctions ...etc)_ un nouveau contexte est empilé sur sur la table des symboles.
+Chaque contexte réfère à un bloc d'instruction de code. Dès que nous entrons dans un nouveau bloc _(structure de contrôle, fonctions ...etc)_ un nouveau contexte doit être empilé sur sur la table des symboles.
 
 .Afficher schéma
 [%collapsible]
@@ -201,6 +210,61 @@ Cette structure nous permet de construire un arbre de contextes puisque un conte
 Chaque entrée associe un nom d'identificateur _(lexème)_, sous la forme d'une chaîne de caractères à un n-uplets.
 
 Ce n-uplets possède les information que l'on souhaite retenir sur l'identificateur, dans notre cas, le type de la valeur associé à celui-ci.
+
+=== API C
+
+L'API C comprend trois structures de données majeures contenues les unes dans les autres. Les champs accessibles sont listés ici.
+
+WARNING: TOUS les champs sont en **lecture seule** et ne doivent pas être modifiés.
+
+* *_<<context, struct context>>_* : Table des symboles à proprement parler, contient des <<entry, entrées>> associées à un identifiant.
+
+NOTE: Les identifiants sont des chaînes de caractères C `const char*`.
+
+* *_<<entry, struct entry>>_* : Entrée dans la table des symboles.
+
+** `id` : _char*_ : Identifiant de l'entrée.
+
+** `type` : _<<typedesc,struct typedesc>>_ : Descripteurs de types.
+
+==== Table des symboles: struct context
+
+===== Création, empilement
+
+anchor:context[]
+Les tables des symboles ne peuvent être créées que par empilement d'une nouvelle table.
+
+* *_pushctx_* : (_void_) -> _<<context,struct context>>*_ : Empile une nouvelle table et renvoie cette dernière.
+
+===== Destruction, dépilement
+
+Une table des symboles peut être dépilée.
+
+IMPORTANT: **Elle n'est pas libérée**. Les pointeurs sur _<<entry, struct entry>>_ restent donc valides.
+
+* *_popctx_* : (_void_) -> _<<context,struct context>>*_ : Dépile une nouvelle table et renvoie le nouveau sommet de la pile.
+
+===== Sommet de la pile
+
+Le sommet actuel de la pile peut être accédé directement.
+
+* *_currentctx_* : (_void_) -> _<<context,struct context>>*_ : Récupère le dernier contexte empilé.
+
+===== Ajout d'un identificateur
+
+Il est possible d'ajouter un identifiant à un contexte.
+
+* *_newname_* : (_<<context,struct context>>*_, _const char*_) -> _<<entry, struct entry>>*_ : Ajoute l'identifiant au contexte et récupère l'entrée correspondante.
+
+WARNING: L'entrée devra être complétée par la suite.
+
+===== Recherche d'un identificateur
+
+La recherche d'une entrée avec un certain identificateur se fait en parcourant récursivement la pile du contexte en argument jusqu'à son dernier parent à la recherche d'un symbole.
+
+* *_lookup_* : (_const char*_) -> _<<entry, struct entry>>*_ : Recherche l'identifiant dans le contexte donné et ses contextes englobants.
+
+WARNING: **Si l'identifiant n'existe pas**, la fonction renvoie **NULL**.
 
 <<<
 
