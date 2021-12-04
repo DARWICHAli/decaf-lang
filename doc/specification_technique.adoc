@@ -118,7 +118,13 @@ Une fonction `nextquad` renvoie l'identifiant du prochain quadruplet généré. 
 anchor:getq[]
 La fonction `getquad` permet de récupérer un quadruplet généré précédemment.
 
-* *_getquad_* : (<<quadidt, _quad_id_t_>>) -> _<<quad,struct quad*>>_ : Récupère un pointeur sur un quadruplet.
+* *_getquad_* : (<<quadidt, _quad_id_t_>>) -> _<<quad,struct quad>>*_ : Récupère un pointeur sur un quadruplet.
+
+===== Récupérer la liste de tous les quadruplets
+
+Il est possible d'obtenir la liste linéaire des quadruplets.
+
+* *_get_all_quads_* : (_size_t*_ size) -> <<quad,struct quad>>* : Renvoie un tableau linéaire de quadruplets dont la taille est écrite dans `size`.
 
 ===== Ajout d'un quadruplet
 
