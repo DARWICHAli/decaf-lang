@@ -5,8 +5,8 @@
  * @brief Génération de code et quadruplets
  * @ingroup IR
  */
-#ifndef INCLUDE__QUADOPS__H
-#define INCLUDE__QUADOPS__H
+#ifndef INCLUDE__GENCODE__H
+#define INCLUDE__GENCODE__H
 
 #include "quadops.h"
 
