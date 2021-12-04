@@ -46,6 +46,8 @@ if E then goto B
 
 === Opérateurs
 
+Les opérateurs seront définis comme des valeurs d'un `enum` *_Q_OP_*.
+
 ==== Quadruplets complets: 1 résultat, 2 opérandes et 1 opérateur
 
 anchor:operator[]
@@ -79,7 +81,7 @@ En langage C, un **quadruplet** est une structure de données `struct quad` à 4
 
 * *_rhs_* : _<<entry,struct entry*>>_ : Une entrée dans la table des symboles correspondant à l'opérande de **droite** de l'opérateur.
 
-* *_op_* : _<<operator,enum operator>>_ : Un enum stockant l'opérateur dont l'alias est conforme à celui défini dans <<Opérateurs>>.
+* *_op_* : _<<operator,enum Q_OP>>_ : Un enum stockant l'opérateur dont l'alias est conforme à celui défini dans <<Opérateurs>>.
 
 * *_res_* : _<<entry,struct entry*>>_ : Une entrée dans la table des symboles ayant pour vocation de stocker le **résultat**.
 
