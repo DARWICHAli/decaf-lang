@@ -12,20 +12,38 @@ void yyerror(const char *msg);
 %type <_int_literal> decimal_literal hex_literal
 %type <_int_literal> int_literal expr
 
-%token PLUS MINUS MULT
-%left PLUS MINUS
-%left MULT
+%token ADD SUB MUL DIV MOD
+%left ADD SUB
+%left MUL
+%right NEG
 
 %start input
 
 %%
 
-input: expr {printf("%d\n", $1);}
+input: expr {
+    printf("%d\n", $1);
+}
 
 expr
-: int_literal PLUS int_literal {$$ = $1 + $3;}
-| int_literal MINUS int_literal {$$ = $1 - $3;}
-| int_literal MULT int_literal {$$ = $1 * $3;}
+: expr ADD expr {
+    $$ = $1 + $3;
+}
+| SUB expr %prec NEG {
+    $$ = - $2;
+}
+| expr SUB expr {
+    $$ = $1 - $3;
+}
+| expr MUL expr {
+    $$ = $1 * $3;
+}
+| expr DIV expr {
+    $$ = $1 / $3;
+}
+| expr MOD expr {
+    $$ = $1 % $3;
+}
 | int_literal
 
 
