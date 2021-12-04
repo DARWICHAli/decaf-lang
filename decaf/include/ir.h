@@ -18,5 +18,7 @@
 #include "gencode.h"
 #include "incomplete.h"
 
-///@}
+/**
+ * @}
+ */
 #endif
