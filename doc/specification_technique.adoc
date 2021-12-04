@@ -278,6 +278,14 @@ La recherche d'une entrée avec un certain identificateur se fait en parcourant 
 
 WARNING: **Si l'identifiant n'existe pas**, la fonction renvoie **NULL**.
 
+===== Symboles pour les temporaires
+
+Le compilateur peut être amené à vouloir créer de nouveaux symboles uniques utilisés pour des valeurs temporaires.
+
+* *_ctx_make_temp()_* : (_void_) -> _<<entry, struct entry>>*_ : Crée un symbole temporaire dans la table courante et récupère son entrée dans la table.
+
+NOTE: Le symbole reste accessible par son identifiant.
+
 ===== Nombre de symboles
 
 Il est possible de récupérer le nombre de symboles définis dans une table.
