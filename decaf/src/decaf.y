@@ -1,6 +1,8 @@
 %{
 extern int yylex();
 void yyerror(const char *msg);
+
+#include "ir.h"
 %}
 
 %union {
@@ -22,12 +24,24 @@ void yyerror(const char *msg);
 %%
 
 input: expr {
+    // init tds globale
     printf("%d\n", $1);
 }
 
 expr
 : expr ADD expr {
-    $$ = $1 + $3;
+    //! create new temp
+    struct entry res = ctx_make_temp();
+    $$ = res;
+    //! check type
+    if (!typedesc_equals($1.type, $2.type)) fprintf(stderr, "Type error :/\n");
+    //! init quadop struct + TDS
+    struct quad new_quad = {.lhs = $1, .rhs = $3, .op = Q_ADD, .res = $$};
+    //! gencode
+    struct quad_id_t qid = gencode(new_quad);
+    // le type de $$ est connu à l'avance dans decaf 
+    // puisque les variables sont déclarés et typée à l'avance 
+    $$->type = typedesc_make_var(BT_INT);
 }
 | SUB expr %prec NEG {
     $$ = - $2;
@@ -44,7 +58,13 @@ expr
 | expr MOD expr {
     $$ = $1 % $3;
 }
-| int_literal
+| int_literal {
+    // constructeur
+    // on perd la valeur du literal !
+    // newtemp?
+    struct typedesc type = typedesc_make_var(BT_INT);
+    $$.type = type;
+}
 
 
 int_literal
