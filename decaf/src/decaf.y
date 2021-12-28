@@ -182,3 +182,7 @@ void yyerror(const char *msg)
     fprintf(stderr, "%s\n", msg);
     return;
 }
+
+void quads_print() {
+    fprintf(stderr, "Not implemented");
+}
