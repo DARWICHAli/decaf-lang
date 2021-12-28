@@ -3,6 +3,10 @@ extern int yylex();
 void yyerror(const char *msg);
 
 #include "ir.h"
+#include "symbols.h"
+
+export const struct typedesc td_var_int;
+export const struct typedesc td_var_bool; 
 %}
 
 %union {
@@ -37,9 +41,9 @@ expr
     //! check type and is int type
     if (!typedesc_equals($1._exprval.result->type, $3._exprval.result->type))
         fprintf(stderr, "Type error :/\n");
-    if (!typedesc_primitif_equals($1._exprval.result->type, BT_INT))
+    if (!typedesc_equals($1._exprval.result->type, &td_var_int))
         fprintf(stderr, "Type error :/\n");
-    if (!typedesc_primitif_equals($3._exprval.result->type, BT_INT))
+    if (!typedesc_equals($3._exprval.result->type, &td_var_int))
         fprintf(stderr, "Type error :/\n");
     //! init quadop struct + TDS
     struct quad new_quad = {
@@ -70,9 +74,9 @@ expr
     struct entry * res = ctx_make_temp();
     if (!typedesc_equals($1._exprval.result->type, $3._exprval.result->type))
         fprintf(stderr, "Type error :/\n");
-    if (!typedesc_primitif_equals($1._exprval.result->type, BT_INT))
+    if (!typedesc_equals($1._exprval.result->type, &td_var_int))
         fprintf(stderr, "Type error :/\n");
-    if (!typedesc_primitif_equals($3._exprval.result->type, BT_INT))
+    if (!typedesc_equals($3._exprval.result->type, &td_var_int))
         fprintf(stderr, "Type error :/\n");
     struct quad new_quad = {
         .lhs = $1._exprval.result,
@@ -88,9 +92,9 @@ expr
     struct entry * res = ctx_make_temp();
     if (!typedesc_equals($1._exprval.result->type, $3._exprval.result->type))
         fprintf(stderr, "Type error :/\n");
-    if (!typedesc_primitif_equals($1._exprval.result->type, BT_INT))
+    if (!typedesc_equals($1._exprval.result->type, &td_var_int))
         fprintf(stderr, "Type error :/\n");
-    if (!typedesc_primitif_equals($3._exprval.result->type, BT_INT))
+    if (!typedesc_equals($3._exprval.result->type, &td_var_int))
         fprintf(stderr, "Type error :/\n");
     struct quad new_quad = {
         .lhs = $1._exprval.result,
@@ -106,9 +110,9 @@ expr
     struct entry * res = ctx_make_temp();
     if (!typedesc_equals($1._exprval.result->type, $3._exprval.result->type))
         fprintf(stderr, "Type error :/\n");
-    if (!typedesc_primitif_equals($1._exprval.result->type, BT_INT))
+    if (!typedesc_equals($1._exprval.result->type, &td_var_int))
         fprintf(stderr, "Type error :/\n");
-    if (!typedesc_primitif_equals($3._exprval.result->type, BT_INT))
+    if (!typedesc_equals($3._exprval.result->type, &td_var_int))
         fprintf(stderr, "Type error :/\n");
     struct quad new_quad = {
         .lhs = $1._exprval.result,
@@ -124,9 +128,9 @@ expr
     struct entry * res = ctx_make_temp();
     if (!typedesc_equals($1._exprval.result->type, $3._exprval.result->type))
         fprintf(stderr, "Type error :/\n");
-    if (!typedesc_primitif_equals($1._exprval.result->type, BT_INT))
+    if (!typedesc_equals($1._exprval.result->type, &td_var_int))
         fprintf(stderr, "Type error :/\n");
-    if (!typedesc_primitif_equals($3._exprval.result->type, BT_INT))
+    if (!typedesc_equals($3._exprval.result->type, &td_var_int))
         fprintf(stderr, "Type error :/\n");
     struct quad new_quad = {
         .lhs = $1._exprval.result,
