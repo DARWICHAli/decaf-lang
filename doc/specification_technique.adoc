@@ -1,0 +1,504 @@
+= Decaf: Spécification technique des fonctions C
+Léo Chéneau <leo.cheneayu@etu.unistra.fr>; Tarek kunze <tarek.kunze@etu.unistra.fr>
+v1.0, 2021-11-25
+:toc: macro
+:homepage: https://git.unistra.fr/decaf/decaf-lang
+
+****
+Ce document a pour but de détailler et d'offrir une vision claire de l'API C proposée au sein du compilateur Decaf et de ses différents modules.
+****
+
+WARNING: Bien que cette API se veuille stable, cette dernière peut être amenée à changer si besoin. La dernière version disponible à l'adresse https://decaf.pages.unistra.fr/decaf-lang/doc/ faisant foi.
+
+toc::[]
+
+== Génération de code intermédiaire
+
+=== Introduction
+
+Le but d'un compilateur est de traduire un programme d'un langage source (le _Decaf_) vers un langage cible (l'assembleur _MIPS_). Cependant, pour faciliter ce procédé, gagner en flexibilité, mais aussi permettre des optimisations, nous avons choisi de d'abord traduire dans un langage intermédiaire très simple basé sur le langage LLVM-IR.
+
+=== Fichiers
+
+Toutes les fonctions décrites ci-dessous sont accessibles via le fichier `ir.h`. Ce fichier regroupe les fichiers suivants :
+
+* `ir.h` : Regroupe ce qui à trait à la génération de code intermédiaire.
+
+** `quadops.h` : <<Quadruplets en C, Langage intermédiaire et quadruplets>> et fonctions associées.
+
+** `gencode.h` : <<Génération de code, Fonction de génération de code intermédiaire>>.
+
+** `incomplete.h` : <<Patching et listes de quadruplets, Fonctions associées à la gestion de quadruplets incomplets>>.
+
+=== Langage intermédiaire et quadruplets
+
+Le langage intermédiaire utilisé est un langage de programmation simplifié dont toutes les instructions sont des codes à **1 résultat, 2 opérandes et 1 opérateur**.
+
+```ir
+a = b + c
+```
+
+Ou bien des instructions à **deux opérandes, 1 opérateur et aucune affectation**.
+
+```ir
+if E then goto B
+```
+
+=== Opérateurs
+
+Les opérateurs seront définis comme des valeurs d'un `enum` *_Q_OP_*.
+
+==== Quadruplets complets: 1 résultat, 2 opérandes et 1 opérateur
+
+anchor:operator[]
+Les opérateurs suivants sont supportés dans les quadruplets complets :
+
+* _l'addition_ : *_Q_ADD_*
+
+* _la soustraction_ : *_Q_SUB_*
+
+* _la multiplication_ : *_Q_MUL_*
+
+* _la division_ : *_Q_DIV_*
+
+* _le modulo_ : *_Q_MOD_*
+
+
+==== Quadruplet 2 opérandes, 1 opérateur
+
+anchor:quad021[]
+Ces quadruplets un peu spéciaux sont les suivants :
+
+* _le if-goto_ : *_Q_IFG_*
+
+* _l'affectation_ : *_Q_AFF_*
+
+* _la négation_ : *_Q_NEG_*
+
+NOTE: Négation <=> `res := - lhs`.
+
+=== Quadruplets en C
+
+anchor:quad[]
+En langage C, un **quadruplet** est une structure de données `struct quad` à 4 champs :
+
+* *_lhs_* : _<<entry,struct entry*>>_ : Une entrée dans la table des symboles correspondant à l'opérande de **gauche** de l'opérateur.
+
+* *_rhs_* : _<<entry,struct entry*>>_ : Une entrée dans la table des symboles correspondant à l'opérande de **droite** de l'opérateur.
+
+* *_op_* : _<<operator,enum Q_OP>>_ : Un enum stockant l'opérateur dont l'alias est conforme à celui défini dans <<Opérateurs>>.
+
+* *_res_* : _<<entry,struct entry*>>_ : Une entrée dans la table des symboles ayant pour vocation de stocker le **résultat**.
+
+NOTE: *_res_* vaut `NULL` si le quadruplet est de type *_Q_IFG_* !
+
+==== Création rapide
+
+TIP: Un quadruplet peut être créé rapidement en utilisant https://en.cppreference.com/w/c/language/struct_initialization[l'initialisation entre accolades].
+
+```c
+struct quad a = {x, y, Q_ADD, a}; // valide en C99
+struct quad incomplet = {bexp, gotrue, Q_IFG}; // valide en C99, res = 0 = NULL !
+```
+
+=== Génération de code
+
+Tout le code intermédiaire est généré à la volée et est ajouté quadruplet par quadruplet à un tableau de quadruplets.
+
+==== API C
+
+===== Identifiant de quadruplet
+
+anchor:quadidt[]
+Chaque quadruplé est identifié de manière unique par un `quad_id_t`.
+
+===== nextquad, id du *_prochain_* quadruplet
+
+Une fonction `nextquad` renvoie l'identifiant du prochain quadruplet généré. Cet identifiant permettra d'accéder à ce quadruplet via la fonction <<getq, `getquad`>>.
+
+* *_nextquad_* : _(void)_ -> <<quadidt, _quad_id_t_>> : Identifiant du prochain quadruplet.
+
+===== getquad, récupérer un quadruplet
+
+anchor:getq[]
+La fonction `getquad` permet de récupérer un quadruplet généré précédemment.
+
+* *_getquad_* : (<<quadidt, _quad_id_t_>>) -> _<<quad,struct quad>>*_ : Récupère un pointeur sur un quadruplet.
+
+===== Récupérer la liste de tous les quadruplets
+
+Il est possible d'obtenir la liste linéaire des quadruplets.
+
+* *_get_all_quads_* : (_size_t*_ size) -> <<quad,struct quad>>* : Renvoie un tableau linéaire de quadruplets dont la taille est écrite dans `size`.
+
+===== Ajout d'un quadruplet
+
+Il est possible d'ajouter un quadruplet au tableau des quadruplets via la fonction `gencode`.
+
+* *_gencode_* : (<<quad,_struct quad_>>) -> <<quadidt, _quad_id_t_>> : Ajoute le quadruplet et renvoie l'identifiant du quadruplet *généré*.
+
+[TIP]
+====
+* Vous pouvez générer des quadruplets incomplets ! 
+
+* Pensez à utiliser la <<Création rapide,création rapide>> de quadruplets pour gagner du temps !!
+====
+
+=== Patching et listes de quadruplets
+
+Lors de la traduction dirigée par la syntaxe nous devront créer des listes de quadruplets incomplets que nous devrons "patcher" plus tard.
+
+Afin de faciliter ces tâches, des fonctions C sont mises à la disposition du pogrammeur.
+
+==== API C
+
+===== Liste de quadruplets
+
+anchor:quadlist[]
+Une liste de quadruplets est modélisée par le type `struct quad_list`. Pour interargir avec un objet de ce type il faut utiliser les fonctions présentées ci-dessous.
+
+===== Création de liste
+
+* *_qlist_new_* : (_void_) -> _<<quadlist, struct quad_list>>_ : crée une liste de quadruplets *vide*.
+
+===== Ajout d'un élément
+
+* *_qlist_append_* : (_<<quadlist, struct quad_list>>*_, _<<quad_id_t,quad_id_t>>_) -> _<<quadlist, struct quad_list>>*_ : Ajoute un quadruplet à la liste, puis renvoie un pointeur sur la liste.
+
+NOTE: le type de retour permet de faire des appels imbriqués.
+
+===== Patching
+
+Une liste de quadruplets **incomplets** peut être patchée avec la fonction suivante. C'est à dire que tous les <<quad021, quadruplets de type goto>> auront pour adresse d'arrivée le <<quadidt, _quad_id_t_>> en paramètre.
+
+* *_qlist_complete_* : (_<<quadlist, struct quad_list>>*_, _<<quadidt, quad_id_t>>_) -> _void_ : Patch les quadruplets de la liste par le quadruplet en argument.
+
+WARNING: Si la liste contient des quadruplets de mauvais type ou bien déjà patchés, le programme plantera avec une erreur.
+
+<<<
+
+== Table des symboles
+
+=== Introduction
+Le but de la table des symboles est de garder en mémoire différentes informations concernant les identificateurs déclarées au fil du programme. Elle permet au reste du compilateur d'obtenir des informations sur chaque identificateur défini, permettant ainsi de faciliter la prise de décision. Dans notre cas, elle servira principalement dans la phase d'analyse syntaxique pour effectuer de la vérification de type et assister la génération de code intermédiaire.
+
+=== Fichiers
+
+* `symbols.h` : regroupe toutes les fonctions et structures mentionnées ici.
+
+** `entry.h` : Structure <<entry, entry>> contenant les entrées de la table et fonctions associées.
+
+** `context.h` : <<context, Table des symboles>> et fonctions associées.
+
+** `typedesc.h` : <<typedesc, descripteurs de type>> et fonction associées.
+
+** `typelist.h` : <<typelist, liste de types>> et fonctions associées.
+
+=== Précisions
+La table des symboles est en fait une pile de table des symboles que l'on va appeller des *contextes*.
+
+La *table* est la structure contenant les identificateurs et leur informations associées.
+
+Chaque contexte possède une table, sous la forme d'une table de hash ou d'une liste chaîné. Par simplicité, la première version de la table des symboles sera une liste chaînée.
+
+La structure des entrées dans les tables est indépendante de la structure de la table. Un changement de fonctionnement de la table ne doit pas affecter la structure interne de ses entrées, et vice-versa.
+
+Chaque contexte réfère à un bloc d'instruction de code. Dès que nous entrons dans un nouveau bloc _(structure de contrôle, fonctions ...etc)_ un nouveau contexte doit être empilé sur sur la table des symboles.
+
+.Afficher schéma
+[%collapsible]
+====
+image:table_des_symboles.png[table des symboles,450,align="center"]
+====
+
+=== Structure des tables
+
+La structure des tables est générique, il faudra instancier un contexte de niveau 0 lors du processus de compilation, appellé *contexte global*.
+
+==== Contextes
+
+Chaque contexte possède un pointeur sur la table parent ainsi qu'une structure interne permettant de garder en mémoire les entrées, la *table*.
+Cette structure nous permet de construire un arbre de contextes puisque un contexte donnée peut avoir plusieurs enfants. 
+
+==== Entrée dans la table
+
+Chaque entrée associe un nom d'identificateur _(lexème)_, sous la forme d'une chaîne de caractères à un n-uplets.
+
+Ce n-uplets possède les information que l'on souhaite retenir sur l'identificateur, dans notre cas, le type de la valeur associée à celui-ci.
+
+=== API C
+
+L'API C comprend trois structures de données majeures contenues les unes dans les autres. Les champs accessibles sont listés ici.
+
+WARNING: TOUS les champs sont en **lecture seule** et ne doivent pas être modifiés.
+
+* *_<<context, struct context>>_* : Table des symboles à proprement parler, contient des <<entry, entrées>> associées à un identifiant.
+
+NOTE: Les identifiants sont des chaînes de caractères C `const char*`.
+
+* *_<<entry, struct entry>>_* : Entrée dans la table des symboles.
+
+** `id` : _char*_ : Identifiant de l'entrée.
+
+** `type` : _<<typedesc,struct typedesc>>_ : Descripteur de type associé à cette entrée.
+
+* *_<<typedesc, struct typedesc>>_* : Descripteur de type, **opaque**.
+
+==== Table des symboles: struct context
+
+===== Création, empilement
+
+anchor:context[]
+Les tables des symboles ne peuvent être créées que par empilement d'une nouvelle table.
+
+* *_ctx_pushctx_* : (_void_) -> _<<context,struct context>>*_ : Empile une nouvelle table et renvoie cette dernière.
+
+===== Destruction, dépilement
+
+Une table des symboles peut être dépilée.
+
+IMPORTANT: **Elle n'est pas libérée**. Les pointeurs sur _<<entry, struct entry>>_ restent donc valides.
+
+* *_ctx_popctx_* : (_void_) -> _<<context,struct context>>*_ : Dépile une nouvelle table et renvoie le nouveau sommet de la pile.
+
+===== Sommet de la pile
+
+Le sommet actuel de la pile peut être accédé directement.
+
+* *_ctx_currentctx_* : (_void_) -> _<<context,struct context>>*_ : Récupère le dernier contexte empilé.
+
+===== Ajout d'un identificateur
+
+Il est possible d'ajouter un identifiant à un contexte.
+
+* *_ctx_newname_* : (_const char*_) -> _<<entry, struct entry>>*_ : Ajoute l'identifiant au contexte courant et récupère l'entrée correspondante.
+
+WARNING: L'entrée devra être complétée par la suite.
+
+===== Recherche d'un identificateur
+
+La recherche d'une entrée avec un certain identificateur se fait en parcourant récursivement la pile du contexte en argument jusqu'à son dernier parent à la recherche d'un symbole.
+
+* *_ctx_lookup_* : (_const char*_) -> _<<entry, struct entry>>*_ : Recherche l'identifiant dans le contexte donné et ses contextes englobants.
+
+WARNING: **Si l'identifiant n'existe pas**, la fonction renvoie **NULL**.
+
+===== Symboles pour les temporaires
+
+Le compilateur peut être amené à vouloir créer de nouveaux symboles uniques utilisés pour des valeurs temporaires.
+
+* *_ctx_make_temp()_* : (_void_) -> _<<entry, struct entry>>*_ : Crée un symbole temporaire dans la table courante et récupère son entrée dans la table.
+
+NOTE: Le symbole reste accessible par son identifiant.
+
+===== Nombre de symboles
+
+Il est possible de récupérer le nombre de symboles définis dans une table.
+
+* *_ctx_count_entries_* : (_const <<context, struct context>>*_) -> size_t : _Calcule_ le nombre d'identifiants présents dans la table.
+
+===== Taille à réserver en octets
+
+Pour obtenir le nombre d'octets à allouer nécessaires à tous les identifiants, il est possible d'appeller la fonction suivante :
+
+* *_ctx_count_bytes_* : (_const <<context, struct context>>*_) -> size_t : _Calcule_ le nombre d'octets nécessaires à allouer pour cette table.
+
+
+==== Entrée: struct entry
+
+anchor:entry[]
+Les entrées associent un identifiant `id` à des champs, pour l'instant seulement un `type`.
+`id` et `type` sont des champs de chaque `struct entry`.
+
+* `id` : _char*_ : identifiant de l'entrée.
+
+* `type` : _<<typedesc, struct typedesc>>_ : type de l'entrée.
+
+WARNING: ne pas modifier `id` !
+
+===== Modifier le type
+
+Le type peut être modifié directement par une affectation.
+
+==== Typage
+
+===== Méta-types
+
+Il faut pouvoir discerner les fonctions des variables simples et des tableaux.
+
+Pour cela on respectera KISS avec des méta-types dans un `enum` *_MTYPE_* :
+
+* `MT_FUN` : Fonction.
+
+* `MT_VAR` : Variable simple.
+
+* `MT_TAB` : Tableau.
+
+===== Types primaires
+
+anchor:btype[]
+Les types de bases ou primaires sont définis statiquement dans un `enum` *_BTYPE_* :
+
+* `BT_BOOL` : Type booléen.
+
+* `BT_INT` : Type entier.
+
+===== Taille des types primaires
+
+La taille en octets des types primaires est obtenue via la fonction suivante :
+
+* *_bt_sizeof_* : (_<<btype, enum BTYPE>>_) -> size_t : Renvoie la taille du type de base.
+
+==== Descripteurs de type
+
+anchor:typedesc[]
+Afin d'être flexibles, les descripteurs de type sont encodés dans un structure `typedesc`.
+
+Cette dernière est opaque et il faut interargir avec elle via des fonctions.
+
+===== Fonction
+
+* *_typedesc_make_function_* : (_<<btype, enum BTYPE>>_, _const <<typelist, struct typelist>>*_) -> _<<typedesc, struct typedesc>>_ +
+Crée un nouveau descripteur de type à partir d'un type de retour et d'une liste de types.
+
+===== Tableau
+
+* *_typedesc_make_tab_* : (_<<btype, enum BTYPE>>_, size_t) -> _<<typedesc, struct typedesc>>_ +
+Crée un nouveau descripteur de type à partir d'un type de tableau et du nombre d'éléments.
+
+===== Variable
+
+* *_typedesc_make_var_* : (_<<btype, enum BTYPE>>_) -> _<<typedesc, struct typedesc>>_ +
+Crée un nouveau descripteur de type à partir d'un type primaire simple.
+
+===== Comparaison de descripteurs
+
+Il est possible de comparer deux descripteurs pour tester leur équivalence.
+
+* *_typedesc_equals_* : (const _<<typedesc, struct typedesc>>_*, const _<<typedesc, struct typedesc>>_*) -> bool : +
+Renvoie `true` si les deux descripteurs sont équivalents.
+
+===== Types prédéfinis
+
+Afin de simplifier les tests de typage, des _<<typedesc, typedesc>>_ seront prédéfinis.
+
+* _const <<typedesc, struct typedesc>>_ *_td_var_int_* : Type d'une variable entière.
+
+* _const <<typedesc, struct typedesc>>_ *_td_var_bool_* : Type d'une variable booléenne.
+
+==== Liste de types primaires
+
+anchor:typelist[]
+Afin de faciliter l'implémentation, l'API C fourni une liste de <<btype, enum BTYPE>> nommée `typelist`.
+
+===== Création de liste
+
+* *_typelist_new_* : (_void_) : _<<typelist,struct typelist>>*_ : Crée une nouvelle liste de types vide.
+
+===== Ajout d'un élément
+
+* *_typelist_append_* : (_<<typelist,struct typelist>>*_, _const <<btype,enum BTYPE>>_) ->  _<<typelist,struct typelist>>*_ : +
+Ajoute un type **à la fin** de la liste.
+
+===== Comparaison de listes
+
+* *_typelist_equals_* :  (_const <<typelist,struct typelist>>*_,  _const <<typelist,struct typelist>>*_) : +
+Compare deux listes et renvoie `true` si les deux listes sont équivalentes, c'est à dire si tous leurs types sont égaux.
+
+===== Un mot sur la mémoire
+
+IMPORTANT: **TOUTE typelist doit être liée à un et exactement un <<typedesc, struct typedesc>>.**
+
+<<<
+
+== Génération du code assembleur
+
+=== Introduction
+
+Une fois le code intermédiaire généré et éventuellement optimisé, ce dernier doit être converti en code machine afin d'être exécuté.
+
+Cette spécification se veut flexible et laisse la porte ouverte à plusieurs langages assembleur. Cependant, seul la conversion vers du MIPS sera implémentée.
+
+=== Fichiers
+
+* `asm.h` : En-tête regroupant toutes les fonctions utiles.
+
+** `genasm.h` : Fonctions de traduction
+
+=== API C
+
+==== Conversion générique
+
+anchor:genasm[]
+La fonction suivante propose de traduire une représentation intermédiaire vers un autre dans un fichier de sortie.
+
+La représentation intermédiaire correspond à une suite de <<quad, quadruplets>>, le fichier est un simple nom.
+
+Cette fonction se veut la plus générique possible est le choix du langage peut être fait avec l'exécution.
+
+IMPORTANT: Le fichier en sortie est un *fichier source*. Il faudra encore assembler ce dernier pour obtenir un exécutable.
+
+* *_genasm_* : (_const char*_ lang, _const <<quad, struct quad>>*_ liste, _size_t_ liste_size, _FILE*_ outfile) -> _void_ +
+Traduit dans le langage `lang` la suite de taille `liste_size` d'instructions intermédiaires `liste` et écrit le résultat dans le *chemin* `chemin_sortie`.
+
+WARNING: En cas d'erreur, le programme plantera avec un message d'erreur explicite.
+
+==== Langages assembleurs proposés
+
+anchor:ASM_types[]
+Les différents langages assembleurs disponible sont défins dans un `enum` :
+
+*_enum ASM_LANG_* :
+
+* _ASM_MIPS_ : assembleur MIPS. `MIPS` en argument de <<genasm, genasm>>.
+
+Ces langages sont assurés d'être toujours disponibles.
+
+<<<
+
+== Optimisations
+
+=== Introduction
+
+Notre compilateur proposera éventuellement des optimisations sur le code intermédiaire.
+
+=== Fichiers
+
+* `optim.h` : En-tête regroupant tout ce qui à trait à l'optimisation.
+
+** `opticode.h` : Fonctions d'optimisation sur le code intermédiaire.
+
+=== API C
+
+Tout repose sur la fonction <<opticode,`opticode`>> qui à partir d'un code intermédiaire produit un nouveau code intermédiaire optimisé en sortie.
+
+Cette fonction accepte aussi des options d'optimisation via la <<optim_params, structure optim_params>>.
+
+==== opticode
+
+* *_opticode_* : (_const <<quad, struct quad>>*_ liste_in, _size_t_ liste_size_in, _<<quad, struct quad>>*_ liste_out, _size_t*_ liste_size_out, _const <<optim_params, struct optim_params>>*_ params) -> _void_ +
+Optimise le code intermédiaire d'après les optimisations demandées dans _params_.
+
+==== optim_params
+
+Structure représentant les optimisations et paramètres d'optimisations possibles.
+
+Cette structure contient les champs suivants :
+
+* _max_passes_ : _int_ : Nombre maximum de passes (*0 = infini*)
+
+* _<NOM OPTIM1>_ : _bool_ : Nom d'une optimisation à effectuer.
+
+...
+
+* _<NOM OPTIMN>_ : _bool_ : Nom d'une optimisation à effectuer.
+
+NOTE: par défaut, toutes les optimisations sont activées et _max_passes_ = 0 **si params = `NULL`**.
+
+<<<
+
+== Annexe
+
+=== Noms des fonctions de TD/CM
+
+Les noms ont été légèrement modifiés pour faciliter le développement.
