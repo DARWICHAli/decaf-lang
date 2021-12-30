@@ -1,7 +1,5 @@
 #include <stdio.h>
 
-#include "token.h"
-
 extern int yyparse();
 extern int yydebug;
 
