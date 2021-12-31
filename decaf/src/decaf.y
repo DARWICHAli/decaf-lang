@@ -1,4 +1,6 @@
 %{
+#include <stdio.h>
+
 extern int yylex();
 void yyerror(const char *msg);
 %}
@@ -12,9 +14,9 @@ void yyerror(const char *msg);
 %type <_int_literal> decimal_literal hex_literal
 %type <_int_literal> int_literal expr
 
-%token PLUS MINUS MULT
-%left PLUS MINUS
-%left MULT
+%token ADD SUB MUL DIV MOD
+%left ADD SUB
+%left MUL
 
 %start input
 
@@ -23,9 +25,11 @@ void yyerror(const char *msg);
 input: expr {printf("%d\n", $1);}
 
 expr
-: int_literal PLUS int_literal {$$ = $1 + $3;}
-| int_literal MINUS int_literal {$$ = $1 - $3;}
-| int_literal MULT int_literal {$$ = $1 * $3;}
+: int_literal ADD int_literal {$$ = $1 + $3;}
+| int_literal SUB int_literal {$$ = $1 - $3;}
+| int_literal MUL int_literal {$$ = $1 * $3;}
+| int_literal DIV int_literal {$$ = $1 / $3;}
+| int_literal MOD int_literal {$$ = $1 % $3;}
 | int_literal
 
 
