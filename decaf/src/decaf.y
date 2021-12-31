@@ -14,7 +14,7 @@ void yyerror(const char *msg);
 %type <_int_literal> decimal_literal hex_literal
 %type <_int_literal> int_literal expr
 
-%token ADD SUB MUL DIV MOD
+%token ADD SUB MUL DIV MOD OPAR CPAR SCOL
 %left ADD SUB
 %left MUL
 
@@ -25,11 +25,12 @@ void yyerror(const char *msg);
 input: expr {printf("%d\n", $1);}
 
 expr
-: int_literal ADD int_literal {$$ = $1 + $3;}
-| int_literal SUB int_literal {$$ = $1 - $3;}
-| int_literal MUL int_literal {$$ = $1 * $3;}
-| int_literal DIV int_literal {$$ = $1 / $3;}
-| int_literal MOD int_literal {$$ = $1 % $3;}
+: OPAR expr CPAR    {$$ = $2;}
+| expr ADD expr     {$$ = $1 + $3;}
+| expr SUB expr     {$$ = $1 - $3;}
+| expr MUL expr     {$$ = $1 * $3;}
+| expr DIV expr     {$$ = $1 / $3;}
+| expr MOD expr     {$$ = $1 % $3;}
 | int_literal
 
 

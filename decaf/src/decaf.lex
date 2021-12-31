@@ -25,10 +25,9 @@ int fileno(FILE *stream);
 "*"                     return MUL;
 "/"                     return DIV;
 "%"                     return MOD;
-        /*
-        "(" return OPAR;
-        ")" return CPAR; */
-
+"("                     return OPAR;
+")"                     return CPAR;
+";"                     return SCOL;
 
 [[:space:]]             ;
 .                       {fprintf(stderr, "(lex) Caractère illégal (%d)\n", yytext[0]);}
