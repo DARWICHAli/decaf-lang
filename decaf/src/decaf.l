@@ -5,9 +5,11 @@
 extern YYSTYPE yylval;
 extern char * yytext;
 
+int fileno(FILE *stream);
 %}
 
 %option nounput
+%option noinput
 %option noyywrap
 
     /* Expressions rationnelles nommées */

@@ -1,17 +1,14 @@
 #include <stdio.h>
 
-#include "token.h"
-
 extern int yyparse();
 extern int yydebug;
 
 
 int main (void)
 {
-    printf("-- Started\n");
-
-    yydebug = 0; // avant yyparse
+    // avant yyparse
+    yydebug = 0;
     int r = yyparse();
-    printf("-- Finished\n");
+
     return r;
 }
