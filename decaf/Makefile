@@ -37,7 +37,7 @@ $(OBJ_DIR):
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c | $(OBJ_DIR)
 	$(CC) -I$(INCLUDE_DIR) $(CFLAGS) -o $@ -c $<
 
-$(SRC_DIR)/decaf_lex.c: $(SRC_DIR)/decaf.lex
+$(SRC_DIR)/decaf_lex.c: $(SRC_DIR)/decaf.l
 	flex $(FLEXFLAGS) -o $@ $<
 
 $(SRC_DIR)/decaf.tab.c: $(SRC_DIR)/decaf.y
