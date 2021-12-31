@@ -15,32 +15,39 @@ void yyerror(const char *msg);
 %type <_int_literal> int_literal expr
 
 %token ADD SUB MUL DIV MOD OPAR CPAR SCOL
-%left ADD SUB
-%left MUL
+
+%left SUB ADD
+%left MUL DIV MOD 
+%right UNEG
 
 %start input
 
 %%
 
-input: expr {printf("%d\n", $1);}
+input: line
+    | input line
+;
 
-expr
-: OPAR expr CPAR    {$$ = $2;}
-| expr ADD expr     {$$ = $1 + $3;}
-| expr SUB expr     {$$ = $1 - $3;}
-| expr MUL expr     {$$ = $1 * $3;}
-| expr DIV expr     {$$ = $1 / $3;}
-| expr MOD expr     {$$ = $1 % $3;}
-| int_literal
+line: expr SCOL         {printf("%d\n", $1);}
+;
 
+expr: expr ADD expr         {$$ = $1 + $3;}
+    | expr SUB expr         {$$ = $1 - $3;}
+    | expr MUL expr         {$$ = $1 * $3;}
+    | expr DIV expr         {$$ = $1 / $3;}
+    | expr MOD expr         {$$ = $1 % $3;}
+    | SUB expr %prec UNEG   {$$ = - $2;}
+    | OPAR expr CPAR        {$$ = ($2);}
+    | int_literal
+;
 
-int_literal
-: decimal_literal
-| hex_literal
-
+int_literal: decimal_literal
+    | hex_literal
+;
 decimal_literal: DECIMAL_CST
+;
 hex_literal: HEXADECIMAL_CST
-
+;
 %%
 
 void yyerror(const char *msg)
