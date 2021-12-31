@@ -14,15 +14,31 @@ void yyerror(const char *msg);
 %type <_int_literal> decimal_literal hex_literal
 %type <_int_literal> int_literal expr
 
-%token ADD SUB MUL DIV MOD OPAR CPAR SCOL
+%token ADD SUB MUL DIV MOD OPAR CPAR COL SCOL 
+%token OBRA CBRA CLASS PROGRAM
 
 %left SUB ADD
 %left MUL DIV MOD 
 %right UNEG
 
-%start input
+%start program
 
 %%
+
+program: CLASS PROGRAM OBRA statement CBRA
+;
+
+statement: /* empty */
+    | input
+    | var_decl
+;
+
+var_decl: type id COL var_decl SCOL
+    | type id
+;
+
+type: "boolean"
+    | "int"
 
 input: line
     | input line
