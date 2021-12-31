@@ -4,6 +4,7 @@
 #include "test_suite.h"
 #include <stdlib.h>
 #include <stdio.h>
+#include <assert.h>
 
 int setup(void** d) {
 	int* t = malloc(sizeof(int)*50);
@@ -53,11 +54,18 @@ int test_2(void* d) {
 	return t[12] == 1;
 }
 
+int ass_t(void* data) {
+	(void)(data);
+	assert(0 && "this should fail");
+	return 0;
+}
+
 int main() {
 	struct test_suite test_suite = make_ts("test_ts", setup, teardown);
 
 	add_test(&test_suite, test_num, "Test setup");
 	add_test(&test_suite, test_2, "Test répetabilite");
+	add_test_assert(&test_suite, ass_t, "Test add_test_assert");
 
 	return exec_ts(&test_suite) ? EXIT_SUCCESS : EXIT_FAILURE;
 }
