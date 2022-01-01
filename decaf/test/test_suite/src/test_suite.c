@@ -7,6 +7,7 @@
 #include <unistd.h>
 #include <sys/wait.h>
 #include <signal.h>
+#include <stdlib.h>
 
 
 struct test_suite make_ts(const char* name, int (*setup)(void**), int (*teardown)(void**)) {
@@ -27,7 +28,7 @@ int test_assert(int (*f)(void*), void* data) {
 			return 0;
 		case 0: // child
 			f(data);
-			return 0; // assert expected to abort before
+			exit(EXIT_SUCCESS); // assert expected to abort before
 		default: // parent
 			if (wait(&status) == -1) {
 				perror("wait failed");
@@ -37,8 +38,49 @@ int test_assert(int (*f)(void*), void* data) {
 	}
 }
 
+int test_failure(int (*f)(void*), void* data) {
+	int pid, status;
+	switch (pid = fork()) {
+		case -1:
+			perror("fork failed");
+			return 0;
+		case 0: // child
+			f(data);
+			exit(EXIT_SUCCESS); // exit(EXIT_FAILURE) expected before
+		default: // parent
+			if (wait(&status) == -1) {
+				perror("wait failed");
+				return 0;
+			}
+			if (WIFEXITED(status)) {
+				return WEXITSTATUS(status) == EXIT_FAILURE;
+			} else {
+				fprintf(stderr, "Test lead to a crash !\n");
+				return 0;
+			}
+	}
+}
+
 int test_std(int (*f)(void*), void* data) {
-	return f(data);
+	int pid, status;
+	switch (pid = fork()) {
+		case -1:
+			perror("fork failed");
+			return 0;
+		case 0: // child
+			exit(f(data)); // On exécute dans une sandbox
+		default: // parent
+			if (wait(&status) == -1) {
+				perror("wait failed");
+				return 0;
+			}
+			if (WIFEXITED(status)) {
+				return WEXITSTATUS(status);
+			} else {
+				fprintf(stderr, "Test lead to a crash ! (Skipping teardown)\n");
+				return 0;
+			}
+	}
 }
 
 
@@ -56,15 +98,27 @@ void add_test_assert(struct test_suite* ts, int (*test)(void*), const char* nom)
 	ts->test_call[ts->nb_tests-1] = test_assert;
 }
 
+void add_test_failure(struct test_suite* ts, int (*test)(void*), const char* nom) {
+	add_test(ts, test, nom);
+	ts->test_call[ts->nb_tests-1] = test_failure;
+}
 
 int exec_ts(struct test_suite* ts) {
 	fprintf(stderr, "--Executing TS %s--\n", ts->nom);
 	for (size_t i = 0; i < ts->nb_tests; ++i) {
 		fprintf(stderr, "Executing test %s %lu/%lu : ", ts->nom_test[i], i+1, ts->nb_tests);
 
-		ts->setup(&ts->data);
-		ts->results[i] = ts->test_call[i](ts->tests[i], ts->data);
-		ts->teardown(&ts->data);
+		if (!ts->setup(&ts->data)) {
+				fprintf(stderr, "Setup failed\n");
+				ts->results[i] = 0;
+		} else {
+			ts->results[i] = ts->test_call[i](ts->tests[i], ts->data);
+		}
+
+		if (ts->results[i] && !ts->teardown(&ts->data)) {
+				fprintf(stderr, "Teardown failed\n");
+				ts->results[i] = 0;
+		}
 
 		fprintf(stderr, "\n%s\n", (ts->results[i]) ? GRE "Success" DEF : RED "Failure" DEF);
 	}
