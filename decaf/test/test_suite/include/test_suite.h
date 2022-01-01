@@ -107,6 +107,14 @@ void add_test(struct test_suite* ts, int (*test)(void*), const char* nom);
  */
 void add_test_assert(struct test_suite* ts, int (*test)(void*), const char* nom);
 
+/**
+ * @brief Ajoute un test qui devrait conduire à EXIT_FAILURE
+ *
+ * @param ts Suite de test
+ * @param test Fonction devant déclencher exit(EXIT_FAILURE)
+ * @param nom Nom du test
+ */
+void add_test_failure(struct test_suite* ts, int (*test)(void*), const char* nom);
 
 /**
  * @brief Exécute une suite de test
