@@ -46,12 +46,7 @@ expr
     if (!typedesc_equals($3._exprval.result->type, &td_var_int))
         fprintf(stderr, "Type error :/\n");
     //! init quadop struct + TDS
-    struct quad new_quad = {
-        .lhs = $1._exprval.result,
-        .rhs = $3._exprval.result,
-        .op = Q_ADD,
-        .res = res
-    };
+    struct quad new_quad = quad_arith(res, $1._exprval.result, Q_ADD, $3._exprval.result);
     //! gencode
     struct quad_id_t qid = gencode(new_quad);
     //! assignation du nouveau temporaire
@@ -60,12 +55,7 @@ expr
 | SUB expr %prec NEG {
     // $$ = - $2;
     struct entry * res = ctx_make_temp();
-    struct quad new_quad = {
-        .lhs = $1._exprval.result,
-        .rhs = NULL,
-        .op = Q_NEG,
-        .res = res
-    };
+    struct quad new_quad = quad_neg(res, $1._exprval.result);
     struct quad_id_t q_id = gencode(new_quad);
     $$._exprval.result = res;
 }
@@ -78,12 +68,8 @@ expr
         fprintf(stderr, "Type error :/\n");
     if (!typedesc_equals($3._exprval.result->type, &td_var_int))
         fprintf(stderr, "Type error :/\n");
-    struct quad new_quad = {
-        .lhs = $1._exprval.result,
-        .rhs = $3._exprval.result,
-        .op = Q_SUB,
-        .res = res
-    };
+
+    struct quad new_quad = quad_arith(res, $1._exprval.result, Q_SUB, $3._exprval.result); 
     struct quad_id_t qid = gencode(new_quad);
     $$._exprval.result = res;
 }
@@ -96,12 +82,8 @@ expr
         fprintf(stderr, "Type error :/\n");
     if (!typedesc_equals($3._exprval.result->type, &td_var_int))
         fprintf(stderr, "Type error :/\n");
-    struct quad new_quad = {
-        .lhs = $1._exprval.result,
-        .rhs = $3._exprval.result,
-        .op = Q_MUL,
-        .res = res
-    };
+
+    struct quad new_quad = quad_arith(res, $1._exprval.result, Q_MUL, $3._exprval.result); 
     struct quad_id_t qid = gencode(new_quad);
     $$._exprval.result = res;
 }
@@ -114,12 +96,8 @@ expr
         fprintf(stderr, "Type error :/\n");
     if (!typedesc_equals($3._exprval.result->type, &td_var_int))
         fprintf(stderr, "Type error :/\n");
-    struct quad new_quad = {
-        .lhs = $1._exprval.result,
-        .rhs = $3._exprval.result,
-        .op = Q_DIV,
-        .res = res
-    };
+
+    struct quad new_quad = quad_arith(res, $1._exprval.result, Q_DIV, $3._exprval.result); 
     struct quad_id_t qid = gencode(new_quad);
     $$._exprval.result = res;
 }
@@ -132,12 +110,8 @@ expr
         fprintf(stderr, "Type error :/\n");
     if (!typedesc_equals($3._exprval.result->type, &td_var_int))
         fprintf(stderr, "Type error :/\n");
-    struct quad new_quad = {
-        .lhs = $1._exprval.result,
-        .rhs = $3._exprval.result,
-        .op = Q_MOD,
-        .res = res
-    };
+        
+    struct quad new_quad = quad_arith(res, $1._exprval.result, Q_MOD, $3._exprval.result); 
     struct quad_id_t qid = gencode(new_quad);
     $$._exprval.result = res;
 }
@@ -152,25 +126,13 @@ int_literal
 
 decimal_literal: DECIMAL_CST {
     struct entry * res = ctx_make_temp();
-    struct entry * lhs = ctx_make_cst($1._int_literal, BT_INT);
-    struct quad new_quad = {
-        .lhs = lhs, 
-        .rhs = NULL, 
-        .op = Q_AFF, 
-        .res = res
-    };
+    struct quad new_quad = quad_cst(res, $1._int_literal);
     struct quad_id_t q_id = gencode(new_quad);
     $$._exprval.result = res;
 }
 hex_literal: HEXADECIMAL_CST {
     struct entry * res = ctx_make_temp();
-    struct entry * lhs = ctx_make_cst($1._hex_literal, BT_INT);
-    struct quad new_quad = {
-        .lhs = lhs, 
-        .rhs = NULL, 
-        .op = Q_AFF, 
-        .res = res
-    };
+    struct quad new_quad = quad_cst(res, $1._hex_literal);
     struct quad_id_t q_id = gencode(new_quad);
     $$._exprval.result = res;
 }
