@@ -14,8 +14,8 @@ void yyerror(const char *msg);
 %type <_int_literal> decimal_literal hex_literal
 %type <_int_literal> int_literal expr
 
-%token ADD SUB MUL DIV MOD OPAR CPAR COL SCOL 
-%token OBRA CBRA CLASS PROGRAM
+%token ADD SUB MUL DIV MOD
+%token CLASS PROGRAM
 
 %left SUB ADD
 %left MUL DIV MOD 
@@ -25,27 +25,19 @@ void yyerror(const char *msg);
 
 %%
 
-program: CLASS PROGRAM OBRA statement CBRA
+program: CLASS PROGRAM '{' statement  '}'
 ;
 
 statement: /* empty */
     | input
-    | var_decl
+    /* | var_decl */
 ;
 
-var_decl: type id COL var_decl SCOL
-    | type id
+
+input: expr ';'             {printf("%d\n", $1);}
+    | input expr ';'        {printf("%d\n", $2);}
 ;
 
-type: "boolean"
-    | "int"
-
-input: line
-    | input line
-;
-
-line: expr SCOL         {printf("%d\n", $1);}
-;
 
 expr: expr ADD expr         {$$ = $1 + $3;}
     | expr SUB expr         {$$ = $1 - $3;}
