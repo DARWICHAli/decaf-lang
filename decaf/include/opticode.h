@@ -30,6 +30,10 @@ struct optim_param {
     int max_passes; ///< Nombre maximum de passes, 0=infini
 };
 
+// forward declarations
+struct quad;
+struct optim_params;
+
 /**
  * @brief Fonction qui optimise le code intermédiaire d’après les optimisations demandées dans params
  * 

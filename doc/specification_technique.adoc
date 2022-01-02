@@ -41,10 +41,10 @@ a = b + c
 Ou bien des instructions à **deux opérandes, 1 opérateur et aucune affectation**.
 
 ```ir
-if E then goto B
+if a OP b then goto Y
 ```
 
-=== Opérateurs
+=== Types d'instructions
 
 Les opérateurs seront définis comme des valeurs d'un `enum` *_Q_OP_*.
 
@@ -75,6 +75,8 @@ Ces quadruplets un peu spéciaux sont les suivants :
 
 * _la négation_ : *_Q_NEG_*
 
+* _l'affectation constante_ : *_Q_CST_*
+
 NOTE: Négation <==> `res := - lhs`.
 
 ==== Quadruplet à 1 opérande
@@ -84,31 +86,75 @@ Ce sont les quadruplets les plus simples.
 
 * _le goto_ : *_Q_GOT_*
 
+* _le param_ : *_Q_PAR_*
+
+* _l'appel de procédure_ : *_Q_PRO_*
+
+* _l'appel de fonction_ : *_Q_CAL_*
+
+NOTE: une fonction renvoie une valeur, pas une procédure.
+
+=== Opérateurs de comparaison
+
+anchor:cmp_op[]
+Les opérateurs de comparaison utilisables dans le *_Q_IFG_* sont définies dans une `enum` *_CMP_OP_* :
+
+* *_CMP_LT_* : "<".
+
+* *_CMP_GT_* : ">".
+
+* *_CMP_EQ_* : "=".
+
+* *_CMP_LE_* : "<=".
+
+* *_CMP_GE_* : ">=".
+
 === Quadruplets en C
 
 anchor:quad[]
 En langage C, un **quadruplet** est une structure de données `struct quad` à 4 champs :
 
-* *_lhs_* : _<<entry,struct entry*>>_ : Une entrée dans la table des symboles correspondant à l'opérande de **gauche** de l'opérateur.
-
-* *_rhs_* : _<<entry,struct entry*>>_ : Une entrée dans la table des symboles correspondant à l'opérande de **droite** de l'opérateur.
+* *_ctx_* : _<<context, const struct context>>*_ : Contexte dans lequel a été produit le quadruplet.
 
 * *_op_* : _<<operator,enum Q_OP>>_ : Un enum stockant l'opérateur dont l'alias est conforme à celui défini dans <<Opérateurs>>.
 
-* *_res_* : _<<entry,struct entry*>>_ : Une entrée dans la table des symboles ayant pour vocation de stocker le **résultat**.
+* *_lhs_* : _const <<entry,struct entry>>*_ : Une entrée dans la table des symboles correspondant à l'opérande de **gauche** de l'opérateur. **C'est aussi la valeur de param et call**.
+
+* *_rhs_* : _const <<entry,struct entry>>*_ : Une entrée dans la table des symboles correspondant à l'opérande de **droite** de l'opérateur.
+
+* *_res_* : _const <<entry,struct entry>>*_ : Une entrée dans la table des symboles ayant pour vocation de stocker le **résultat** d'une expression arithmétique ou d'une fonction.
 
 * *_dst_* : _quad_id_t_ : **Quadruplet de destination** d'un goto.
 
-NOTE: *_res_* vaut `NULL` si le quadruplet est de type *_Q_IFG_* ou *_Q_GOT_* !
+* *_cmp_* : _<<cmp_op, enum CMP_OP>>_ : **Opérateur de comparaison** pour _if goto_.
+
+* *_val_* : _int_ : Valeur de l'affectation constante.
+
+WARNING: *_res_* vaut `NULL` si le quadruplet est de type *_Q_IFG_* ou *_Q_GOT_* !
+
 
 ==== Création rapide
 
-TIP: Un quadruplet peut être créé rapidement en utilisant https://en.cppreference.com/w/c/language/struct_initialization[l'initialisation entre accolades].
+On pourra utiliser les fonctions suivantes pour créer des <<quad, quadruplets>> rapidement :
 
-```c
-struct quad a = {x, y, Q_ADD, a}; // valide en C99
-struct quad incomplet = {bexp, gotrue, Q_IFG}; // valide en C99, res = 0 = NULL !
-```
+* *_quad_arith_* : (_const <<entry,struct entry>>*_, _const <<entry,struct entry>>*_, _<<operator,enum Q_OP>>_, _const <<entry,struct entry>>*_) -> _<<quad, struct quad>>_ : Crée un quadruplet arithmétique.
+
+* *_quad_aff_* : (_const <<entry,struct entry>>*_, _const <<entry,struct entry>>*_) -> _<<quad, struct quad>>_ : Crée un quadruplet d'affectation.
+
+* *_quad_neg_* : (_const <<entry,struct entry>>*_, _const <<entry,struct entry>>*_) -> _<<quad, struct quad>>_ : Crée un quadruplet de négation.
+
+* *_quad_cst_* : (_const <<entry,struct entry>>*_, _int_) -> _<<quad, struct quad>>_ : Crée un quadruplet d'affectation constante.
+
+* *_quad_goto_* : (_quad_id_t) -> _<<quad, struct quad>>_ : Crée un quadruplet goto.
+
+* *_quad_ifgoto_* : (_const <<entry,struct entry>>*_, _<<cmp_op, enum CMP_OP>>_, _<<entry,struct entry>>*_, _quad_id_t_) -> _<<quad, struct quad>>_ : Crée un quadruplet if-goto.
+
+* *_quad_param_* : (_const <<entry,struct entry>>*_) -> _<<quad, struct quad>>_ : Crée un quadruplet param.
+
+* *_quad_proc_* : (_const <<entry,struct entry>>*_) -> _<<quad, struct quad>>_ : Crée un quadruplet proc.
+
+* *_quad_call_* : (_const <<entry,struct entry>>*_, _const <<entry,struct entry>>*_) -> _<<quad, struct quad>>_ : Crée un quadruplet d'appel de fonction.
+
 
 === Génération de code
 
@@ -132,19 +178,23 @@ Une fonction `nextquad` renvoie l'identifiant du prochain quadruplet généré. 
 anchor:getq[]
 La fonction `getquad` permet de récupérer un quadruplet généré précédemment.
 
-* *_getquad_* : (<<quadidt, _quad_id_t_>>) -> _<<quad,struct quad>>*_ : Récupère un pointeur sur un quadruplet.
+* *_getquad_* : (_<<quadidt, quad_id_t>>_) -> _<<quad,struct quad>>*_ : Récupère un pointeur sur un quadruplet.
 
 ===== Récupérer la liste de tous les quadruplets
 
 Il est possible d'obtenir la liste linéaire des quadruplets.
 
-* *_get_all_quads_* : (_size_t*_ size) -> <<quad,struct quad>>* : Renvoie un tableau linéaire de quadruplets dont la taille est écrite dans `size`.
+* *_get_all_quads_* : (_size_t*_ size) -> <<quad,struct quad>>* : Renvoie un tableau linéaire de quadruplets **dont la taille est écrite dans `size`**.
+
+NOTE: La taille est le nombre de quadruplets effectifs du taleau...
 
 ===== Ajout d'un quadruplet
 
 Il est possible d'ajouter un quadruplet au tableau des quadruplets via la fonction `gencode`.
 
 * *_gencode_* : (<<quad,_struct quad_>>) -> <<quadidt, _quad_id_t_>> : Ajoute le quadruplet et renvoie l'identifiant du quadruplet *généré*.
+
+CAUTION: Ne pas oublier de préciser le <<context, contexte>> du quadruplet !
 
 [TIP]
 ====
@@ -174,7 +224,7 @@ Une liste de quadruplets est modélisée par le type `struct quad_list`. Pour in
 
 * *_qlist_append_* : (_<<quadlist, struct quad_list>>*_, _<<quad_id_t,quad_id_t>>_) -> _<<quadlist, struct quad_list>>*_ : Ajoute un quadruplet à la liste, puis renvoie un pointeur sur la liste.
 
-NOTE: le type de retour permet de faire des appels imbriqués.
+NOTE: le type de retour permet de faire des appels imbriqués. Donc `@retour == @liste en paramètre`.
 
 ===== Patching
 
@@ -220,6 +270,24 @@ Chaque contexte réfère à un bloc d'instruction de code. Dès que nous entrons
 image:table_des_symboles.png[table des symboles,450,align="center"]
 ====
 
+=== Table super-globale
+
+Une table dite "super-globale" sera créé avant toutes les autres. Cette dernière contiendra les fonctions définies par défaut. Cette table n'aura qu'un seul et unique enfant, la table racine.
+
+==== Fonctions par défaut
+
+Voici la liste des fonctions qui seront toujours définies dans la table super-globale
+
+.Fonctions globales
+[cols="^,^,^"]
+|===
+|WriteInt| MT_FUN | (_entier_) -> _void_
+|WriteBool | MT_FUN | (_booléen_) -> _void_
+|ReadInt | MT_FUN | (_void_) -> _entier_
+3+|...
+|===
+
+
 === Structure des tables
 
 La structure des tables est générique, il faudra instancier un contexte de niveau 0 lors du processus de compilation, appellé *contexte global*.
@@ -234,6 +302,46 @@ Cette structure nous permet de construire un arbre de contextes puisque un conte
 Chaque entrée associe un nom d'identificateur _(lexème)_, sous la forme d'une chaîne de caractères à un n-uplets.
 
 Ce n-uplets possède les information que l'on souhaite retenir sur l'identificateur, dans notre cas, le type de la valeur associée à celui-ci.
+
+==== Tables extensibles
+
+Nos tables doivent pouvoir contenir beaucoup d'entrées, par conséquent elles doivent être extensibles.
+
+==== Fonctions
+
+Les identifiants des fonctions seront déclarés au sein de la table racine, avec les variables globales. Une première sous-table contiendra **exclusivement** les identifiants des paramètres, puis **une table de niveau inférieur** contiendra les identifiants du corps de la fonction.
+
+.Table super-globale
+[cols="^,^,^"]
+|===
+|write_X| MT_FUN | ...
+|read_X| MT_FUN | ...
+3+|...
+|===
+
+.Table racine
+[cols="^,^,^"]
+|===
+|globale_var| MT_VAR | ...
+|main| MT_FUN | ...
+3+|...
+|===
+
+.Table main
+[cols="^,^,^"]
+|===
+|argc|MT_VAR| ...
+|argv|MT_VAR| ...
+3+|...
+|===
+
+.Table main-body
+[cols="^,^,^"]
+|===
+|x|MT_VAR|...
+|y|MT_VAR|...
+3+|...
+|===
 
 === API C
 
@@ -251,7 +359,7 @@ NOTE: Les identifiants sont des chaînes de caractères C `const char*`.
 
 ** `type` : _<<typedesc,struct typedesc>>_ : Descripteur de type associé à cette entrée.
 
-* *_<<typedesc, struct typedesc>>_* : Descripteur de type, **opaque**.
+* *_<<typedesc, struct typedesc>>_* : Descripteur de type.
 
 ==== Table des symboles: struct context
 
@@ -284,13 +392,15 @@ Il est possible d'ajouter un identifiant à un contexte.
 
 WARNING: L'entrée devra être complétée par la suite.
 
+IMPORTANT: Les identifiants doivent être unique au sein d'une même table et ses extensions.
+
 ===== Recherche d'un identificateur
 
 La recherche d'une entrée avec un certain identificateur se fait en parcourant récursivement la pile du contexte en argument jusqu'à son dernier parent à la recherche d'un symbole.
 
 * *_ctx_lookup_* : (_const char*_) -> _<<entry, struct entry>>*_ : Recherche l'identifiant dans le contexte donné et ses contextes englobants.
 
-WARNING: **Si l'identifiant n'existe pas**, la fonction renvoie **NULL**.
+IMPORTANT: **Si l'identifiant n'existe pas**, la fonction renvoie **NULL**.
 
 ===== Symboles pour les temporaires
 
@@ -308,10 +418,71 @@ Il est possible de récupérer le nombre de symboles définis dans une table.
 
 ===== Taille à réserver en octets
 
-Pour obtenir le nombre d'octets à allouer nécessaires à tous les identifiants, il est possible d'appeller la fonction suivante :
+Pour obtenir le nombre d'octets à allouer **dans le programme généré**  nécessaires à tous les identifiants, il est possible d'appeller la fonction suivante :
 
 * *_ctx_count_bytes_* : (_const <<context, struct context>>*_) -> size_t : _Calcule_ le nombre d'octets nécessaires à allouer pour cette table.
 
+===== N-ième élément du contexte
+
+Il faut un moyen d'accéder à la n-ième entrée d'un <<context, context>>.
+
+* *_ctx_nth_* (_const <<context, struct context>>*_, size_t) -> _const <<entry, struct entry>>*_ : N-ième entrée du contexte.
+
+===== N-ième fonction du contexte
+
+Comme *_ctx_nth_* mais uniquement pour la n-ième fonction de la table.
+
+* *_ctx_nth_function_* (_const <<context, struct context>>*_, size_t) -> _const <<entry, struct entry>>*_ : N-ième fonction du contexte.
+
+===== Plus long chemin de contextes
+
+Pour des raisons bas-niveau, il doit être possible de trouver le plus long chemin en partant d'un parent jusqu'aux noeuds fils. La longueur d'un chemin étant définie par le nombre d'octets à allouer pour une table (`ctx_count_bytes_`).
+
+.Exemple
+****
+```plaintext
+  A_16
+  / \
+ /   \
+B_10  C_4
+       \
+        D_8
+```
+
+La table A pèse 16 octets, etc.
+
+Ici le plus long chemin partant de A est A -> C -> D, avec une valeur de 16+4+8 = 28 octets.
+
+`ctx_longest_path(A)` doit donc renvoyer 28.
+****
+
+* *_ctx_longest_path_* : (_const <<context, struct context>>*_) -> _size_t_ : Plus long chemin partant du contexte passé en paramètre.
+
+===== Index en octets dans une table
+
+Nous pouvons être amenés à devoir récupérer l'index d'un élément dans son contexte en nombre d'octets.
+
+.Exemple
+****
+Imaginons la tabble suivante :
+
+|===
+|Identifiant|Taille en octets
+|a|4
+|b|16
+|c|8
+|d|64
+|e|4|
+|===
+
+Alors :
+
+* l'index octal de `d` est : `4+16+8`. **sans la taille de d**.
+
+* l'index octal de `e` est : `4+16+8+64`.
+****
+
+* *_ctx_byte_idx_* (_const <<entry, struct entry>>*_) -> _size_t_ : Index octal de l'entrée dans sa table.
 
 ==== Entrée: struct entry
 
@@ -333,6 +504,7 @@ Le type peut être modifié directement par une affectation.
 
 ===== Méta-types
 
+anchor:mtype[]
 Il faut pouvoir discerner les fonctions des variables simples et des tableaux.
 
 Pour cela on respectera KISS avec des méta-types dans un `enum` *_MTYPE_* :
@@ -358,12 +530,37 @@ La taille en octets des types primaires est obtenue via la fonction suivante :
 
 * *_bt_sizeof_* : (_<<btype, enum BTYPE>>_) -> size_t : Renvoie la taille du type de base.
 
+.Conventions
+|===
+|Type primaire|Taille
+|Booléen|4 octets
+|Entier|4 octets
+|===
+
+
 ==== Descripteurs de type
 
 anchor:typedesc[]
 Afin d'être flexibles, les descripteurs de type sont encodés dans un structure `typedesc`.
 
-Cette dernière est opaque et il faut interargir avec elle via des fonctions.
+Cette dernière doit au moins contenir les champs suivants :
+
+* `mtype` : <<mtype,Méta-type>> de l'entrée.
+
+* `btype` : <<btype,Type primaire>> de l'entrée. Si c'est une variable ou tableau, type des éléments, si c'est une fonction alors c'est le type de retour.
+
+===== Taille d'un descripteur
+
+La taille en octets d'un descripteur est la taille à allouer pour un objet avec ce descripteur.
+
+WARNING: **Si c'est une fonction, il n'y a rien à allouer.**
+
+* Si c'est une variable il faut allouer la taille de son type primaire.
+
+* Si c'est un taleau il faut allouer la taille d'un élément * le nombre d'éléments.
+
+
+* *_td_sizeof_* : (const <<typedesc, struct typedesc>>*) -> size_t : Taille du descripteur en octets.
 
 ===== Fonction
 
@@ -387,6 +584,28 @@ Il est possible de comparer deux descripteurs pour tester leur équivalence.
 * *_typedesc_equals_* : (const _<<typedesc, struct typedesc>>_*, const _<<typedesc, struct typedesc>>_*) -> bool : +
 Renvoie `true` si les deux descripteurs sont équivalents.
 
+===== Interface
+
+Pour s'abstraire de l'implémentation, l'API C proposera les fonctions suivantes :
+
+* *_typedesc_is_function_* : (_const <<typedesc, struct typedesc>>*_) -> bool : Vrai si le <<typedesc, typdesc>> est une fonction.
+
+* *_typedesc_is_var_* : (_const <<typedesc, struct typedesc>>*_) -> bool : Vrai si le <<typedesc, typdesc>> est une variable.
+
+* *_typedesc_is_tab_* : (_const <<typedesc, struct typedesc>>*_) -> bool : Vrai si le <<typedesc, typdesc>> est un tableau.
+
+* *_typedesc_var_type_* (_const <<typedesc, struct typedesc>>*_) -> _<<btype, enum BTYPE>>_ : Type de la variable.
+
+* *_typedesc_function_return_type_* (_const <<typedesc, struct typedesc>>*_) -> _<<btype, enum BTYPE>>_ : Type de retour de la fonction.
+
+* *_typedesc_function_args_* (_const <<typedesc, struct typedesc>>*_) -> _const <<typelist, struct typelist>>_ : Liste des paramètres de la fonction.
+
+* *_typedesc_tab_type_* (_const <<typedesc, struct typedesc>>*_) -> _<<btype, enum BTYPE>>_ : Type d'un élément du tableau.
+
+* *_typedesc_tab_size_* (_const <<typedesc, struct typedesc>>*_) -> _size_t_ : Nombre d'éléments d'un taleau.
+
+CAUTION: Demander le type de retour d'un tableau est une erreur de programmation. Il faudra utiliser des `assert`. De même pour les autres demandes insensées.
+
 ===== Types prédéfinis
 
 Afin de simplifier les tests de typage, des _<<typedesc, typedesc>>_ seront prédéfinis.
@@ -402,12 +621,20 @@ Afin de faciliter l'implémentation, l'API C fourni une liste de <<btype, enum B
 
 ===== Création de liste
 
-* *_typelist_new_* : (_void_) : _<<typelist,struct typelist>>*_ : Crée une nouvelle liste de types vide.
+* *_typelist_new_* : (_void_) : _<<typelist,struct typelist>>_ : Crée une nouvelle liste de types vide.
 
-===== Ajout d'un élément
+===== Ajout d'un élément à la fin
 
 * *_typelist_append_* : (_<<typelist,struct typelist>>*_, _const <<btype,enum BTYPE>>_) ->  _<<typelist,struct typelist>>*_ : +
 Ajoute un type **à la fin** de la liste.
+
+IMPORTANT: Modification en place du paramètre.
+
+NOTE: L'adresse de retour est égale à l'adresse de la <<typelist, struct typelist>> passée en paramètre afin de pouvoir chaîner les appels.
+
+==== Taille de la liste
+
+* *_typelist_size_* : (_const <<typelist, struct typelist>>*_) -> _size_t_ : Nombre de types dans la liste.
 
 ===== Comparaison de listes
 

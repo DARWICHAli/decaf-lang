@@ -41,10 +41,6 @@ struct context {
 };
 
 
-extern struct context racine;
-
-
-
 /**
  * @brief Empile un nouveau contexte vierge
  *
@@ -120,6 +116,50 @@ size_t ctx_count_entries(const struct context* ctx);
  * @warning N'examine pas les fils
  */
 size_t ctx_count_bytes(const struct context* ctx);
+
+/**
+ * @brief Récupère la n-ième entrée du contexte
+ *
+ * @param ctx Contexte dans lequel rechercher
+ * @param n Numéro de l'entrée
+ *
+ * @pre n < Nombre d'éléments
+ * @warning Premier élément -> n=0
+ *
+ * @return La n-ième entrée
+ */
+const struct entry* ctx_nth(const struct context* ctx, size_t n);
+
+/**
+ * @brief Récupère la n-ième entrée du contexte qui soit une fonction
+ *
+ * @param ctx Contexte dans lequel rechercher
+ * @param n Numéro de l'entrée
+ *
+ * @pre n < Nombre de fonctions
+ * @warning Premier élément -> n=0
+ *
+ * @return La n-ième entrée qui soit une fonction
+ */
+const struct entry* ctx_nth_function(const struct context* ctx, size_t n);
+/**
+ * @brief Index octal de l'entrée dans sa table
+ *
+ * @param ent Entrée dans une table
+ *
+ * @return L'index octal de l'entrée
+ *
+ * Imaginons la tabble suivante :
+ * a = 4o
+ * b = 16o
+ * c = 8o
+ * d = 64o
+ * e = 4o
+ * Alors :
+ * l'index octal de `d` est : `4+16+8`. **sans la taille de d**.
+ * l'index octal de `e` est : `4+16+8+64`.
+ */
+size_t ctx_byte_idx(const struct entry* ent);
 
 /**
  * @}
