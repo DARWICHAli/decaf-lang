@@ -49,7 +49,7 @@ struct typelist typelist_new();
  * @param[inout] lst Liste en entrée, modifiée in-place
  * @param[in] new_type Nouveau type à ajouter à la fin de la liste
  * @return La liste avec un élément de plus
- * @note \@ret == \@lst
+ * @note \@ret == \@lst, adresse de retour == adrese de lst
  * @warning Modifications en place
  * @warning Si échec, plantage
  */
@@ -65,6 +65,15 @@ struct typelist* typelist_append(struct typelist* lst, enum BTYPE new_type);
  */
 int typelist_equals(const struct typelist* lhs, const struct typelist* rhs);
 
+
+/**
+ * @brief Nombre de types dans la liste.
+ *
+ * @param tl Liste de types
+ *
+ * @return La taille de la liste de types
+ */
+size_t typelist_size(const struct typelist* tl);
 
 /**
  * @}

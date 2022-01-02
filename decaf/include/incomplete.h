@@ -11,6 +11,8 @@
 #include "quadops.h"
 #include "gencode.h"
 
+#include <stddef.h> // size_t
+
 /**
  * @addtogroup IR
  * @{
@@ -33,7 +35,7 @@
  */
 struct quad_list {
 	quad_id_t quads[QUADLIST_MAX_SIZE]; ///< Liste réelle
-	unsigned long long used; ///<  Nombre de places utilisées
+	size_t used; ///<  Nombre de places utilisées
 };
 
 /**
