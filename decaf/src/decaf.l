@@ -14,7 +14,6 @@ int fileno(FILE *stream);
 
     /* Expressions rationnelles nommées */
 
-
 %%
 
 0x[0-9a-fA-F]+          { yylval._hex_literal = strtol(yytext, NULL, 16); return HEXADECIMAL_CST; }
@@ -24,14 +23,11 @@ int fileno(FILE *stream);
 "*"                     return MUL;
 "/"                     return DIV;
 "%"                     return MOD;
-"("                     return OPAR;
-")"                     return CPAR;
-"{"                     return OBRA;
-"}"                     return CBRA;
-","                     return COL;
-";"                     return SCOL;
 "class"                 return CLASS;
-"Program"               return PROGRAM;
+[a-zA-Z]+               return PROGRAM;
+    /* "Program"               return PROGRAM; */ 
+
+[(){},;]                return yytext[0];
 
 [[:space:]]             ;
 .                       {fprintf(stderr, "(lex) Caractère illégal (%d)\n", yytext[0]);}
