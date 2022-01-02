@@ -21,9 +21,6 @@
  * @{
  */
 
-/// @brief Type de l'dentifiant unique associé à chaque quadruplet
-typedef unsigned long quad_id_t;
-
 /**
  * @brief récupère un tableau linéaire de tous les quadruplets pour la conversion vers assembleur
  * @param[in] size Taille du tableau renvoyé.

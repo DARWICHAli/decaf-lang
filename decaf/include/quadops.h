@@ -19,6 +19,9 @@
  * @{
  */
 
+/// @brief Type de l'dentifiant unique associé à chaque quadruplet
+typedef unsigned long quad_id_t;
+
 /**
  * @enum Q_OP
  * @brief Opérateurs autorisés pour les quadruplets
@@ -30,8 +33,9 @@ enum Q_OP {
 	Q_MUL, ///< Multiplication, 3 opérandes
 	Q_DIV, ///< Division, 3 opérandes
 	Q_MOD, ///< Modulo, 3 opérandes
-
+	Q_NEG, ///< Négation, 2 opérandes
 	Q_IFG, ///< If E then goto Y, 2 opérandes
+	Q_GOT, ///< Goto simple 1 opérande
 	Q_AFF  ///< Affectation, 2 opérandes
 };
 
@@ -48,7 +52,8 @@ struct quad {
 	struct entry* lhs; ///< Opérande gauche
 	struct entry* rhs; ///< Opérande droite
 	enum Q_OP op; ///< Opérateur
-	struct entry* res; ///< variable dans laquelle affecter
+	struct entry* res; ///< Variable dans laquelle affecter
+	quad_id_t dst; ///< Destination d'un éventuel goto
 };
 
 

@@ -74,7 +74,14 @@ Ces quadruplets un peu spéciaux sont les suivants :
 
 * _la négation_ : *_Q_NEG_*
 
-NOTE: Négation <=> `res := - lhs`.
+NOTE: Négation <==> `res := - lhs`.
+
+==== Quadruplet à 1 opérande
+
+anchor:quad011[]
+Ce sont les quadruplets les plus simples.
+
+* _le goto_ : *_Q_GOT_*
 
 === Quadruplets en C
 
@@ -89,7 +96,9 @@ En langage C, un **quadruplet** est une structure de données `struct quad` à 4
 
 * *_res_* : _<<entry,struct entry*>>_ : Une entrée dans la table des symboles ayant pour vocation de stocker le **résultat**.
 
-NOTE: *_res_* vaut `NULL` si le quadruplet est de type *_Q_IFG_* !
+* *_dst_* : _quad_id_t_ : **Quadruplet de destination** d'un goto.
+
+NOTE: *_res_* vaut `NULL` si le quadruplet est de type *_Q_IFG_* ou *_Q_GOT_* !
 
 ==== Création rapide
 
@@ -401,7 +410,7 @@ Ajoute un type **à la fin** de la liste.
 
 ===== Comparaison de listes
 
-* *_typelist_equals_* :  (_const <<typelist,struct typelist>>*_,  _const <<typelist,struct typelist>>*_) : +
+* *_typelist_equals_* :  (_const <<typelist,struct typelist>>*_,  _const <<typelist,struct typelist>>*_) -> bool : +
 Compare deux listes et renvoie `true` si les deux listes sont équivalentes, c'est à dire si tous leurs types sont égaux.
 
 ===== Un mot sur la mémoire

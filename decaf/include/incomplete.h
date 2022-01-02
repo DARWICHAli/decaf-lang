@@ -32,7 +32,7 @@
  * crée à partir de ::qlist_new
  */
 struct quad_list {
-	struct quad quads[QUADLIST_MAX_SIZE]; ///< Liste réelle
+	quad_id_t quads[QUADLIST_MAX_SIZE]; ///< Liste réelle
 	unsigned long long used; ///<  Nombre de places utilisées
 };
 

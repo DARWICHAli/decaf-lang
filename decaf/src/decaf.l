@@ -6,7 +6,6 @@ extern YYSTYPE yylval;
 extern char * yytext;
 
 int fileno(FILE *stream);
-
 %}
 
 %option nounput

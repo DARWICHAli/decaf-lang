@@ -28,6 +28,7 @@ for f in $tests; do
 		printf "${RED}Error...${NOR}\n"
 		printf "output:\n===\n$OUTPUT\n===\n"
 	fi
+	i=$((i+1))
 done
 
 if [ $ok = $count ]; then
