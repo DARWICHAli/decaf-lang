@@ -36,7 +36,6 @@
 #include <stddef.h> //size_t
 
 /**
- * @macro ASSERT_TRUE
  * @brief Fait return 0 si condition fausse et affiche la condition
  * @param exp Expression booléenne
  * @warning Fait un "return 0" si exp faux !!
@@ -44,7 +43,6 @@
 #define ASSERT_TRUE(exp) do {if (!(exp)) {fprintf(stderr, "Test failed : \"" #exp "\"\n"); return 0;}}while(0)
 
 /**
- * @macro ASSERT_EQ
  * @brief Fait return 0 si lhs != rhs et affiche les opérandes
  * @param lhs Membre de gauche
  * @param rhs Membre de droite
@@ -53,7 +51,6 @@
 #define ASSERT_EQ(lhs, rhs) do {if ((rhs) != (lhs)) {fprintf(stderr, "Test failed : \"" #lhs "\" != \"" #rhs "\"\n"); return 0;}}while(0)
 
 /**
- * @macro ASSERT_EQSTR
  * @brief Fait return 0 si deux cstring sont différentes et les affiche
  * @param lhs c-string de gauche
  * @param rhs c-string de droite
@@ -107,6 +104,14 @@ void add_test(struct test_suite* ts, int (*test)(void*), const char* nom);
  */
 void add_test_assert(struct test_suite* ts, int (*test)(void*), const char* nom);
 
+/**
+ * @brief Ajoute un test qui devrait conduire à EXIT_FAILURE
+ *
+ * @param ts Suite de test
+ * @param test Fonction devant déclencher exit(EXIT_FAILURE)
+ * @param nom Nom du test
+ */
+void add_test_failure(struct test_suite* ts, int (*test)(void*), const char* nom);
 
 /**
  * @brief Exécute une suite de test

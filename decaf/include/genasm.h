@@ -8,6 +8,8 @@
 #ifndef INCLUDE__GENASM__H
 #define INCLUDE__GENASM__H
 
+#include <stdio.h> // FILE
+
 /**
  * @addtogroup ASM
  * @{
@@ -24,7 +26,6 @@ enum ASM_LANG {
 
 // forward declarations
 struct quad;
-struct FILE;
 
 /**
  * @brief traduit du code intermédiaire vers du code assembleur dans un fichier

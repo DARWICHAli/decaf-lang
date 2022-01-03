@@ -10,6 +10,8 @@
 
 #include "quadops.h"
 
+#include <stddef.h> // size_t
+
 /**
  * @addtogroup IR
  * @{
@@ -23,12 +25,12 @@
 
 /**
  * @brief récupère un tableau linéaire de tous les quadruplets pour la conversion vers assembleur
- * @param[in] size Taille du tableau renvoyé.
+ * @param[out] size Taille du tableau renvoyé.
  * @return Un tableau de quadruplet
  *
- * Permet de préserver l'opacité de l'implémentation
+ * Permet de préserver l'opacité de l'implémentation. La taille du tableau est écrire dans size
  */
-struct quad* get_all_quads(unsigned long long* size);
+struct quad* get_all_quads(size_t* size);
 
 /**
  * @brief Récupère l'identifiant du prochain quadruplet qui SERA généré.
