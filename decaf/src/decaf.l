@@ -13,21 +13,18 @@ int fileno(FILE *stream);
 %option noyywrap
 
     /* Expressions rationnelles nommées */
-
+EDIGIT [0-9]
+EHEXDIGIT {EDIGIT}[a-fA-F]
 %%
 
-0x[0-9a-fA-F]+          { yylval._hex_literal = strtol(yytext, NULL, 16); return HEXADECIMAL_CST; }
-[0-9]+                  { yylval._int_literal = strtol(yytext, NULL, 10); return DECIMAL_CST; }
-"+"                     return ADD;
-"-"                     return SUB;
-"*"                     return MUL;
-"/"                     return DIV;
-"%"                     return MOD;
+0x{EHEXDIGIT}+          { yylval._hex_literal = strtol(yytext, NULL, 16); return HEXADECIMAL_CST; }
+{EDIGIT}+               { yylval._int_literal = strtol(yytext, NULL, 10); return DECIMAL_CST; }
+
+[+\-*/%]                return yytext[0];
+[(){},;]                return yytext[0];
+
 "class"                 return CLASS;
 [a-zA-Z]+               return PROGRAM;
-    /* "Program"               return PROGRAM; */ 
-
-[(){},;]                return yytext[0];
 
 [[:space:]]             ;
 .                       {fprintf(stderr, "(lex) Caractère illégal (%d)\n", yytext[0]);}
