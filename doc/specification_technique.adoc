@@ -623,7 +623,7 @@ Afin de faciliter l'implémentation, l'API C fourni une liste de <<btype, enum B
 
 ===== Création de liste
 
-* *_typelist_new_* : (_void_) : _<<typelist,struct typelist>>*_ : Crée une nouvelle liste de types vide.
+* *_typelist_new_* : (_void_) : _<<typelist,struct typelist>>_ : Crée une nouvelle liste de types vide.
 
 ===== Ajout d'un élément à la fin
 
