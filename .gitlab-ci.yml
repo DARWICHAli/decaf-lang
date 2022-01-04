@@ -38,7 +38,7 @@ coverage:
     - make clean
     - wget https://raw.githubusercontent.com/eriwen/lcov-to-cobertura-xml/master/lcov_cobertura/lcov_cobertura.py
   script:
-    - export CFLAGS="--coverage -fprofile-arcs -ftest-coverage -Wall -Wextra -Wpedantic"
+    - export CFLAGS="--coverage -fprofile-arcs -ftest-coverage -Wall -Wextra -Wpedantic -g"
     - make test
     - gcov src/*.c
     - lcov --directory . -c --output-file coverage.info

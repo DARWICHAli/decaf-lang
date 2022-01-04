@@ -23,15 +23,17 @@ struct context* alloc_ctx()
 	return new_context;
 }
 
-int existe(const char* str, const struct context* ctx)
+struct entry* ctx_search(const char* str, const struct context* ctx)
 {
 	assert(ctx && "non-NULL context expected");
+	const struct entry* ret;
 	for (size_t i = 0; i < ctx_count_entries(ctx); i++) {
-		if (strcmp(ctx_nth(ctx, i)->id, str) == 0) {
-			return 1;
+		ret = ctx_nth(ctx, i);
+		if (strcmp(ret->id, str) == 0) {
+			return (struct entry*)ret;
 		}
 	}
-	return 0;
+	return NULL;
 }
 
 void rand_string(char str[MAX_IDENTIFIER_SIZE])
@@ -69,7 +71,7 @@ struct entry* ctx_newname(const char id[MAX_IDENTIFIER_SIZE])
 	struct context* curr = ctx_currentctx();
 	assert(curr && "No current context");
 
-	if (existe(&id[0], curr)) {
+	if (ctx_search(&id[0], curr)) {
 		return NULL;
 	}
 
@@ -104,7 +106,7 @@ struct entry* ctx_make_temp()
 	//si on a nommer des var tmp_X
 	do {
 		rand_string(str);
-	} while (existe(str, curr));
+	} while (ctx_search(str, curr));
 	return ctx_newname(str);
 }
 
@@ -113,13 +115,12 @@ struct entry* ctx_lookup(const char id[MAX_IDENTIFIER_SIZE])
 	struct context* curr = ctx_currentctx();
 	const struct entry* ent;
 	while (curr) {
-		for (size_t i = 0; i < ctx_count_entries(curr); i++) {
-			ent = ctx_nth(curr, i);
-			if (strcmp(ent->id, id) == 0) {
-				return (struct entry*) ent; // const
-			}
+		ent = ctx_search(id, curr);
+		if (ent != NULL) {
+			return (struct entry*)ent; // const
 		}
-		curr = (struct context*) curr->parent; // const
+
+		curr = (struct context*)curr->parent; // const
 	}
 	return NULL;
 }
@@ -160,7 +161,7 @@ const struct entry* ctx_nth_function(const struct context* ctx, size_t idx)
 	assert(ctx && "Expects non-NULL context");
 	assert(idx < ctx_count_entries(ctx) && "Index too high");
 
-	const struct entry* ret = NULL, *tmp;
+	const struct entry *ret = NULL, *tmp;
 	size_t i, j;
 	for (i = 0, j = 0; j <= idx && i < ctx_count_entries(ctx); ++i) {
 		tmp = ctx_nth(ctx, i);
@@ -207,7 +208,7 @@ size_t ctx_longest_path(const struct context* ctx)
 	// recherche des fils
 	for (size_t i = 0; i < co_used; ++i) {
 		struct context* potentiel_fils = &global_context[i];
-		if (potentiel_fils->parent == ctx) {// fils de ctx
+		if (potentiel_fils->parent == ctx) { // fils de ctx
 			lp = ctx_longest_path(potentiel_fils);
 			max = MAX(max, sz + lp);
 		}

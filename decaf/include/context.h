@@ -136,10 +136,10 @@ const struct entry* ctx_nth(const struct context* ctx, size_t n);
  * @param ctx Contexte dans lequel rechercher
  * @param n Numéro de l'entrée
  *
- * @pre n < Nombre de fonctions
+ * @warning si n < Nombre de fonctions, renvoie NULL
  * @warning Premier élément -> n=0
  *
- * @return La n-ième entrée qui soit une fonction
+ * @return La n-ième entrée qui soit une fonction, sinon NULL
  */
 const struct entry* ctx_nth_function(const struct context* ctx, size_t n);
 
@@ -173,6 +173,18 @@ size_t ctx_byte_idx(const struct entry* ent);
  * Pour plus d'informations sur le calcul, voir la spécification technique
  */
 size_t ctx_longest_path(const struct context* ctx);
+
+/**
+ * @brief Cherche un identifiant dans un contexte seulement
+ *
+ * Ne vas pas voir les parents
+ *
+ * @param str Identifiant
+ * @param ctx Contexte
+ *
+ * @return NULL si introuvable, l'entrée sinon
+ */
+struct entry* ctx_search(const char* str, const struct context* ctx);
 
 /**
  * @}
