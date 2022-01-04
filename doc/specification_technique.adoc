@@ -588,6 +588,8 @@ Renvoie `true` si les deux descripteurs sont équivalents.
 
 Pour s'abstraire de l'implémentation, l'API C proposera les fonctions suivantes :
 
+* *_typedesc_meta_type_* : (_const <<typedesc, struct typedesc>>*_) -> <<mtype, enum MTYPE>> : Méta-type de l'entrée.
+
 * *_typedesc_is_function_* : (_const <<typedesc, struct typedesc>>*_) -> bool : Vrai si le <<typedesc, typdesc>> est une fonction.
 
 * *_typedesc_is_var_* : (_const <<typedesc, struct typedesc>>*_) -> bool : Vrai si le <<typedesc, typdesc>> est une variable.
@@ -621,7 +623,7 @@ Afin de faciliter l'implémentation, l'API C fourni une liste de <<btype, enum B
 
 ===== Création de liste
 
-* *_typelist_new_* : (_void_) : _<<typelist,struct typelist>>_ : Crée une nouvelle liste de types vide.
+* *_typelist_new_* : (_void_) : _<<typelist,struct typelist>>*_ : Crée une nouvelle liste de types vide.
 
 ===== Ajout d'un élément à la fin
 

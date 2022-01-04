@@ -26,6 +26,12 @@
  */
 #define MAX_TYPELIST_SIZE 64
 
+
+/**
+ * @brief Nombre maximal de typelist allouables
+ */
+#define MAX_TOTAL_TYPELIST 2048
+
 /**
  * @struct typelist
  * @brief Structure représentant une liste de types
@@ -40,9 +46,11 @@ struct typelist {
 
 /**
  * @brief crée une nouvelle liste de types vide
- * @return Une typelist vide
+ * @note Alloué sur le tas. Ne PAS faire de free
+ * @return Une typelist vide OU NULL
+ * @warning L'allocation peut échouer, cette fonction renverra alors NULL
  */
-struct typelist typelist_new();
+struct typelist* typelist_new();
 
 /**
  * @brief Ajoute un type primitif à la FIN de la liste
