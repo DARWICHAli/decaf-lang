@@ -63,13 +63,13 @@ struct typelist;
  * @warning Ne pas utiliser les champs de cette structure directement !!!
  */
 struct typedesc {
-	enum MTYPE mtype;
-	enum BTYPE btype;
+	enum MTYPE mtype; ///< Méta-type de l'entrée
+	enum BTYPE btype; ///< Type primaire de l'entrée
 
 	union {
-			struct typelist* arg_list;
-			size_t size;
-	} dist;
+			const struct typelist* arg_list; ///< Liste optionnelle d'arguments
+			size_t size; ///< Taille optionnele d'un tableau
+	} dist; ///< Union qui devrait être anonyme
 };
 
 /**
@@ -119,6 +119,15 @@ struct typedesc typedesc_make_var(enum BTYPE btype);
  * @return vrai si lhs <=> rhs, faux sinon
  */
 int typedesc_equals(const struct typedesc* lhs, const struct typedesc* rhs);
+
+/**
+ * @brief Méta-type de l'entrée
+ *
+ * @param td Descripteur de type
+ *
+ * @return Le meta-type de l'entrée
+ */
+enum MTYPE typedesc_meta_type(const struct typedesc* td);
 
 /**
  * @brief Teste si le descripteur correspond à une fonction
@@ -212,7 +221,6 @@ extern const struct typedesc td_var_int;
  * @brief Descripteur représentant une variable booléene
  */
 extern const struct typedesc td_var_bool;
-
 
 /**
  * @}
