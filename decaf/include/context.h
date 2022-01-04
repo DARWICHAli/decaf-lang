@@ -142,6 +142,7 @@ const struct entry* ctx_nth(const struct context* ctx, size_t n);
  * @return La n-ième entrée qui soit une fonction
  */
 const struct entry* ctx_nth_function(const struct context* ctx, size_t n);
+
 /**
  * @brief Index octal de l'entrée dans sa table
  *
@@ -160,6 +161,18 @@ const struct entry* ctx_nth_function(const struct context* ctx, size_t n);
  * l'index octal de `e` est : `4+16+8+64`.
  */
 size_t ctx_byte_idx(const struct entry* ent);
+
+/**
+ * @brief Plus long chemin partant du contexte passé en paramètre
+ *
+ * @param ctx Contexte parent
+ *
+ * @note La longueur d'un chemin est donné par la taille octale d'une table
+ * @return Le plus long chemin en nombre d'octets
+ *
+ * Pour plus d'informations sur le calcul, voir la spécification technique
+ */
+size_t ctx_longest_path(const struct context* ctx);
 
 /**
  * @}
