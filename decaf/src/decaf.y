@@ -8,8 +8,6 @@ void yyerror(const char *msg);
 #include "ir.h"
 #include "symbols.h"
 
-export const struct typedesc td_var_int;
-export const struct typedesc td_var_bool; 
 %}
 %define parse.error verbose
 %union {
@@ -23,8 +21,8 @@ export const struct typedesc td_var_bool;
 %token <_int_literal> DECIMAL_CST HEXADECIMAL_CST
 %token <_id> ID
 
-%type <_exprval> decimal_literal hex_literal
-%type <_exprval> int_literal expr
+%type <_int_literal> decimal_literal hex_literal
+%type <_int_literal> int_literal expr
 
 %left '-' '+'
 %left '*' '/' '%' 
