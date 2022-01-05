@@ -149,7 +149,7 @@ struct quad quad_goto(quad_id_t qid);
  *
  * @return Un quadruplet de la forme "if lhs COP rhs then goto qid"
  */
-struct quad quad_ifgoto(const struct entry* lhs, enum CMP_OP cmp_op, struct entry* rhs, quad_id_t qid);
+struct quad quad_ifgoto(const struct entry* lhs, enum CMP_OP cmp_op, const struct entry* rhs, quad_id_t qid);
 
 /**
  * @brief Crée un quadruplet param

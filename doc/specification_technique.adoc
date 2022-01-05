@@ -118,11 +118,11 @@ En langage C, un **quadruplet** est une structure de données `struct quad` à 4
 
 * *_op_* : _<<operator,enum Q_OP>>_ : Un enum stockant l'opérateur dont l'alias est conforme à celui défini dans <<Opérateurs>>.
 
-* *_lhs_* : _const <<entry,struct entry>>*_ : Une entrée dans la table des symboles correspondant à l'opérande de **gauche** de l'opérateur. **C'est aussi la valeur de param et call**.
+* *_lhs_* : _const <<entry,struct entry>>*_ : Une entrée dans la table des symboles correspondant à l'opérande de **gauche** de l'opérateur. **C'est aussi la valeur de param, call et proc**.
 
 * *_rhs_* : _const <<entry,struct entry>>*_ : Une entrée dans la table des symboles correspondant à l'opérande de **droite** de l'opérateur.
 
-* *_res_* : _const <<entry,struct entry>>*_ : Une entrée dans la table des symboles ayant pour vocation de stocker le **résultat** d'une expression arithmétique ou d'une fonction.
+* *_res_* : _const <<entry,struct entry>>*_ : Une entrée dans la table des symboles ayant pour vocation de stocker le **résultat** d'une expression arithmétique ou d'une fonction ou d'une affectation/négation ou d'une affectation constante.
 
 * *_dst_* : _quad_id_t_ : **Quadruplet de destination** d'un goto.
 
@@ -587,6 +587,8 @@ Renvoie `true` si les deux descripteurs sont équivalents.
 ===== Interface
 
 Pour s'abstraire de l'implémentation, l'API C proposera les fonctions suivantes :
+
+* *_typedesc_meta_type_* : (_const <<typedesc, struct typedesc>>*_) -> <<mtype, enum MTYPE>> : Méta-type de l'entrée.
 
 * *_typedesc_is_function_* : (_const <<typedesc, struct typedesc>>*_) -> bool : Vrai si le <<typedesc, typdesc>> est une fonction.
 
