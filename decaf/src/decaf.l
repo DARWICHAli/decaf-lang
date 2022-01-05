@@ -19,10 +19,12 @@ EALPHA [a-zA-Z_]
 EHEXDIGIT {EDIGIT}[a-fA-F]
 EALPHANUM ({EALPHA}|{EDIGIT})
 %%
+\/\/.*                  ; /* \/\/[^\n] */
 
 int                     return INT;
 class                   return CLASS;
 Program                 return PROGRAM; // NOTE: conflict
+void                    return VOID;
 
 0x{EHEXDIGIT}+          { yylval._hex_literal = strtol(yytext, NULL, 16); return HEXADECIMAL_CST; }
 {EDIGIT}+               { yylval._int_literal = strtol(yytext, NULL, 10); return DECIMAL_CST; }
@@ -32,7 +34,7 @@ Program                 return PROGRAM; // NOTE: conflict
 
 [+\-*/%]                return yytext[0];
 [(){},;]                return yytext[0];
-
+[=]                     return yytext[0];
 
 [[:space:]]             ;
 .                       {fprintf(stderr, "(lex) Caractère illégal (%d)\n", yytext[0]);}

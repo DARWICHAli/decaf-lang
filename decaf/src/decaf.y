@@ -15,14 +15,13 @@ void yyerror(const char *msg);
     int _hex_literal;
     char _id[128];
 }
-%token CLASS PROGRAM
+%token CLASS PROGRAM VOID
 %token INT 
 
 %token <_int_literal> DECIMAL_CST HEXADECIMAL_CST
 %token <_id> ID
 
-%type <_int_literal> decimal_literal hex_literal
-%type <_int_literal> int_literal expr
+%type <_int_literal> int_literal decimal_literal hex_literal
 
 %left '-' '+'
 %left '*' '/' '%' 
@@ -32,7 +31,7 @@ void yyerror(const char *msg);
 
 %%
 
-program: CLASS PROGRAM '{' field_decl_opt statement_opt '}'
+program: CLASS PROGRAM '{' field_decl_opt method_decl_opt '}'
 ;
 
 field_decl_opt: /* empty */
@@ -46,25 +45,52 @@ id_list: ID                 {printf("var decl: %s\n", $1);}
     | id_list ',' ID        {printf("var decl: %s\n", $3);}
 ;
 
+
+method_decl_opt: /* empty */
+    | method_decl block
+;
+
+method_decl: VOID ID '(' ')'    {printf("method_decl: void: %s\n", $2);}
+    // | type ID '(' ')'        {printf("method_decl: type: %s\n", $2);}
+;
+
+block: '{' var_decl_opt statement_opt '}'
+;
+
+var_decl_opt: /* empty */
+    | var_decl ';'
+;
+
+var_decl: type id_list
+    | var_decl ';' type id_list
+;
+
 type: INT
 ;
 
-statement_opt: /* empty */
-    | line
+statement_opt:  /* empty */
+    | statement ';'
 ;
 
-line: expr ';'              {printf("%d\n", $1);}
-    | line expr ';'         {printf("%d\n", $2);}
+
+statement: location assign_op expr                {printf("stmt\n");}
+    | statement ';' location '=' expr
 ;
 
-expr: expr '+' expr         {$$ = $1 + $3;}
-    | expr '-' expr         {$$ = $1 - $3;}
-    | expr '*' expr         {$$ = $1 * $3;}
-    | expr '/' expr         {$$ = $1 / $3;}
-    | expr '%' expr         {$$ = $1 % $3;}
-    | '-' expr %prec UNEG   {$$ = - $2;}
-    | '(' expr ')'          {$$ = ($2);}
-    | int_literal
+
+assign_op: '='
+;
+
+location: ID
+;
+
+expr: expr arith_op expr
+    | '-' expr %prec UNEG
+    | literal
+    | location
+;
+
+literal: int_literal
 ;
 
 int_literal: decimal_literal
@@ -73,6 +99,15 @@ int_literal: decimal_literal
 decimal_literal: DECIMAL_CST
 ;
 hex_literal: HEXADECIMAL_CST
+;
+
+
+
+arith_op: '+'
+    | '-'
+    | '*'
+    | '/'
+    | '%'
 ;
 
 %%
