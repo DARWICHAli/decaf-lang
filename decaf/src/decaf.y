@@ -84,8 +84,13 @@ assign_op: '='
 location: ID
 ;
 
-expr: expr arith_op expr
+expr: expr '+' expr
+    | expr '-' expr
+    | expr '*' expr
+    | expr '/' expr
+    | expr '%' expr
     | '-' expr %prec UNEG
+    | '(' expr ')'
     | literal
     | location
 ;
