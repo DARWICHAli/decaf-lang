@@ -74,10 +74,12 @@ bin-release/
 # Other files and folders
 .settings/
 .project/
+.vscode/
 
 .FlexUnitSettings
 .externalToolBuilders
 .model
+
 
 # End of https://www.toptal.com/developers/gitignore/api/c,flex
 obj/

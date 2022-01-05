@@ -1,5 +1,5 @@
 CC ?= gcc
-CFLAGS ?=-std=c11 -Wpedantic -Wall -Wextra
+CFLAGS ?=-std=c11 -Wpedantic -Wall -Wextra -g
 LDFLAGS ?=
 BISONFLAGS ?= -t
 FLEXFLAGS ?= -s
@@ -22,6 +22,11 @@ OBJS_STAT=decaf.tab.o decaf_lex.o
 OBJS_DYN=$(patsubst $(SRC_DIR)/%.c,$(OBJ_DIR)/%.o,$(wildcard $(SRC_DIR)/*.c))
 OBJS=$(patsubst %,$(OBJ_DIR)/%,$(OBJS_STAT)) $(OBJS_DYN)
 OBJS_TS=$(patsubst $(SRC_TS_DIR)/%.c, $(OBJ_TS_DIR)/%.o, $(wildcard $(SRC_TS_DIR)/*.c))
+
+# NOTE: Permet de désactiver les règles intégrées au makefile
+# évitant ainsi d'écraser le fichier decaf.c par bison et/ou lex
+%.c: %.y
+%.c: %.l
 
 decaf: $(BIN_DIR)/decaf
 

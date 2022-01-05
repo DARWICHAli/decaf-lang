@@ -8,6 +8,9 @@
 #ifndef INCLUDE__GENASM__H
 #define INCLUDE__GENASM__H
 
+#include <stddef.h> // size_t
+#include <stdio.h> // FILE (obligatoire, pas possible de FD)
+
 /**
  * @addtogroup ASM
  * @{
@@ -24,18 +27,18 @@ enum ASM_LANG {
 
 // forward declarations
 struct quad;
-struct FILE;
 
 /**
  * @brief traduit du code intermédiaire vers du code assembleur dans un fichier
  * @param to_lang Langage assembleur vers lequel traduire
- * @param liste Liste linéaire de quadruplets
+ * @param qlist Liste linéaire de quadruplets
  * @param liste_size Taille de la liste
  * @param[out] outfile descripteur de fichier en sortie
  *
  * @note Pour voir la liste des langages toujours disponible voir ::ASM_LANG
  */
-void genasm(const char* to_lang, struct quad* liste, unsigned long long liste_size, FILE* outfile);
+
+void genasm(const char* to_lang, const struct quad* qlist, size_t liste_size, FILE* outfile);
 
 ///@}
 
