@@ -218,6 +218,13 @@ int td_func(void* data)
 	return 1;
 }
 
+int td_fprintf_test(void *data)
+{
+	struct data_td* dt = data;
+	td_fprintf(stdout,&dt->fct_bool2b);
+	return 0;
+}
+
 int main(void)
 {
 	struct test_suite bt, td;
@@ -244,6 +251,7 @@ int main(void)
 	add_test(&td, td_var, "typedesc var behaves correctly");
 	add_test(&td, td_func, "typedesc func behaves correctly");
 	add_test(&td, td_tab, "typedesc tab behaves correctly");
-
+	add_test(&td, td_fprintf_test, "test print");
+	
 	return exec_ts(&bt) && exec_ts(&td) ? EXIT_SUCCESS : EXIT_FAILURE;
 }
