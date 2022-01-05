@@ -1,0 +1,10 @@
+class Program {
+	void main() {
+		int res1, res2, res3, res4, res5;
+		res1 = 42 +   69;
+		res2 = 13*7;
+		res3 =res1/res2;
+		res4=         res3%    res2        ;
+		res5   =  res2- res1 ;
+	}
+}
