@@ -9,7 +9,7 @@
 #define INCLUDE__TYPEDESC__H
 
 #include <stddef.h> // size_t
-
+#include <stdio.h>
 /**
  * @addtogroup CTX
  * @{
@@ -211,6 +211,16 @@ enum BTYPE typedesc_tab_type(const struct typedesc* td);
  * @return Le nombre d'éléments du tableau
  */
 size_t typedesc_tab_size(const struct typedesc* td);
+
+/**
+ * @brief Fonction d'affichage pour struct typedesc
+ * 
+ * @param fd[out] fichier de sortie d'affichage
+ * 
+ * @param td[in] le descripteur de type
+ * 
+ */
+void td_fprintf(FILE* fd, const struct typedesc* td);
 
 /**
  * @brief Descripteur représentant une variable entière

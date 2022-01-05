@@ -128,3 +128,22 @@ enum MTYPE typedesc_meta_type(const struct typedesc* td)
 	assert(td && "Expected non-null typedesc");
 	return td->mtype;
 }
+
+void td_fprintf(FILE* fd, const struct typedesc* td)
+{
+	assert(td && "td_fprintf expecting NON null entry");
+	
+	switch (typedesc_meta_type(td)) {
+	case MT_VAR:
+		fprintf("");
+	case MT_TAB:
+		fprintf("");
+	case MT_FUN:
+		return 0; // Une fonction fait 0 octets sur la pile
+	// LCOV_EXCL_START
+	default:
+		assert(0 && "Unknown meta-type");
+	// LCOV_EXCL_STOP
+	}
+}
+}
