@@ -16,7 +16,7 @@ printf "Found $count files...\n"
 
 i=1
 ok=0
-for f in $tests; do
+for f in $decaf_files; do
 	printf "Parsing file $i of $count: $f... "
 
 	if OUTPUT=$($binary < $f 2>&1)
