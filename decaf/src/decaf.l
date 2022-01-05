@@ -29,7 +29,14 @@ void                    return VOID;
 0x{EHEXDIGIT}+          { yylval._hex_literal = strtol(yytext, NULL, 16); return HEXADECIMAL_CST; }
 {EDIGIT}+               { yylval._int_literal = strtol(yytext, NULL, 10); return DECIMAL_CST; }
 
-{EALPHA}{EALPHANUM}*    { strcpy(yylval._id, yytext); return ID; }
+{EALPHA}{EALPHANUM}*    {
+    if (yyleng >= MAX_IDENTIFIER_SIZE) {
+        fprintf(stderr, "Identifier max length reached (%d characters)\n", MAX_IDENTIFIER_SIZE);
+        exit(1);
+    }
+    strcpy(yylval._id, yytext);
+    return ID;
+}
 
 
 [+\-*/%]                return yytext[0];

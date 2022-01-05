@@ -10,10 +10,13 @@ void yyerror(const char *msg);
 
 %}
 %define parse.error verbose
+%code requires {
+    #include "symbols.h"
+}
 %union {
     int _int_literal;
     int _hex_literal;
-    char _id[128];
+    char _id[MAX_IDENTIFIER_SIZE];
 }
 %token CLASS PROGRAM VOID
 %token INT 
@@ -104,15 +107,6 @@ int_literal: decimal_literal
 decimal_literal: DECIMAL_CST
 ;
 hex_literal: HEXADECIMAL_CST
-;
-
-
-
-arith_op: '+'
-    | '-'
-    | '*'
-    | '/'
-    | '%'
 ;
 
 %%
