@@ -1,0 +1,6 @@
+class Program {
+	void main() {
+		int res;
+		res = 42 + 69;
+	}
+}

@@ -4,7 +4,7 @@ LDFLAGS ?=
 BISONFLAGS ?= -t
 FLEXFLAGS ?= -s
 
-.PHONY: clean test decaf
+.PHONY: clean test decaf unitary_test integration_test
 
 SRC_DIR=src
 SRC_TS_DIR=test/test_suite/src
@@ -49,8 +49,13 @@ $(SRC_DIR)/decaf.tab.c: $(SRC_DIR)/decaf.y
 	bison $(BISONFLAGS) --defines=$(patsubst $(SRC_DIR)/%.c,$(INCLUDE_DIR)/%.h,$@) --output=$@ $<
 
 # Tests
-test: $(patsubst $(UNIT_TEST_DIR)/%.c,$(BIN_DIR)/$(TEST_DIR)/%,$(wildcard $(UNIT_TEST_DIR)/*.c)) decaf | $(BIN_DIR)/$(TEST_DIR)
-	bash $(UNIT_TEST_DIR)/launch.sh $(BIN_DIR)/$(TEST_DIR) && bash $(INTEGRATION_TEST_DIR)/launch.sh $(BIN_DIR)
+test: unitary_test integration_test
+
+unitary_test: $(patsubst $(UNIT_TEST_DIR)/%.c,$(BIN_DIR)/$(TEST_DIR)/%,$(wildcard $(UNIT_TEST_DIR)/*.c))
+	bash $(UNIT_TEST_DIR)/launch.sh $(BIN_DIR)/$(TEST_DIR)
+
+integration_test: decaf
+	bash $(INTEGRATION_TEST_DIR)/launch.sh $(BIN_DIR)
 
 $(BIN_DIR)/$(TEST_DIR):
 	mkdir -p $@
