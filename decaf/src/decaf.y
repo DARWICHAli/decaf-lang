@@ -104,7 +104,6 @@ method_declaration: VOID  new_entry '(' ')' {
 		  	struct typelist* tl = typelist_new();
 			$2->type = typedesc_make_function(BT_VOID, tl);
 			} proc_block
-			| INT
 ;
 /*
  * Blocs et code
