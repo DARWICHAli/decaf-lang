@@ -34,7 +34,7 @@ void                    return VOID;
         fprintf(stderr, "Identifier max length reached (%d characters)\n", MAX_IDENTIFIER_SIZE);
         exit(1);
     }
-    strcpy(yylval._id, yytext);
+    strcpy(yylval.exprval._id, yytext);
     return ID;
 }
 
