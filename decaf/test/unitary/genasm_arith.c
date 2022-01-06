@@ -83,7 +83,7 @@ void set_quad(struct quad quads[MAX_Q], size_t i, enum Q_OP op, struct entry* re
 	quads[i].res = res;
 	quads[i].lhs = lhs;
 	quads[i].rhs = rhs;
-	quads[i].ctx = res->ctx;
+	quads[i].ctx = res ? res->ctx : NULL;
 }
 
 int check_file(FILE* f, const char* exp) {
@@ -130,6 +130,12 @@ int arith_add(void* data) {
 	const char* expected = ".data\n\n"
 				"global: .word 0\n"
 				"\n.text\n"
+				"__start:\n"
+				"call main\n"
+                                "move $a0 $v0\n"
+                                "li $v0 17\n"
+                                "syscall\n"
+                                "\n"
 				"main:\n"
 				"addi $sp $sp -12\n"
 				"lw $a0 4($sp)\n"
@@ -155,6 +161,12 @@ int arith_all_binary(void* data) {
 	const char* expected = ".data\n\n"
 			       "global: .word 0\n"
 			       "\n.text\n"
+				"__start:\n"
+				"call main\n"
+                                "move $a0 $v0\n"
+                                "li $v0 17\n"
+                                "syscall\n"
+                                "\n"
 			       "main:\n"
 			       "addi $sp $sp -12\n"
 			       "lw $a0 4($sp)\n"
@@ -195,6 +207,12 @@ int arith_aff_neg(void* data) {
 	const char* expected = ".data\n\n"
 			       "global: .word 0\n"
 			       "\n.text\n"
+				"__start:\n"
+				"call main\n"
+                                "move $a0 $v0\n"
+                                "li $v0 17\n"
+                                "syscall\n"
+                                "\n"
 			       "main:\n"
 			       "addi $sp $sp -12\n"
                                "lw $a0 4($sp)\n"
@@ -219,6 +237,12 @@ int arith_cst_small(void* data) {
 	const char* expected = ".data\n\n"
 			       "global: .word 0\n"
 			       "\n.text\n"
+				"__start:\n"
+				"call main\n"
+                                "move $a0 $v0\n"
+                                "li $v0 17\n"
+                                "syscall\n"
+                                "\n"
 			       "main:\n"
 			       "addi $sp $sp -12\n"
                                "ori $v0 $v0 42\n"
@@ -238,6 +262,12 @@ int arith_cst_big(void* data) {
 	const char* expected = ".data\n\n"
 			       "global: .word 0\n"
 			       "\n.text\n"
+				"__start:\n"
+				"call main\n"
+                                "move $a0 $v0\n"
+                                "li $v0 17\n"
+                                "syscall\n"
+                                "\n"
 			       "main:\n"
 			       "addi $sp $sp -12\n"
                                "ori $v0 $v0 65520\n"
@@ -259,6 +289,12 @@ int arith_no_locals(void* data) {
 	const char* expected = ".data\n\n"
 			       "global: .word 0\n"
 			       "\n.text\n"
+				"__start:\n"
+				"call main\n"
+                                "move $a0 $v0\n"
+                                "li $v0 17\n"
+                                "syscall\n"
+                                "\n"
 			       "main:\n"
 			       "lw $a0 4($fp)\n"
 			       "move $v0 $a0\n"
@@ -304,6 +340,29 @@ int err_neg_glob(void* data) {
 	return 0;
 }
 
+int empty_main(void* data) {
+	struct data* dt = data;
+
+	set_quad(dt->ql, 0, Q_END, NULL, NULL, NULL);
+	dt->ql[0].ctx = dt->main_int;
+	dt->main_int->used = 0; // no locals
+
+	const char* expected = ".data\n\n"
+			       "global: .word 0\n"
+			       "\n.text\n"
+				"__start:\n"
+				"call main\n"
+                                "move $a0 $v0\n"
+                                "li $v0 17\n"
+                                "syscall\n"
+                                "\n"
+			       "main:\n"
+			       "jr $ra\n";
+
+	genasm("MIPS", dt->ql, 1, dt->fo);
+
+	return check_file(dt->fo, expected);
+}
 
 int main() {
 	struct test_suite ts = make_ts("Traduction MIPS d'expressions arithmetiques", setup, teardown);
@@ -313,6 +372,7 @@ int main() {
 	add_test(&ts, arith_cst_small, "Affectation de petites constantes (<=16b)");
 	add_test(&ts, arith_cst_big, "Affectation de grandes constantes (>16b)");
 	add_test(&ts, arith_no_locals, "Fonction sans variable locales");
+	add_test(&ts, empty_main, "Main vide");
 	add_test_assert(&ts, err_cst_glob, "Impossible d'affecter une constante à une variable globale");
 	add_test_assert(&ts, err_aff_glob, "Impossible d'affecter une variable à une variable globale");
 	add_test_assert(&ts, err_neg_glob, "Impossible d'affecter une négation à une variable globale");

@@ -91,6 +91,15 @@ Ce sont les quadruplets les plus simples.
 
 * _l'appel de fonction_ : *_Q_CAL_*
 
+* _le retour de fonction_ : *_Q_RET_*
+
+==== Quadruplet sans opérande
+
+anchor:quad000[]
+Ce sont des quadruplets particuliers
+
+* _la fin de procédure_* : *_Q_END_*
+
 NOTE: une fonction renvoie une valeur, pas une procédure.
 
 === Opérateurs de comparaison
@@ -117,7 +126,7 @@ En langage C, un **quadruplet** est une structure de données `struct quad` à 4
 
 * *_op_* : _<<operator,enum Q_OP>>_ : Un enum stockant l'opérateur dont l'alias est conforme à celui défini dans <<Opérateurs>>.
 
-* *_lhs_* : _const <<entry,struct entry>>*_ : Une entrée dans la table des symboles correspondant à l'opérande de **gauche** de l'opérateur. **C'est aussi la valeur de param, call et proc**.
+* *_lhs_* : _const <<entry,struct entry>>*_ : Une entrée dans la table des symboles correspondant à l'opérande de **gauche** de l'opérateur. **C'est aussi la valeur de param, call, proc et return**.
 
 * *_rhs_* : _const <<entry,struct entry>>*_ : Une entrée dans la table des symboles correspondant à l'opérande de **droite** de l'opérateur.
 
@@ -154,6 +163,9 @@ On pourra utiliser les fonctions suivantes pour créer des <<quad, quadruplets>>
 
 * *_quad_call_* : (_const <<entry,struct entry>>*_, _const <<entry,struct entry>>*_) -> _<<quad, struct quad>>_ : Crée un quadruplet d'appel de fonction.
 
+* *_quad_return_* : (_const <<entry,struct entry>>*_) -> _<<quad, struct quad>>_ : Crée un quadruplet de retour de fonction.
+
+* *_quad_endproc_* : (_const <<entry,struct entry>>*_) -> _<<quad, struct quad>>_ : Crée un quadruplet de fin de procédure.
 
 === Génération de code
 

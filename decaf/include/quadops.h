@@ -54,7 +54,9 @@ enum Q_OP {
 	Q_CST, ///< Affectation de constante
 	Q_PAR, ///< Argument de fonction
 	Q_PRO, ///< Appel de procédure
-	Q_CAL ///< Appel de fonction
+	Q_CAL,  ///< Appel de fonction
+	Q_RET, ///< Retour de fonction
+	Q_END ///< Fin de procédure
 };
 
 // forward declarations

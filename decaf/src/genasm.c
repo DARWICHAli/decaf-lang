@@ -92,6 +92,9 @@ void write_instruction(FILE* out, const char* op, const char* one, const char* t
 #endif
 
 	switch (nb_op) {
+		case 0:
+			fprintf(out, "%s", op);
+			break;
 		case 1:
 			fprintf(out, "%s %s", op, one);
 			break;
@@ -177,6 +180,9 @@ void MIPS_translate(const struct quad q, FILE* out) {
 				write_instruction(out, "lui", "$v0", int_to_str(hi), "", 2, buf_com);
 			}
 			break;
+		case Q_END:
+			write_instruction(out, "jr", "$ra", "", "", 1, "endproc");
+			break;
 		// LCOV_EXCL_START
 		default:
 			assert(0 && "Not implemented");
@@ -185,7 +191,7 @@ void MIPS_translate(const struct quad q, FILE* out) {
 
 	if (is_in(q.op, req_res, REQ_RES_SIZE)) {
 		assert(q.res && "Operator requires res");
-		assert(q.res->ctx && q.res->ctx->parent && q.res->ctx->parent->parent && "Cannot affect to globbal var");
+		assert(q.res->ctx && q.res->ctx->parent && q.res->ctx->parent->parent && "Cannot affect to global var");
 		ctx_get_access(q.res, buf_res);
 		write_instruction(out, "sw", "$v0", buf_res, "", 2, q.res->id);
 	}
@@ -310,12 +316,24 @@ void make_fct(const struct context* args_ctx, FILE* outfile) {
 	MIPS_alloc_stack(to_alloc, outfile);
 }
 
+/* Génère point d'entrée */
+void MIPS_start(FILE* outfile) {
+	fprintf(outfile, "__start:\n");
+	write_instruction(outfile, "call", "main", "", "", 1, "");
+	write_instruction(outfile, "move", "$a0", "$v0", "", 2, "store main return");
+	write_instruction(outfile, "li", "$v0", "17", "", 2, "");
+	write_instruction(outfile, "syscall", "", "", "", 0, "");
+	fprintf(outfile, "\n");
+}
+
 /*
  * Génère segment text
  */
 void MIPS_text_segment(const struct quad* qlist, size_t liste_size, FILE* outfile) {
 	assert(liste_size > 0 && qlist && "Expected non-null qlist");
+	assert(ctx_lookup(tokenize("main")) && typedesc_is_function(&ctx_lookup(tokenize("main"))->type) && "main function required");
 	fprintf(outfile, "\n.text\n");
+	MIPS_start(outfile);
 
 	const struct context* last_args_ctx = NULL, *cur;
 	for (size_t i = 0; i < liste_size; ++i) {
