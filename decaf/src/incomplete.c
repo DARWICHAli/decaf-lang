@@ -17,7 +17,7 @@ struct quad_list qlist_new()
 
 struct quad_list* qlist_append(struct quad_list* qlst, quad_id_t qid)
 {
-    assert(qlst->used+1 < QUADLIST_MAX_SIZE && "Max Reached!");
+    assert(qlst->used+1 <= QUADLIST_MAX_SIZE && "Max Reached!");
     assert(getquad(qid) && "quad n'existe pas!");
     qlst->quads[qlst->used++] = qid;
 	return qlst;
