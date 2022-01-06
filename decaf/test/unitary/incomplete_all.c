@@ -34,7 +34,7 @@ int setup(void** data)
             case (0):{qlst->quadTab[i] =quad_arith( &qlst->res,  &qlst->lhs,Q_ADD, &qlst->rhs); break;}
             case (1):{qlst->quadTab[i] =quad_aff(&qlst->res, &qlst->rhs); break;}
             case (2):{qlst->quadTab[i] =quad_neg(&qlst->res,&qlst->rhs); break;}
-            case (3):{qlst->quadTab[i] =quad_goto(i+3); break;}
+            case (3):{qlst->quadTab[i] =quad_goto(i); break;}
             case (4):{qlst->quadTab[i] =quad_ifgoto(&qlst->lhs, CMP_EQ, &qlst->rhs, i); break;}
             case (5):{qlst->quadTab[i] =quad_param(&qlst->rhs); break;}
             case (6):{qlst->quadTab[i] =quad_call(&qlst->res, &qlst->rhs); break;}
