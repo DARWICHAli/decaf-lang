@@ -23,7 +23,7 @@ ok=0
 for f in $decaf_files; do
 	printf "Parsing file $i of $count: $f... "
 
-	if OUTPUT=$($binary < $f 2>&1)
+	if OUTPUT=$($binary --nogen < $f 2>&1)
 	then
 		printf "${GRE}Ok!${NOR}\n"
 		ok=$((ok+1))

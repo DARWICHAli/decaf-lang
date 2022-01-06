@@ -42,7 +42,8 @@ int main (int argc, char* argv[])
     size_t sz = 0;
     struct quad* quads = get_all_quads(&sz);
 
-    genasm("MIPS", quads, sz, fo);
+    if (!parameters.no_gen)
+    	genasm("MIPS", quads, sz, fo);
 
     return EXIT_SUCCESS;
 }
