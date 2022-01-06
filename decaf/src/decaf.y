@@ -27,6 +27,7 @@ void yyerror(const char *msg);
     struct entry* Entry;
     enum BTYPE BType;
     enum Q_OP Binop;
+    struct context* Context;
 }
 
 %token CLASS PROGRAM VOID
@@ -102,11 +103,19 @@ method_declarations: method_declaration
 method_declaration: VOID  new_entry '(' ')' {
 		  	struct typelist* tl = typelist_new();
 			$2->type = typedesc_make_function(BT_VOID, tl);
-			} block { gencode(quad_endproc()); }
+			} proc_block
 
 /*
  * Blocs et code
  */
+
+// bloc de procédure
+proc_block: '{' { ctx_pushctx(); } optional_var_declarations optional_instructions '}' { gencode(quad_endproc()); ctx_popctx();}
+
+
+// blocks
+blocks: block
+      | block blocks
 
 // Bloc de code
 block: '{' { ctx_pushctx(); } optional_var_declarations optional_instructions '}' { ctx_popctx();}
@@ -114,6 +123,7 @@ block: '{' { ctx_pushctx(); } optional_var_declarations optional_instructions '}
 // liste optionnelle d'instructions
 optional_instructions: %empty
 		     | instructions
+		     | blocks
 
 // liste d'instructions
 instructions: affectation ';'
