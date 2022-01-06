@@ -46,7 +46,7 @@ void yyerror(const char *msg);
 
 %%
 
-program: CLASS PROGRAM '{' {ctx_pushctx();} optional_var_declarations optional_method_declarations '}' {ctx_popctx();}
+program: CLASS PROGRAM '{' {ctx_pushctx();} optional_var_declarations optional_method_declarations '}' {/*ctx_popctx();*/ /* Ne pas dépiler ce contexte !*/}
 
 /*
  * Entrées et identifiants
