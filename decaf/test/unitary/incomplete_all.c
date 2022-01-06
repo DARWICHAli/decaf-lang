@@ -66,27 +66,24 @@ int append_max(void *data)
     for (size_t i = 0; i < QUADLIST_MAX_SIZE; i++) {
         qlist_append(&dt->qlst,i);
     }
-    return 1;
+    qlist_append(&dt->qlst,QUADLIST_MAX_SIZE);
+    return 0;
 }
 
-
-int append_max_assert(void *data)
-{
-    struct data_qlst* dt = data;
-    ASSERT_TRUE(qlist_append(&dt->qlst,QUADLIST_MAX_SIZE));
-    return 1;
-}
 
 int append_nonexist_assert(void *data)
 {
     struct data_qlst* dt = data;
-    ASSERT_TRUE(qlist_append(&dt->qlst,QUADLIST_MAX_SIZE-1));
-    return 1;
+    // for (size_t i = 0; i < QUADLIST_MAX_SIZE; i++) {
+    //     qlist_append(&dt->qlst,i);
+    // }
+    qlist_append(&dt->qlst,QUADLIST_MAX_SIZE+100);
+    return 0;
 }
 int tt_complete(void *data)
 {
     (void )data;
-    
+
     return 1;
 }
 int main(void)
@@ -94,8 +91,8 @@ int main(void)
 	struct test_suite qlst;
 
 	qlst = make_ts("incomplete", setup, teardown);
-    add_test(&qlst, append_max, "erreur ");
-    add_test_assert(&qlst, append_max_assert, "erreur si append apres sizemax");
+    add_test_assert(&qlst, append_max, "erreur ");
+    add_test_assert(&qlst, append_nonexist_assert, "erreur si append quad n'existe pas");
     //add_test_assert(&qlst, append_nonexist_assert, "erreur si append quad n'existe pas");
     add_test(&qlst, tt_complete, "erreur ");
 
