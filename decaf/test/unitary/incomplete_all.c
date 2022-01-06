@@ -74,27 +74,24 @@ int append_max(void *data)
 int append_nonexist_assert(void *data)
 {
     struct data_qlst* dt = data;
-    // for (size_t i = 0; i < QUADLIST_MAX_SIZE; i++) {
-    //     qlist_append(&dt->qlst,i);
-    // }
     qlist_append(&dt->qlst,QUADLIST_MAX_SIZE+100);
     return 0;
 }
-int tt_complete(void *data)
+int tt_complete_assert(void *data)
 {
-    (void )data;
-
-    return 1;
+    struct data_qlst* dt = data;
+    qlist_complete(&dt->qlst,4);
+    return 0;
 }
 int main(void)
 {
 	struct test_suite qlst;
 
 	qlst = make_ts("incomplete", setup, teardown);
-    add_test_assert(&qlst, append_max, "erreur ");
-    add_test_assert(&qlst, append_nonexist_assert, "erreur si append quad n'existe pas");
     //add_test_assert(&qlst, append_nonexist_assert, "erreur si append quad n'existe pas");
-    add_test(&qlst, tt_complete, "erreur ");
+    //add_test_assert(&qlst, append_max, "erreur ");
+    add_test_assert(&qlst, tt_complete_assert, "erreur type or res non null");
+
 
 
 	return exec_ts(&qlst) ? EXIT_SUCCESS : EXIT_FAILURE;

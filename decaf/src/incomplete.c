@@ -1,3 +1,11 @@
+/**
+ * @file gencode.c
+ * @author Ali Darwich <ali.darwich@etu.unistra.fr
+ * @version 1.0
+ * @brief Gestion de listes de quadruplets incomplets
+ * @ingroup IR
+ */
+
 #include <stdlib.h>
 #include "incomplete.h"
 #include "gencode.h"
@@ -26,9 +34,12 @@ struct quad_list* qlist_append(struct quad_list* qlst, quad_id_t qid)
 void qlist_complete(struct quad_list* qlst, quad_id_t qid)
 {
     for (size_t i = 0; i < qlst->used; i++) {
-        if((getquad(qlst->quads[i])->op == Q_IFG) && !(getquad(qlst->quads[i])->res) ){
-            getquad(qlst->quads[i])->dst = qid;
-        }
+        assert(
+            ((getquad(qlst->quads[i])->op == Q_IFG) ||
+            (getquad(qlst->quads[i])->op == Q_GOT) ) &&
+            !(getquad(qlst->quads[i])->res)  &&
+            "quadruplets non patchables ou res non null");
+        getquad(qlst->quads[i])->dst = qid;
     }
     return;
 }
