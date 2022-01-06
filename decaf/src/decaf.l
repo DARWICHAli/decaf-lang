@@ -21,20 +21,21 @@ EALPHANUM ({EALPHA}|{EDIGIT})
 %%
 \/\/.*                  ; /* \/\/[^\n] */
 
-int                     return INT;
+int                     { yylval.BType = BT_INT; return TYPE; }
+bool                    { yylval.BType = BT_BOOL; return TYPE; }
 class                   return CLASS;
 Program                 return PROGRAM; // NOTE: conflict
 void                    return VOID;
 
-0x{EHEXDIGIT}+          { yylval._hex_literal = strtol(yytext, NULL, 16); return HEXADECIMAL_CST; }
-{EDIGIT}+               { yylval._int_literal = strtol(yytext, NULL, 10); return DECIMAL_CST; }
+0x{EHEXDIGIT}+          { yylval.Integer = strtol(yytext, NULL, 16); return HEXADECIMAL_CST; }
+{EDIGIT}+               { yylval.Integer = strtol(yytext, NULL, 10); return DECIMAL_CST; }
 
 {EALPHA}{EALPHANUM}*    {
     if (yyleng >= MAX_IDENTIFIER_SIZE) {
         fprintf(stderr, "Identifier max length reached (%d characters)\n", MAX_IDENTIFIER_SIZE);
         exit(1);
     }
-    strcpy(yylval.exprval._id, yytext);
+    strcpy(yylval.Identifier, yytext);
     return ID;
 }
 

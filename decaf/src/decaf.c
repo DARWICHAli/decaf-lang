@@ -1,19 +1,34 @@
+#include "argparse.h"
+#include "gencode.h"
+#include "genasm.h"
+
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "symbols.h" // TDS - TDS entries - descripteur de type - liste de type
 
 extern int yyparse();
 extern int yydebug;
 
-int main (void)
+int main (int argc, char* argv[])
 {
-    
-    yydebug = 0; // avant yyparse
+    struct params parameters = parse_args(argc, argv);
 
-    // init TDS globale avec ajout des fonctions/nom protégés
-    struct context * ctx_global = ctx_pushctx();
-    
-    int parse_r_value = yyparse();
-    
-    return parse_r_value;
+    FILE* fo = fopen(parameters.output_file, "w");
+    if (!fo) {
+	    perror("Cannot open output file for writing");
+	    exit(EXIT_FAILURE);
+    }
+
+    yydebug = parameters.debug_mode;
+    int r = yyparse();
+    if (r == EXIT_FAILURE)
+	    exit(EXIT_FAILURE);
+
+    size_t sz = 0;
+    struct quad* quads = get_all_quads(&sz);
+
+    genasm("MIPS", quads, sz, fo);
+
+    return EXIT_SUCCESS;
 }

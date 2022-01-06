@@ -1,6 +1,7 @@
 %{
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 
 extern int yylex();
 void yyerror(const char *msg);
@@ -8,146 +9,139 @@ void yyerror(const char *msg);
 #include "ir.h"
 #include "symbols.h"
 
+#define SERR(x, msg) do { if ((x)) { fprintf(stderr, "Erreur semantique: " msg); exit(EXIT_FAILURE);} } while(0)
+#define SERRL(x, fct) do { if ((x)) { fprintf(stderr, "Erreur semantique: "); fct; exit(EXIT_FAILURE);} } while(0)
+
 %}
 %define parse.error verbose
+
 %code requires {
-    #include "symbols.h"
+#include "ir.h"
+#include "symbols.h"
 }
+
+
 %union {
-    int _int_literal;
-    int _hex_literal;
-    struct {
-        struct entry *_res;
-        char _id[MAX_IDENTIFIER_SIZE];
-    } exprval;
+    int Integer;
+    char Identifier[MAX_IDENTIFIER_SIZE];
+    struct entry* Entry;
+    enum BTYPE BType;
+    enum Q_OP Binop;
 }
+
 %token CLASS PROGRAM VOID
-%token INT 
 
-%token <_int_literal> DECIMAL_CST HEXADECIMAL_CST
-%token <exprval> ID 
+%token <Integer> DECIMAL_CST HEXADECIMAL_CST
+%token <BType> TYPE
+%token <Identifier> ID
 
-%type <exprval> expr location
-%type <_int_literal> int_literal decimal_literal hex_literal
+%type <Entry> new_entry existing_entry arithmetique_exp negation_exp
+%type <Integer> integer
 
 %left '-' '+'
-%left '*' '/' '%' 
-%nonassoc UNEG
+%left '*' '/' '%'
+%left MUNAIRE
 
 %start program
 
 %%
 
-program: CLASS PROGRAM '{' field_decl_opt method_decl_opt '}'
-;
+program: CLASS PROGRAM '{' optional_var_declarations optional_method_declarations '}'
 
-field_decl_opt: /* empty */
-    | field_decl ';'
-;
-field_decl: type id_list
-    | field_decl ';' type id_list
-;
+/*
+ * Entrées et identifiants
+ */
 
-id_list: ID                 {printf("var decl: %s\n", $1._id);}
-    | id_list ',' ID        {printf("var decl: %s\n", $3._id);}
-;
+// Déclaration de variables optionnelle
+optional_var_declarations: %empty
+		     | var_declarations
 
+// Déclaration de variables
+var_declarations: TYPE new_entry ';' { $2->type = typedesc_make_var($1); }
+		| TYPE new_entry ',' { $2->type = typedesc_make_var($1); } new_id_list ';'
 
-method_decl_opt: /* empty */
-    | method_decl block
-;
+// Liste de nouveelles entrées
+new_id_list: new_entry { $1->type = $<Entry>-2->type; }
+	   | new_entry ',' { $1->type = $<Entry>-2->type; } new_id_list
 
-method_decl: VOID ID '(' ')'    {
-        struct entry * e = ctx_newname($2._id);
-        e->type.mtype = MT_FUN;
-        printf("method_decl\n");}
-    // | type ID '(' ')'        {struct entry * e = ctx_newname($2._id);ctx_pushctx();printf("method_decl\n");}
-;
+// Nouvel identifiant
+new_entry: ID {
+			struct entry* ent = ctx_newname($1);
+			SERRL(ent == NULL, fprintf(stderr, "%s is already declared in this context\n", $1));
+			$$ = ent;
+	      }
 
-block: '{' var_decl_opt statement_opt '}' {
-        struct context * n_c = ctx_pushctx();
-        struct context * c_r = ctx_popctx();
-}
-;
+// identifiant préalablement déclaré
+existing_entry: ID {
+	      		struct entry* ent = ctx_lookup($1);
+			SERRL(ent == NULL, fprintf(stderr, "%s not declared in this context\n", $1));
+			$$ = ent;
+		   }
 
-var_decl_opt: /* empty */
-    | var_decl ';'
-;
+/*
+ * Constantes et litteraux
+ */
 
-var_decl: type id_list              // NOTE: Ajouter un moyen d'accéder au liste d'identifiant
-    | var_decl ';' type id_list     // NOTE: pour remplir la table des symboles
-;
+// Littérauux entiers
+integer: DECIMAL_CST { $$ = $1; }
+       | HEXADECIMAL_CST { $$ = $1; }
 
-type: INT
-;
+/*
+ * Méthodes et fonctions
+ */
 
-statement_opt:  /* empty */
-    | statement ';'
-;
+// Déclaration optionnelle de méthode
+optional_method_declarations: %empty
+			    | method_declarations
 
+// Plusieurs déclarations de méthodes
+method_declarations: method_declaration
+		   | method_declaration method_declarations
 
-statement: location assign_op expr {
-        struct quad q = quad_aff($1._res, $3._res);
-        quad_id_t qid = gencode(q);}
-    | statement ';' location assign_op expr {
-        struct quad q = quad_aff($3._res, $5._res);
-        quad_id_t qid = gencode(q);}
-;
+// Déclaration de méthodes
+method_declaration: VOID  new_entry '(' ')' {
+		  	struct typelist* tl = typelist_new();
+			$2->type = typedesc_make_function(BT_VOID, tl);
+			} block
 
+/*
+ * Blocs et code
+ */
 
-assign_op: '='
-;
+// Bloc de code
+block: '{' { ctx_pushctx(); } optional_var_declarations optional_instructions '}' { ctx_popctx();}
 
-location: ID    {
-        $$._res = ctx_lookup($1._id);
-}
-;
+// liste optionnelle d'instructions
+optional_instructions: %empty
+		     | instructions
 
-expr: expr '+' expr {
-        struct entry * res= ctx_make_temp();
-        struct quad q = quad_arith(res, $1._res, Q_ADD, $3._res);
-        quad_id_t qid = gencode(q);
-        $$._res = res;}
-    | expr '-' expr {
-        struct entry * res = ctx_make_temp();
-        struct quad q = quad_arith(res, $1._res, Q_SUB, $3._res);
-        quad_id_t qid = gencode(q);
-        $$._res = res;}
-    | expr '*' expr {
-        struct entry * res = ctx_make_temp();
-        struct quad q = quad_arith(res, $1._res, Q_MUL, $3._res);
-        quad_id_t qid = gencode(q);
-        $$._res = res;}
-    | expr '/' expr {
-        struct entry * res = ctx_make_temp();
-        struct quad q = quad_arith(res, $1._res, Q_DIV, $3._res);
-        quad_id_t qid = gencode(q);
-        $$._res = res;}
-    | expr '%' expr {
-        struct entry * res = ctx_make_temp();
-        struct quad q = quad_arith(res, $1._res, Q_MOD, $3._res);
-        quad_id_t qid = gencode(q);
-        $$._res = res;}
-    | '-' expr %prec UNEG {
-        struct entry * res = ctx_make_temp();
-        struct quad q = quad_neg(res, $2._res);
-        quad_id_t qid = gencode(q);
-        $$._res = res;}
-    | '(' expr ')'      {$$ = $2;}
-    | literal       //  NOTE: Bison types collides
-    | location
-;
+// liste d'instructions
+instructions: affectation ';'
 
-literal: int_literal
-;
+/*
+ * Expressions arithmétiques
+ */
 
-int_literal: decimal_literal
-    | hex_literal
-;
-decimal_literal: DECIMAL_CST
-;
-hex_literal: HEXADECIMAL_CST
-;
+// affectation
+affectation: existing_entry '=' arithmetique_exp { gencode(quad_aff($1, $3)); }
+
+// expression arithmétique
+arithmetique_exp: arithmetique_exp '+' arithmetique_exp { $$ = ctx_make_temp(); gencode(quad_arith($$, $1, Q_ADD, $3)); }
+		| arithmetique_exp '-' arithmetique_exp { $$ = ctx_make_temp(); gencode(quad_arith($$, $1, Q_SUB, $3)); }
+		| arithmetique_exp '*' arithmetique_exp { $$ = ctx_make_temp(); gencode(quad_arith($$, $1, Q_MUL, $3)); }
+		| arithmetique_exp '/' arithmetique_exp { $$ = ctx_make_temp(); gencode(quad_arith($$, $1, Q_DIV, $3)); }
+		| arithmetique_exp '%' arithmetique_exp { $$ = ctx_make_temp(); gencode(quad_arith($$, $1, Q_MOD, $3)); }
+		| negation_exp { $$ = $1; } %prec MUNAIRE
+		| '(' arithmetique_exp ')' { $$ = $2; }
+		| integer { $$ = ctx_make_temp(); gencode(quad_cst($$, $1)); }
+		| existing_entry {$$ = $1; }
+
+// moins unaire
+negation_exp: '-' arithmetique_exp {
+	    				$$ = ctx_make_temp();
+					gencode(quad_neg($$, $2));
+				   }
+
 
 %%
 void yyerror(const char *msg)
