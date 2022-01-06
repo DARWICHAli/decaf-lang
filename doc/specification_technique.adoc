@@ -165,7 +165,7 @@ On pourra utiliser les fonctions suivantes pour créer des <<quad, quadruplets>>
 
 * *_quad_return_* : (_const <<entry,struct entry>>*_) -> _<<quad, struct quad>>_ : Crée un quadruplet de retour de fonction.
 
-* *_quad_endproc_* : (_const <<entry,struct entry>>*_) -> _<<quad, struct quad>>_ : Crée un quadruplet de fin de procédure.
+* *_quad_endproc_* : (_void_) -> _<<quad, struct quad>>_ : Crée un quadruplet de fin de procédure.
 
 === Génération de code
 

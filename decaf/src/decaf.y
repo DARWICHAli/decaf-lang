@@ -102,7 +102,7 @@ method_declarations: method_declaration
 method_declaration: VOID  new_entry '(' ')' {
 		  	struct typelist* tl = typelist_new();
 			$2->type = typedesc_make_function(BT_VOID, tl);
-			} block
+			} block { gencode(quad_endproc()); }
 
 /*
  * Blocs et code

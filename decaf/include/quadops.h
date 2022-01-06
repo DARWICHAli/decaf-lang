@@ -196,6 +196,21 @@ struct quad quad_proc(const struct entry* proc);
  */
 struct quad quad_cst(const struct entry* var, int cst);
 
+/**
+ * @brief Crée un quadruplet de retour de fonction
+ *
+ * @param ret Retour de la fonction
+ *
+ * @return Un quadruplet de la forme "return ret"
+ */
+struct quad quad_return(const struct entry* ret);
+
+/**
+ * @brief Crée un quadruplet de fin de procédure
+ *
+ * @return Un quadruplet de la forme "return;"
+ */
+struct quad quad_endproc();
 
 ///@}
 ///@}

@@ -74,6 +74,13 @@ int quad_neg_val(void* data)
 	return 0;
 }
 
+int quad_ret_bad(void* data)
+{
+	(void)data;
+	quad_return(NULL);
+	return 0;
+}
+
 extern int is_arith(enum Q_OP);
 
 int quad_arith_bad_op(void* data) {
@@ -165,6 +172,21 @@ int spec_ok_call(void* data) {
 	return 1;
 }
 
+int spec_ok_return(void* data) {
+	struct donnees* dt = data;
+	struct quad q = quad_return(&dt->res);
+	ASSERT_EQ(q.op, Q_RET);
+	ASSERT_EQ(q.lhs, &dt->res);
+	return 1;
+}
+
+int spec_ok_endproc(void* data) {
+	(void)data;
+	struct quad q = quad_endproc();
+	ASSERT_EQ(q.op, Q_END);
+	return 1;
+}
+
 int is_arith_test(void* data) {
 	(void)data;
 	ASSERT_EQ(is_arith(Q_CAL), 0);
@@ -183,6 +205,7 @@ int main(void)
 	add_test_assert(&ts_qo, quad_arith_bad_op, "erreur si quad_arith: mauvais operateur");
 	add_test_assert(&ts_qo, quad_aff_res, "erreur si quad_aff: res == NULL");
 	add_test_assert(&ts_qo, quad_aff_res, "erreur si quad_aff: val == NULL");
+	add_test_assert(&ts_qo, quad_ret_bad, "erreur si quad_return: ret == NULL");
 
 	add_test(&ts_qo, spec_ok_arith, "quad_arith conforme");
 	add_test(&ts_qo, spec_ok_aff, "quad_aff conforme");
@@ -193,6 +216,8 @@ int main(void)
 	add_test(&ts_qo, spec_ok_param, "quad_param conforme");
 	add_test(&ts_qo, spec_ok_proc, "quad_proc conforme");
 	add_test(&ts_qo, spec_ok_call, "quad_call conforme");
+	add_test(&ts_qo, spec_ok_return, "quad_return conforme");
+	add_test(&ts_qo, spec_ok_endproc, "quad_endproc conforme");
 
 	add_test(&ts_qo, is_arith_test, "Fonction annexe is_arith");
 
