@@ -187,6 +187,15 @@ size_t ctx_longest_path(const struct context* ctx);
 struct entry* ctx_search(const char* str, const struct context* ctx);
 
 /**
+ * @brief Cpnverti une chaîne en identifiant
+ *
+ * @param str Chaîne C à convertir
+ *
+ * @return Une chaîne pour utilisation temporaire.
+ */
+const char* tokenize(const char* str);
+
+/**
  * @}
  * @}
  */

@@ -12,13 +12,6 @@
 extern int yyparse();
 extern int yydebug;
 
-const char* tokenize(const char* str) {
-	static char buf[MAX_IDENTIFIER_SIZE];
-	assert(strlen(str) < MAX_IDENTIFIER_SIZE && "identifier too big");
-	strncpy(buf, str, MAX_IDENTIFIER_SIZE);
-	return buf;
-}
-
 int main (int argc, char* argv[])
 {
     struct params parameters = parse_args(argc, argv);

@@ -216,3 +216,10 @@ size_t ctx_longest_path(const struct context* ctx)
 
 	return max;
 }
+
+const char* tokenize(const char* str) {
+	static char buf[MAX_IDENTIFIER_SIZE];
+	assert(strlen(str) < MAX_IDENTIFIER_SIZE && "identifier too big");
+	strncpy(buf, str, MAX_IDENTIFIER_SIZE);
+	return buf;
+}

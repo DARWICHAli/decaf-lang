@@ -34,13 +34,6 @@ void make_var(struct context* ctx, const char* id) {
 	++ctx->used;
 }
 
-char* tokenize(const char* str) {
-	static char buf[MAX_IDENTIFIER_SIZE];
-	int n = snprintf(buf, MAX_IDENTIFIER_SIZE, "%s", str);
-	ASSERT_TRUE(n > 0 && n < MAX_IDENTIFIER_SIZE);
-	return buf;
-}
-
 int setup(void** data) {
 	struct data* dt = malloc(sizeof(struct data));
 	if (!dt)

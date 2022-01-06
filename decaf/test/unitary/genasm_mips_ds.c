@@ -46,13 +46,6 @@ void strip_com(char* str) {
 	}
 }
 
-char* tokenize(const char* str) {
-	static char buf[MAX_IDENTIFIER_SIZE];
-	int n = snprintf(buf, MAX_IDENTIFIER_SIZE, "%s", str);
-	ASSERT_TRUE(n > 0 && n < MAX_IDENTIFIER_SIZE);
-	return buf;
-}
-
 int setup(void** data) {
 	struct donnees* dt = malloc(sizeof(struct donnees));
 	if (!dt)
