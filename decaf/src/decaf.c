@@ -28,7 +28,7 @@ int main (int argc, char* argv[])
 	    perror("Cannot open output file for writing");
 	    exit(EXIT_FAILURE);
     }
-    
+
     // Contexte super-global
     ctx_pushctx();
     struct typelist* one_int = typelist_new();

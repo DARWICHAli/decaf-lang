@@ -145,6 +145,7 @@ struct params parse_args(int argc, char* const argv[])
 		}
 		assert(read <= left && "Erreur in arg or name");
 		left -= read;
+		i += read-1;
 	}
 
 	return ret;
