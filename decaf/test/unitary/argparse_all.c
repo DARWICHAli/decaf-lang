@@ -168,6 +168,18 @@ int debug_extended(void* data) {
 	return 1;
 }
 
+int parse_extended(void* data) {
+	(void)data;
+	char* argv[] = { "decaf", "--nogen" };
+
+	size_t argc = 2;
+	struct params p = parse_args(argc, argv);
+	fflush(stderr);
+	ASSERT_EQ(p.no_gen, 1);
+
+	return 1;
+}
+
 int bad_arg_fail(void* data) {
 	struct data* dt = data;
 	char* argv[] = { "decaf", "--xxx" };
@@ -253,6 +265,7 @@ int main() {
 	add_test(&ts, tos_long, "-tos");
 	add_test(&ts, tos_extended, "--tos");
 	add_test(&ts, debug_extended, "--debug");
+	add_test(&ts, parse_extended, "--nogen");
 	add_test(&ts, version_extended, "--version works and exit");
 	add_test(&ts, tos_extended, "--help works and exit");
 	add_test(&ts, bad_arg_fail, "bad argument fails and exit with error");
