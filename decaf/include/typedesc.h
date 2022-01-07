@@ -41,8 +41,8 @@ enum MTYPE {
  */
 enum BTYPE {
 	BT_BOOL, ///< Type booléen
-	BT_INT,   ///< Type entier signé
-	BT_VOID ///< Type void, reservé aux fonctions
+	BT_INT,  ///< Type entier signé
+	BT_VOID  ///< Type void, reservé aux fonctions
 };
 
 
