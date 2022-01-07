@@ -133,32 +133,18 @@ enum MTYPE typedesc_meta_type(const struct typedesc* td)
 #define LEN_BT 2
 #define ID_LEN 64
 #define MAX_LEN_ARGLIST_STRING 4096
-/**
- * @brief Fonction qui donne la liste de parametres 
- * sous forme de string pour l'afficher dans la fonction td_fprintf.
- */
-void get_arglist_string(const struct typedesc* td,char out[MAX_LEN_ARGLIST_STRING], char names[LEN_BT][ID_LEN])
-{
-	assert(td && "print_function expected NON null entry");
-	assert(typedesc_is_function(td) && "print_function non function typedesc not allowed");
-	const struct typelist *tl;
-	size_t size;
-	tl = typedesc_function_args(td);
-	size = typelist_size(tl);
-	for(size_t i = 0; i < size - 1; i++){
-		strcpy(out, names[tl->btypes[i]]);
-		strcpy(out, ", ");
-	}
-	strcpy(out, names[tl->btypes[size]]);
-}
 
 void td_fprintf(FILE* fd, const struct typedesc* td)
 {
 	assert(td && "td_fprintf expecting NON null entry");
+	assert(fd && "td_fprintf expecting NON null entry");
+
 	enum BTYPE type;
+	const struct typelist *tl;
+	size_t size;
 	char names[LEN_BT][ID_LEN] ={"bool", "int"};
 	char arglist[MAX_LEN_ARGLIST_STRING];
-	int size;
+	size_t size_arglist;
 	switch (typedesc_meta_type(td)) {
 	case MT_VAR:
 		type = typedesc_var_type(td);
@@ -167,12 +153,19 @@ void td_fprintf(FILE* fd, const struct typedesc* td)
 	case MT_TAB:
 		type = typedesc_tab_type(td);
 		size = typedesc_tab_size(td);
-		fprintf(fd,"tab: (%s)[%d]  ", names[type], size);
+		fprintf(fd,"tab: (%s)[%ld]  ", names[type], size);
 
 		break;
 	case MT_FUN:
 		type = typedesc_function_type(td);
-		get_arglist_string(td,arglist, names);
+		tl = typedesc_function_args(td);
+		size_arglist = typelist_size(tl);
+		for(size_t i = 0; i < size_arglist -1 ; i++){
+			fprintf(fd,"%ld\n", i);
+			strcat(arglist, names[tl->btypes[i]]);
+			strcat(arglist, ", ");
+		}
+		strcat(arglist, names[tl->btypes[size_arglist-1]]);
 		fprintf(fd,"function: (%s) -> %s", arglist, names[type]);
 		break;
 	// LCOV_EXCL_START

@@ -218,11 +218,69 @@ int td_func(void* data)
 	return 1;
 }
 
-int td_fprintf_test(void *data)
+int td_fprintf_null_entry_fd(void *data)
 {
 	struct data_td* dt = data;
-	td_fprintf(stdout,&dt->fct_bool2b);
+	td_fprintf(NULL,&dt->fct_bool2b);
 	return 0;
+}
+
+int td_fprintf_null_entry_td()
+{
+	
+	FILE* fd = tmpfile();
+	if(fd == NULL)
+		fprintf(stderr,"td_fprintf_1: erreur creation de fichier temporaire\n");
+	
+	td_fprintf(fd,NULL);
+	fclose(fd);
+	return 0;
+}
+
+int td_fprintf_1(void *data)
+{
+	struct data_td* dt = data;
+	FILE* fd = tmpfile();
+	if(fd == NULL)
+		fprintf(stderr,"td_fprintf_1: erreur creation de fichier temporaire\n");
+	td_fprintf(fd,&dt->fct_bool2b);
+
+	char c;
+	int i = 0;
+	char expected[] = "(int, bool) -> bool";
+	while((c=fgetc(fd))!=EOF){
+		putchar(c);
+		if(c != expected[i] ){
+			fprintf(stderr,"td_fprintf_1: mauvais affichage");
+			return 0;
+		}
+		i++;
+	}
+	fclose(fd);
+	return 1;
+}
+
+int td_fprintf_2(void *data)
+{
+	struct data_td* dt = data;
+	FILE* fd = tmpfile();
+	if(fd == NULL)
+		fprintf(stderr,"td_fprintf_1: erreur creation de fichier temporaire\n");
+	td_fprintf(fd,&dt->fct_bool);
+
+	char c;
+	int i = 0;
+	char expected[] = "(int) -> bool";
+	while((c=fgetc(fd))!=EOF){
+		putchar(c);
+		if(c != expected[i]){
+			fprintf(stderr,"td_fprintf_2: mauvais affichage");
+			return 0;
+		}
+		i++;
+	}
+	fclose(fd);
+	return 1;
 }
 
 int main(void)
@@ -251,7 +309,11 @@ int main(void)
 	add_test(&td, td_var, "typedesc var behaves correctly");
 	add_test(&td, td_func, "typedesc func behaves correctly");
 	add_test(&td, td_tab, "typedesc tab behaves correctly");
-	add_test(&td, td_fprintf_test, "test print");
-	
+	add_test(&td, td_fprintf_1, "mauvais affichage");
+	add_test(&td, td_fprintf_1, "mauvais affichage");
+
+	add_test_assert(&td, td_fprintf_null_entry_fd, "erreru si fd == NULL");
+	add_test_assert(&td, td_fprintf_null_entry_fd, "erreru si td == NULL");
+
 	return exec_ts(&bt) && exec_ts(&td) ? EXIT_SUCCESS : EXIT_FAILURE;
 }
