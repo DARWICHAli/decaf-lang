@@ -1,4 +1,4 @@
-class Program {
+class Neg {
 	void main() {
 		int res, lhs;
 		lhs = 67;

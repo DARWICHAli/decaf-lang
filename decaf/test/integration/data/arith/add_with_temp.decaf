@@ -1,4 +1,4 @@
-class Program {
+class AddWithTemp {
 	void main() {
 		int res;
 		res = 42 + 69;

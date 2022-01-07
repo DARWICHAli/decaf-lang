@@ -1,4 +1,4 @@
-class Program {
+class AddEasy {
 	void main() {
 		int res, lhs, rhs;
 		lhs = 42;

@@ -1,4 +1,4 @@
-class Program {
+class AllBinop {
 	void main() {
 		int res1, res2, res3, res4, res5;
 		res1 = 42 +   69;

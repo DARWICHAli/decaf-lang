@@ -24,7 +24,6 @@ EALPHANUM ({EALPHA}|{EDIGIT})
 int                     { yylval.BType = BT_INT; return TYPE; }
 bool                    { yylval.BType = BT_BOOL; return TYPE; }
 class                   return CLASS;
-Program                 return PROGRAM; // NOTE: conflict
 void                    return VOID;
 
 0x{EHEXDIGIT}+          { yylval.Integer = strtol(yytext, NULL, 16); return HEXADECIMAL_CST; }

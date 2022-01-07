@@ -30,7 +30,7 @@ void yyerror(const char *msg);
     struct context* Context;
 }
 
-%token CLASS PROGRAM VOID
+%token CLASS VOID
 
 %token <Integer> DECIMAL_CST HEXADECIMAL_CST
 %token <BType> TYPE
@@ -47,7 +47,7 @@ void yyerror(const char *msg);
 
 %%
 
-program: CLASS PROGRAM '{' {ctx_pushctx();} optional_var_declarations optional_method_declarations '}' {/*ctx_popctx();*/ /* Ne pas dépiler ce contexte !*/}
+program: CLASS ID '{' {ctx_pushctx();} optional_var_declarations optional_method_declarations '}' {/*ctx_popctx();*/ /* Ne pas dépiler ce contexte !*/}
 ;
 /*
  * Entrées et identifiants
@@ -55,7 +55,7 @@ program: CLASS PROGRAM '{' {ctx_pushctx();} optional_var_declarations optional_m
 
 // Déclaration de variables optionnelle
 optional_var_declarations: %empty
-		     | var_declarations
+		     | var_declarations optional_var_declarations
 ;
 // Déclaration de variables
 var_declarations: TYPE new_entry ';' { $2->type = typedesc_make_var($1); }
