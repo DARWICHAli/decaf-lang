@@ -1,0 +1,6 @@
+class Program {
+    int v1;
+    int v3, v5, Vaze_;
+    bool _ssjid;
+    void main () {}
+}
