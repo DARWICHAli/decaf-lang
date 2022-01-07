@@ -103,7 +103,10 @@ method_declarations: method_declaration
 method_declaration: VOID  new_entry '(' ')' {
 		  	struct typelist* tl = typelist_new();
 			$2->type = typedesc_make_function(BT_VOID, tl);
-			} proc_block
+			ctx_pushctx();
+			/* Ici empiler les paramètres de la fonction */
+			ctx_pushctx();
+			} proc_block { ctx_popctx(); ctx_popctx();}
 ;
 /*
  * Blocs et code
