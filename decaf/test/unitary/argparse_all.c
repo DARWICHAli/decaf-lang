@@ -180,6 +180,17 @@ int parse_extended(void* data) {
 	return 1;
 }
 
+int entrypoint_extended(void* data) {
+	(void)data;
+	char* argv[] = { "decaf", "--entrypoint" };
+
+	size_t argc = 2;
+	struct params p = parse_args(argc, argv);
+	fflush(stderr);
+	ASSERT_EQ(p.generate_entrypoint, 1);
+
+	return 1;
+}
 int bad_arg_fail(void* data) {
 	struct data* dt = data;
 	char* argv[] = { "decaf", "--xxx" };
@@ -236,6 +247,7 @@ int combination(void* data) {
 	ASSERT_EQSTR(p.output_file, "file.mips");
 	ASSERT_EQ(p.debug_mode, 1);
 	ASSERT_EQ(p.print_table, 1);
+	ASSERT_EQ(p.generate_entrypoint, 0);
 
 	return 1;
 }
@@ -266,6 +278,7 @@ int main() {
 	add_test(&ts, tos_extended, "--tos");
 	add_test(&ts, debug_extended, "--debug");
 	add_test(&ts, parse_extended, "--nogen");
+	add_test(&ts, entrypoint_extended, "--entrypoint");
 	add_test(&ts, version_extended, "--version works and exit");
 	add_test(&ts, tos_extended, "--help works and exit");
 	add_test(&ts, bad_arg_fail, "bad argument fails and exit with error");
