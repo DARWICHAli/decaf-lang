@@ -55,7 +55,7 @@ program: CLASS ID '{' {ctx_pushctx();} optional_var_declarations optional_method
 
 // Déclaration de variables optionnelle
 optional_var_declarations: %empty
-		     | var_declarations
+		     | var_declarations optional_var_declarations
 ;
 // Déclaration de variables
 var_declarations: TYPE new_entry ';' { $2->type = typedesc_make_var($1); }
@@ -103,7 +103,10 @@ method_declarations: method_declaration
 method_declaration: VOID  new_entry '(' ')' {
 		  	struct typelist* tl = typelist_new();
 			$2->type = typedesc_make_function(BT_VOID, tl);
-			} proc_block
+			ctx_pushctx();
+			/* Ici empiler les paramètres de la fonction */
+			ctx_pushctx();
+			} proc_block { ctx_popctx(); ctx_popctx();}
 ;
 /*
  * Blocs et code

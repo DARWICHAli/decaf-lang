@@ -23,6 +23,7 @@ struct data {
 	struct quad ql[MAX_Q];
 	struct entry *res, *rhs, *lhs;
 	FILE* fo;
+	struct asm_params ap;
 };
 
 void make_var(struct context* ctx, const char* id) {
@@ -67,6 +68,8 @@ int setup(void** data) {
 	dt->rhs->type = typedesc_make_var(BT_INT);
 
 	dt->fo = fopen("/tmp/tst_genasm_arith.mips", "w+");
+	dt->ap.generate_entrypoint = 1;
+
 	return dt->fo ? 1 : 0;
 }
 
@@ -144,7 +147,7 @@ int arith_add(void* data) {
 				"sw $v0 0($sp)\n";
 
 
-	genasm("MIPS", dt->ql, 1, dt->fo);
+	genasm("MIPS", dt->ql, 1, dt->fo, &dt->ap);
 
 	return check_file(dt->fo, expected);
 }
@@ -193,7 +196,7 @@ int arith_all_binary(void* data) {
 			       "mfhi $v0\n"
 			       "sw $v0 0($sp)\n";
 
-	genasm("MIPS", dt->ql, 5, dt->fo);
+	genasm("MIPS", dt->ql, 5, dt->fo, &dt->ap);
 
 	return check_file(dt->fo, expected);
 }
@@ -219,11 +222,11 @@ int arith_aff_neg(void* data) {
                                "move $v0 $a0\n"
                                "sw $v0 0($sp)\n"
                                "lw $a0 8($sp)\n"
-                               "xor $a1 $a1 a1\n"
+                               "and $a1 $a1 $0\n"
                                "sub $v0 $a1 $a0\n"
                                "sw $v0 0($sp)\n";
 
-	genasm("MIPS", dt->ql, 2, dt->fo);
+	genasm("MIPS", dt->ql, 2, dt->fo, &dt->ap);
 
 	return check_file(dt->fo, expected);
 }
@@ -248,7 +251,7 @@ int arith_cst_small(void* data) {
                                "ori $v0 $v0 42\n"
                                "sw $v0 0($sp)\n";
 
-	genasm("MIPS", dt->ql, 1, dt->fo);
+	genasm("MIPS", dt->ql, 1, dt->fo, &dt->ap);
 
 	return check_file(dt->fo, expected);
 }
@@ -274,7 +277,7 @@ int arith_cst_big(void* data) {
                                "lui $v0 15\n"
                                "sw $v0 0($sp) # res\n";
 
-	genasm("MIPS", dt->ql, 1, dt->fo);
+	genasm("MIPS", dt->ql, 1, dt->fo, &dt->ap);
 
 	return check_file(dt->fo, expected);
 }
@@ -300,7 +303,7 @@ int arith_no_locals(void* data) {
 			       "move $v0 $a0\n"
                                "sw $v0 0($fp)\n";
 
-	genasm("MIPS", dt->ql, 1, dt->fo);
+	genasm("MIPS", dt->ql, 1, dt->fo, &dt->ap);
 
 	return check_file(dt->fo, expected);
 }
@@ -313,7 +316,7 @@ int err_cst_glob(void* data) {
 	dt->ql[0].val = 42;
 	dt->ql[0].ctx = dt->main_int;
 
-	genasm("MIPS", dt->ql, 1, dt->fo);
+	genasm("MIPS", dt->ql, 1, dt->fo, &dt->ap);
 
 	return 0;
 }
@@ -324,7 +327,7 @@ int err_aff_glob(void* data) {
 	set_quad(dt->ql, 0, Q_AFF, &dt->root->entries[0], dt->lhs, NULL);
 	dt->ql[0].ctx = dt->main_int;
 
-	genasm("MIPS", dt->ql, 1, dt->fo);
+	genasm("MIPS", dt->ql, 1, dt->fo, &dt->ap);
 
 	return 0;
 }
@@ -335,7 +338,7 @@ int err_neg_glob(void* data) {
 	set_quad(dt->ql, 0, Q_NEG, &dt->root->entries[0], dt->lhs, NULL);
 	dt->ql[0].ctx = dt->main_int;
 
-	genasm("MIPS", dt->ql, 1, dt->fo);
+	genasm("MIPS", dt->ql, 1, dt->fo, &dt->ap);
 
 	return 0;
 }
@@ -359,7 +362,7 @@ int empty_main(void* data) {
 			       "main:\n"
 			       "jr $ra\n";
 
-	genasm("MIPS", dt->ql, 1, dt->fo);
+	genasm("MIPS", dt->ql, 1, dt->fo, &dt->ap);
 
 	return check_file(dt->fo, expected);
 }

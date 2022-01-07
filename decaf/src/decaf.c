@@ -34,9 +34,10 @@ int main (int argc, char* argv[])
 
     size_t sz = 0;
     struct quad* quads = get_all_quads(&sz);
+    struct asm_params asmp = {.generate_entrypoint = parameters.generate_entrypoint };
 
     if (!parameters.no_gen)
-    	genasm("MIPS", quads, sz, fo);
+    	genasm("MIPS", quads, sz, fo, &asmp);
 
     return EXIT_SUCCESS;
 }

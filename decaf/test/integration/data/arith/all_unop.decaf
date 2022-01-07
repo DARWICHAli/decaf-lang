@@ -1,4 +1,4 @@
-class Program {
+class AllUnop {
 	void main() {
 		int res;
 		res = 42;
