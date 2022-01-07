@@ -1,0 +1,8 @@
+class AssignTrueFalse {
+
+    void main () {
+        boolean tt, ff;
+        tt = true;
+        ff = false;
+    }
+}

@@ -1,0 +1,9 @@
+class BoolExpr {
+    void main () {
+        boolean booboo, bibouu234_, res;
+        booboo = false;
+        bibouu234_ = true;
+        res = ! (booboo || bibouu234_);
+        res = res && booboo;
+    }
+}

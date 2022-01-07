@@ -1,0 +1,13 @@
+class TrueFalseCondExpr {
+    boolean b1;
+    void main () {
+        boolean b2;
+        b1 = true;
+        if (b1) {
+            b2 = b1 && false;
+            if (false || true) {
+                int qsd;
+            }
+        }
+    }
+}
