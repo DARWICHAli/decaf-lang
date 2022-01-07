@@ -1,0 +1,6 @@
+class AddWithTemp {
+	void main() {
+		int res;
+		res = 42 + 69;
+	}
+}

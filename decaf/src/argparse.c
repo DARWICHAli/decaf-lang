@@ -7,24 +7,42 @@
 
 #define VERSION "V1-arith"
 
-#define NB_ARGS 5
+#define NB_ARGS 7
 static const char* args_str[NB_ARGS][3] = { { "-t", "-tos", "Affiche la table des symboles" },
 					    { "-v", "-version", "Version du programme et noms des auteurs" },
 					    { "-o", "-out", "Nom du fichier de sortie" },
 					    { "-d", "-debug", "Active le mode debug du compilateur" },
+					    { "-n", "-nogen", "Ne fait que le parsing" },
+					    { "-e", "-entrypoint", "Génère un point d'entrée dans l'assembleur final" },
 					    { "-h", "-help", "Affiche ce message" } };
-static int args_need[NB_ARGS] = { 0, 0, 1, 0, 0 };
-static int (*args_fct[NB_ARGS])(struct params* p, char* const args[]) = { arg_tos, arg_version, arg_out, arg_debug,
-									  arg_help };
+static int args_need[NB_ARGS] = { 0, 0, 1, 0, 0, 0, 0};
+static int (*args_fct[NB_ARGS])(struct params* p, char* const args[]) = { arg_tos,   arg_version,    arg_out, arg_debug,
+									  arg_nogen, arg_entrypoint, arg_help };
 
-struct params default_args() {
+struct params default_args()
+{
 	struct params ret;
 	ret.debug_mode = 0;
 	ret.print_table = 0;
+	ret.no_gen = 0;
+	ret.generate_entrypoint = 0;
 	ret.output_file = "out.mips";
 	return ret;
 }
 
+int arg_nogen(struct params* p, char* const args[])
+{
+	(void)args;
+	p->no_gen = 1;
+	return 1;
+}
+
+int arg_entrypoint(struct params* p, char* const args[])
+{
+	(void)args;
+	p->generate_entrypoint = 1;
+	return 1;
+}
 
 int arg_tos(struct params* p, char* const args[])
 {
@@ -136,6 +154,7 @@ struct params parse_args(int argc, char* const argv[])
 		}
 		assert(read <= left && "Erreur in arg or name");
 		left -= read;
+		i += read - 1;
 	}
 
 	return ret;

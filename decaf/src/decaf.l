@@ -1,5 +1,6 @@
 %{
 #include <stdio.h>
+#include <string.h>
 #include "decaf.tab.h"
 
 extern YYSTYPE yylval;
@@ -13,32 +14,36 @@ int fileno(FILE *stream);
 %option noyywrap
 
     /* Expressions rationnelles nommées */
-
-
+EDIGIT [0-9]
+EALPHA [a-zA-Z_]
+EHEXDIGIT {EDIGIT}[a-fA-F]
+EALPHANUM ({EALPHA}|{EDIGIT})
 %%
-    /* Hexadecimaux en premier, sinon (0)x(..) sont matcher comme étant 2 entiers  */
-0x[0-9a-fA-F]+ {
-    yylval._hex_literal = strtol(yytext, NULL, 16);
-    return HEXADECIMAL_CST;
+\/\/.*                  ; /* \/\/[^\n] */
+
+int                     { yylval.BType = BT_INT; return TYPE; }
+boolean                 { yylval.BType = BT_BOOL; return TYPE; }
+class                   return CLASS;
+void                    return VOID;
+
+0x{EHEXDIGIT}+          { yylval.Integer = strtol(yytext, NULL, 16); return HEXADECIMAL_CST; }
+{EDIGIT}+               { yylval.Integer = strtol(yytext, NULL, 10); return DECIMAL_CST; }
+
+{EALPHA}{EALPHANUM}*    {
+    if (yyleng >= MAX_IDENTIFIER_SIZE) {
+        fprintf(stderr, "Identifier max length reached (%d characters)\n", MAX_IDENTIFIER_SIZE);
+        exit(1);
+    }
+    strcpy(yylval.Identifier, yytext);
+    return ID;
 }
 
-    /* [+-]? */
-[0-9]+ {
-    yylval._int_literal = strtol(yytext, NULL, 10);
-    return DECIMAL_CST;
-}
 
-"+" return PLUS;
-"-" return MINUS;
-"*" return MULT;
+[+\-*/%]                return yytext[0];
+[(){},;]                return yytext[0];
+[=]                     return yytext[0];
 
-    /*  "/" return DIVIDE;
-        "%" return MODULO;
-        "(" return OPAR;
-        ")" return CPAR; */
-
-
-[[:space:]] ;
-. fprintf(stderr, "(lex) Caractère illégal (%d)\n", yytext[0]);
+[[:space:]]             ;
+.                       {fprintf(stderr, "(lex) Caractère illégal (%d)\n", yytext[0]);}
 
 %%

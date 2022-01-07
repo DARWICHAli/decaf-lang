@@ -46,13 +46,6 @@ int ent_teardown(void** data)
 	return 1;
 }
 
-char* tokenize(const char* str) {
-	static char buf[MAX_IDENTIFIER_SIZE];
-	int n = snprintf(buf, MAX_IDENTIFIER_SIZE, "%s", str);
-	ASSERT_TRUE(n > 0 && n < MAX_IDENTIFIER_SIZE);
-	return buf;
-}
-
 int empty_add_entry_crash(void* data)
 {
 	(void)(data);

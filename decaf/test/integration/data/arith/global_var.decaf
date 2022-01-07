@@ -1,0 +1,6 @@
+class GlobalVar {
+    int v1;
+    int v3, v5, Vaze_;
+    boolean _ssjid;
+    void main () {}
+}
