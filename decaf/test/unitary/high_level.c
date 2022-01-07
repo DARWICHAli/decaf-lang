@@ -80,8 +80,9 @@ int gencode_arith_add(void* data)
 	ASSERT_EQ(sz, 3);
 
 	FILE* fo = fopen("/tmp/gencode_hl.mips", "w+");
+	struct asm_params ap = {.generate_entrypoint = 1 };
 
-	genasm("MIPS", q_all, sz, fo);
+	genasm("MIPS", q_all, sz, fo, &ap);
 
 	return 1;
 }

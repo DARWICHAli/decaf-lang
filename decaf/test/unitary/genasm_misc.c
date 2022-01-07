@@ -142,6 +142,7 @@ int wi_com(void* data) {
 struct gmd {
 	FILE* fo;
 	struct quad quads[1];
+	struct asm_params ap;
 };
 
 int genasm_setup(void** data) {
@@ -150,6 +151,7 @@ int genasm_setup(void** data) {
 		return 0;
 
 	struct gmd* dt = *data;
+	dt->ap.generate_entrypoint = 1;
 	dt->fo = fopen("/tmp/genasm_gmd.mips", "w+");
 
 	return dt->fo ? 1 : 0;
@@ -164,27 +166,34 @@ int genasm_teardown(void** data) {
 
 int genasm_err_lang(void* data) {
 	struct gmd* dt = data;
-	genasm("", dt->quads, 1, dt->fo);
+	genasm("", dt->quads, 1, dt->fo, &dt->ap);
 	return 0;
 }
 
 int genasm_err_quads(void* data) {
 	struct gmd* dt = data;
-	genasm("MIPS", NULL, 1, dt->fo);
+	genasm("MIPS", NULL, 1, dt->fo, &dt->ap);
 	return 0;
 }
 
 int genasm_err_size(void* data) {
 	struct gmd* dt = data;
-	genasm("MIPS", dt->quads, 0, dt->fo);
+	genasm("MIPS", dt->quads, 0, dt->fo, &dt->ap);
 	return 0;
 }
 
 int genasm_err_file(void* data) {
 	struct gmd* dt = data;
-	genasm("MIPS", dt->quads, 1, NULL);
+	genasm("MIPS", dt->quads, 1, NULL, &dt->ap);
 	return 0;
 }
+
+int genasm_err_params(void* data) {
+	struct gmd* dt = data;
+	genasm("MIPS", dt->quads, 1, dt->fo, NULL);
+	return 0;
+}
+
 
 int genasm_err_unknown_instr(void* data) {
 	struct gmd* dt = data;
@@ -222,7 +231,7 @@ int genasm_err_unknown_instr(void* data) {
 	dt->quads[0].res = &main_i.entries[0];
 	dt->quads[0].op = (enum Q_OP) -1;
 
-	genasm("MIPS", dt->quads, 1, dt->fo);
+	genasm("MIPS", dt->quads, 1, dt->fo, &dt->ap);
 	return 0;
 }
 
@@ -250,6 +259,7 @@ int main() {
 	add_test_assert(&gm, genasm_err_quads, "Vérifie le tableau de quads");
 	add_test_assert(&gm, genasm_err_size, "Vérifie la taille du tableau de quads");
 	add_test_assert(&gm, genasm_err_file, "Vérifie le fichier de sortie");
+	add_test_assert(&gm, genasm_err_params, "Vérifie les paramètres");
 	add_test_assert(&gm, genasm_err_unknown_instr, "Instruction inconnue délenche assert");
 
 	return exec_ts(&ii) && exec_ts(&wi) && exec_ts(&gm) ? EXIT_SUCCESS : EXIT_FAILURE;

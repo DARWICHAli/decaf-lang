@@ -687,10 +687,17 @@ Cette fonction se veut la plus générique possible est le choix du langage peut
 
 IMPORTANT: Le fichier en sortie est un *fichier source*. Il faudra encore assembler ce dernier pour obtenir un exécutable.
 
-* *_genasm_* : (_const char*_ lang, _const <<quad, struct quad>>*_ liste, _size_t_ liste_size, _FILE*_ outfile) -> _void_ +
+* *_genasm_* : (_const char*_ lang, _const <<quad, struct quad>>*_ liste, _size_t_ liste_size, _FILE*_ outfile, _const <<asm_parameters, struct asm_parameters>>*_) -> _void_ +
 Traduit dans le langage `lang` la suite de taille `liste_size` d'instructions intermédiaires `liste` et écrit le résultat dans le *chemin* `chemin_sortie`.
 
 WARNING: En cas d'erreur, le programme plantera avec un message d'erreur explicite.
+
+==== Paramètres de génération
+
+anchor:asm_parameters[]
+Il est possible de spécifier des paramètres d'assemblage en remplissant les champs de la structure *_asm_parameters_* :
+
+* *_generate_entrypoint_* : booléen indiquant si il faut ou non générer un point d'entrée en plus du main.
 
 ==== Langages assembleurs proposés
 

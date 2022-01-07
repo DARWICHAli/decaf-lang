@@ -13,6 +13,7 @@ struct params {
 	int print_table; ///< Demande d'affichage de la table des symboles
 	int debug_mode; ///< Mode debug demandé
 	int no_gen; ///< Aucune génération de code
+	int generate_entrypoint; ///< Génération d'un point d'entrée assembleur
 	const char* output_file; ///< Fichier de sortie
 };
 
@@ -35,6 +36,16 @@ int arg_tos(struct params* p, char* const args[]);
  * @return Vrai si tout s'est bien passé, 0 sinon
  */
 int arg_nogen(struct params* p, char* const args[]);
+
+/**
+ * @brief Argument demandant la création d'un point d'entrée
+ *
+ * @param p paramètres
+ * @param args args
+ *
+ * @return Vrai si tout s'est bien passé, 0 sinon
+ */
+int arg_entrypoint(struct params* p, char* const args[]);
 
 /**
  * @brief Argument version
