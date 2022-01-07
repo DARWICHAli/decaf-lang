@@ -247,7 +247,7 @@ int td_fprintf_1(void *data)
 
 	char c;
 	int i = 0;
-	char expected[] = "(int, bool) -> bool";
+	char expected[] = "function: (int, bool) -> bool";
 	while((c=fgetc(fd))!=EOF){
 		putchar(c);
 		if(c != expected[i] ){
@@ -270,7 +270,7 @@ int td_fprintf_2(void *data)
 
 	char c;
 	int i = 0;
-	char expected[] = "(int) -> bool";
+	char expected[] = "function: (int) -> bool";
 	while((c=fgetc(fd))!=EOF){
 		putchar(c);
 		if(c != expected[i]){
@@ -281,6 +281,32 @@ int td_fprintf_2(void *data)
 	}
 	fclose(fd);
 	return 1;
+}
+
+int td_fprintf_3(void *data)
+{
+	struct data_td* dt = data;
+	FILE* fd = tmpfile();
+	if(fd == NULL)
+		fprintf(stderr,"td_fprintf_1: erreur creation de fichier temporaire\n");
+	td_fprintf(fd,&dt->lst_tab);
+	char c[1];
+	size_t nread;
+	int i = 0;
+	char expected[] = "tab: (bool)[15]";
+	while(nread = fread(c, 1, sizeof(c), fd)){
+		if (ferror(fd)) {
+			return 0;
+    	}
+		putchar(c);
+		if(c != expected[i]){
+			fprintf(stderr,"td_fprintf_2: mauvais affichage");
+			return 1;
+		}
+		i++;
+	}
+	fclose(fd);
+	return 0;
 }
 
 int main(void)
@@ -310,7 +336,8 @@ int main(void)
 	add_test(&td, td_func, "typedesc func behaves correctly");
 	add_test(&td, td_tab, "typedesc tab behaves correctly");
 	add_test(&td, td_fprintf_1, "mauvais affichage");
-	add_test(&td, td_fprintf_1, "mauvais affichage");
+	add_test(&td, td_fprintf_2, "mauvais affichage");
+	add_test(&td, td_fprintf_3, "mauvais affichage");
 
 	add_test_assert(&td, td_fprintf_null_entry_fd, "erreru si fd == NULL");
 	add_test_assert(&td, td_fprintf_null_entry_fd, "erreru si td == NULL");
