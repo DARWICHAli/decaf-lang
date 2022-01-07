@@ -43,6 +43,7 @@ coverage:
     - gcov src/*.c
     - lcov --directory . -c --output-file coverage.info
     - lcov --remove coverage.info '*/test/*/*' -o coverage.info
+    - lcov --remove coverage.info '*/src/*.tab.c' '*/src/*_lex.c' -o coverage.info
     - genhtml coverage.info --output-directory coverage_html
     - python lcov_cobertura.py coverage.info
   after_script:

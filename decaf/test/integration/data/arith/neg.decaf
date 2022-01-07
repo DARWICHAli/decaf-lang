@@ -1,0 +1,9 @@
+class Neg {
+	void main() {
+		int res, lhs;
+		lhs = 67;
+		res = -42;
+		res = lhs - -res;
+		lhs = -lhs;
+	}
+}

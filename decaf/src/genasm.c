@@ -92,6 +92,9 @@ void write_instruction(FILE* out, const char* op, const char* one, const char* t
 #endif
 
 	switch (nb_op) {
+		case 0:
+			fprintf(out, "%s", op);
+			break;
 		case 1:
 			fprintf(out, "%s %s", op, one);
 			break;
@@ -121,7 +124,8 @@ const char* int_to_str(int v) {
 /*
  * Traduit une instruction en MIPS
  */
-void MIPS_translate(const struct quad q, FILE* out) {
+void MIPS_translate(const struct quad q, FILE* out, const struct asm_params* genp) {
+	(void)genp;
 	char buf_lhs[MAX_OPERAND_SIZE];
 	char buf_rhs[MAX_OPERAND_SIZE];
 	char buf_res[MAX_OPERAND_SIZE];
@@ -164,7 +168,7 @@ void MIPS_translate(const struct quad q, FILE* out) {
 			write_instruction(out, "move", "$v0", "$a0", "", 2, "=");
 			break;
 		case Q_NEG:
-			write_instruction(out, "xor", "$a1", "$a1", "a1", 3, "$a1 = 0");
+			write_instruction(out, "and", "$a1", "$a1", "$0", 3, "a1 = 0");
 			write_instruction(out, "sub", "$v0", "$a1", "$a0", 3, "0-x");
 			break;
 		case Q_CST:
@@ -177,6 +181,9 @@ void MIPS_translate(const struct quad q, FILE* out) {
 				write_instruction(out, "lui", "$v0", int_to_str(hi), "", 2, buf_com);
 			}
 			break;
+		case Q_END:
+			write_instruction(out, "jr", "$ra", "", "", 1, "endproc");
+			break;
 		// LCOV_EXCL_START
 		default:
 			assert(0 && "Not implemented");
@@ -185,7 +192,7 @@ void MIPS_translate(const struct quad q, FILE* out) {
 
 	if (is_in(q.op, req_res, REQ_RES_SIZE)) {
 		assert(q.res && "Operator requires res");
-		assert(q.res->ctx && q.res->ctx->parent && q.res->ctx->parent->parent && "Cannot affect to globbal var");
+		assert(q.res->ctx && q.res->ctx->parent && q.res->ctx->parent->parent && "Cannot affect to global var");
 		ctx_get_access(q.res, buf_res);
 		write_instruction(out, "sw", "$v0", buf_res, "", 2, q.res->id);
 	}
@@ -227,7 +234,8 @@ void MIPS_type(const struct typedesc* td, char buf[MAX_TYPE_SIZE]) {
 /*
  * Génère le segment data
  */
-void MIPS_data_segment(FILE* out) {
+void MIPS_data_segment(FILE* out, const struct asm_params* genp) {
+	(void)genp;
 	const struct context* root = ctx_root_ctx();
 
 	fprintf(out, ".data\n\n");
@@ -287,8 +295,9 @@ void MIPS_alloc_stack(size_t size, FILE* outfile) {
  * Crée le label de la fonction
  * IMPORTANT: on suppose l'ordre respecté
  */
-void make_fct(const struct context* args_ctx, FILE* outfile) {
+void make_fct(const struct context* args_ctx, FILE* outfile, const struct asm_params* genp) {
 	assert(args_ctx && args_ctx->parent && "Bad args context");
+	(void)genp;
 	static int idx = 0;
 	const struct context* root = args_ctx->parent;
 	assert(root && root->parent && (root->parent->parent == NULL) && "args context too low");
@@ -310,21 +319,35 @@ void make_fct(const struct context* args_ctx, FILE* outfile) {
 	MIPS_alloc_stack(to_alloc, outfile);
 }
 
+/* Génère point d'entrée */
+void MIPS_start(FILE* outfile, const struct asm_params* genp) {
+	if (genp->generate_entrypoint) { //inutile si on utilise spim -exception
+		fprintf(outfile, "__start:\n");
+		write_instruction(outfile, "call", "main", "", "", 1, "");
+		write_instruction(outfile, "move", "$a0", "$v0", "", 2, "store main return");
+		write_instruction(outfile, "li", "$v0", "17", "", 2, "");
+		write_instruction(outfile, "syscall", "", "", "", 0, "");
+		fprintf(outfile, "\n");
+	}
+}
+
 /*
  * Génère segment text
  */
-void MIPS_text_segment(const struct quad* qlist, size_t liste_size, FILE* outfile) {
+void MIPS_text_segment(const struct quad* qlist, size_t liste_size, FILE* outfile, const struct asm_params* genp) {
 	assert(liste_size > 0 && qlist && "Expected non-null qlist");
+	assert(ctx_lookup(tokenize("main")) && typedesc_is_function(&ctx_lookup(tokenize("main"))->type) && "main function required");
 	fprintf(outfile, "\n.text\n");
+	MIPS_start(outfile, genp);
 
 	const struct context* last_args_ctx = NULL, *cur;
 	for (size_t i = 0; i < liste_size; ++i) {
 		assert(qlist[i].ctx && "Quad must have a context");
 		cur = ctx_argsfun(qlist[i].ctx);
 		if (last_args_ctx != cur) { // changement de fonction
-			make_fct(cur, outfile);
+			make_fct(cur, outfile, genp);
 		}
-		MIPS_translate(qlist[i], outfile);
+		MIPS_translate(qlist[i], outfile, genp);
 		last_args_ctx = cur;
 	}
 }
@@ -333,17 +356,18 @@ void MIPS_text_segment(const struct quad* qlist, size_t liste_size, FILE* outfil
 /*
  * Génère un fichier MIPS
  */
-void genMIPS(const struct quad* qlist, size_t liste_size, FILE* outfile) {
-	MIPS_data_segment(outfile);
+void genMIPS(const struct quad* qlist, size_t liste_size, FILE* outfile, const struct asm_params* genp) {
+	MIPS_data_segment(outfile, genp);
 
-	MIPS_text_segment(qlist, liste_size, outfile);
+	MIPS_text_segment(qlist, liste_size, outfile, genp);
 }
 
-void genasm(const char* to_lang, const struct quad* qlist, size_t liste_size, FILE* outfile) {
+void genasm(const char* to_lang, const struct quad* qlist, size_t liste_size, FILE* outfile, const struct asm_params* genp) {
 	assert(qlist && liste_size > 0 && "Empty list not allowed");
+	assert(genp && "Parameters cannot be NULL");
 	assert(outfile && "Bad file");
 	if (strcmp(to_lang, "MIPS") == 0) {
-		genMIPS(qlist, liste_size, outfile);
+		genMIPS(qlist, liste_size, outfile, genp);
 	} else {
 		fprintf(stderr, "Unknown lang: %s\n", to_lang);
 		exit(EXIT_FAILURE);

@@ -23,6 +23,7 @@ struct data {
 	struct quad ql[MAX_Q];
 	struct entry *res, *rhs, *lhs;
 	FILE* fo;
+	struct asm_params ap;
 };
 
 void make_var(struct context* ctx, const char* id) {
@@ -32,13 +33,6 @@ void make_var(struct context* ctx, const char* id) {
 	ctx->entries[idx].type.btype = BT_INT;
 	ctx->entries[idx].ctx = ctx;
 	++ctx->used;
-}
-
-char* tokenize(const char* str) {
-	static char buf[MAX_IDENTIFIER_SIZE];
-	int n = snprintf(buf, MAX_IDENTIFIER_SIZE, "%s", str);
-	ASSERT_TRUE(n > 0 && n < MAX_IDENTIFIER_SIZE);
-	return buf;
 }
 
 int setup(void** data) {
@@ -74,6 +68,8 @@ int setup(void** data) {
 	dt->rhs->type = typedesc_make_var(BT_INT);
 
 	dt->fo = fopen("/tmp/tst_genasm_arith.mips", "w+");
+	dt->ap.generate_entrypoint = 1;
+
 	return dt->fo ? 1 : 0;
 }
 
@@ -90,7 +86,7 @@ void set_quad(struct quad quads[MAX_Q], size_t i, enum Q_OP op, struct entry* re
 	quads[i].res = res;
 	quads[i].lhs = lhs;
 	quads[i].rhs = rhs;
-	quads[i].ctx = res->ctx;
+	quads[i].ctx = res ? res->ctx : NULL;
 }
 
 int check_file(FILE* f, const char* exp) {
@@ -137,6 +133,12 @@ int arith_add(void* data) {
 	const char* expected = ".data\n\n"
 				"global: .word 0\n"
 				"\n.text\n"
+				"__start:\n"
+				"call main\n"
+                                "move $a0 $v0\n"
+                                "li $v0 17\n"
+                                "syscall\n"
+                                "\n"
 				"main:\n"
 				"addi $sp $sp -12\n"
 				"lw $a0 4($sp)\n"
@@ -145,7 +147,7 @@ int arith_add(void* data) {
 				"sw $v0 0($sp)\n";
 
 
-	genasm("MIPS", dt->ql, 1, dt->fo);
+	genasm("MIPS", dt->ql, 1, dt->fo, &dt->ap);
 
 	return check_file(dt->fo, expected);
 }
@@ -162,6 +164,12 @@ int arith_all_binary(void* data) {
 	const char* expected = ".data\n\n"
 			       "global: .word 0\n"
 			       "\n.text\n"
+				"__start:\n"
+				"call main\n"
+                                "move $a0 $v0\n"
+                                "li $v0 17\n"
+                                "syscall\n"
+                                "\n"
 			       "main:\n"
 			       "addi $sp $sp -12\n"
 			       "lw $a0 4($sp)\n"
@@ -188,7 +196,7 @@ int arith_all_binary(void* data) {
 			       "mfhi $v0\n"
 			       "sw $v0 0($sp)\n";
 
-	genasm("MIPS", dt->ql, 5, dt->fo);
+	genasm("MIPS", dt->ql, 5, dt->fo, &dt->ap);
 
 	return check_file(dt->fo, expected);
 }
@@ -202,17 +210,23 @@ int arith_aff_neg(void* data) {
 	const char* expected = ".data\n\n"
 			       "global: .word 0\n"
 			       "\n.text\n"
+				"__start:\n"
+				"call main\n"
+                                "move $a0 $v0\n"
+                                "li $v0 17\n"
+                                "syscall\n"
+                                "\n"
 			       "main:\n"
 			       "addi $sp $sp -12\n"
                                "lw $a0 4($sp)\n"
                                "move $v0 $a0\n"
                                "sw $v0 0($sp)\n"
                                "lw $a0 8($sp)\n"
-                               "xor $a1 $a1 a1\n"
+                               "and $a1 $a1 $0\n"
                                "sub $v0 $a1 $a0\n"
                                "sw $v0 0($sp)\n";
 
-	genasm("MIPS", dt->ql, 2, dt->fo);
+	genasm("MIPS", dt->ql, 2, dt->fo, &dt->ap);
 
 	return check_file(dt->fo, expected);
 }
@@ -226,12 +240,18 @@ int arith_cst_small(void* data) {
 	const char* expected = ".data\n\n"
 			       "global: .word 0\n"
 			       "\n.text\n"
+				"__start:\n"
+				"call main\n"
+                                "move $a0 $v0\n"
+                                "li $v0 17\n"
+                                "syscall\n"
+                                "\n"
 			       "main:\n"
 			       "addi $sp $sp -12\n"
                                "ori $v0 $v0 42\n"
                                "sw $v0 0($sp)\n";
 
-	genasm("MIPS", dt->ql, 1, dt->fo);
+	genasm("MIPS", dt->ql, 1, dt->fo, &dt->ap);
 
 	return check_file(dt->fo, expected);
 }
@@ -245,13 +265,19 @@ int arith_cst_big(void* data) {
 	const char* expected = ".data\n\n"
 			       "global: .word 0\n"
 			       "\n.text\n"
+				"__start:\n"
+				"call main\n"
+                                "move $a0 $v0\n"
+                                "li $v0 17\n"
+                                "syscall\n"
+                                "\n"
 			       "main:\n"
 			       "addi $sp $sp -12\n"
                                "ori $v0 $v0 65520\n"
                                "lui $v0 15\n"
                                "sw $v0 0($sp) # res\n";
 
-	genasm("MIPS", dt->ql, 1, dt->fo);
+	genasm("MIPS", dt->ql, 1, dt->fo, &dt->ap);
 
 	return check_file(dt->fo, expected);
 }
@@ -266,12 +292,18 @@ int arith_no_locals(void* data) {
 	const char* expected = ".data\n\n"
 			       "global: .word 0\n"
 			       "\n.text\n"
+				"__start:\n"
+				"call main\n"
+                                "move $a0 $v0\n"
+                                "li $v0 17\n"
+                                "syscall\n"
+                                "\n"
 			       "main:\n"
 			       "lw $a0 4($fp)\n"
 			       "move $v0 $a0\n"
                                "sw $v0 0($fp)\n";
 
-	genasm("MIPS", dt->ql, 1, dt->fo);
+	genasm("MIPS", dt->ql, 1, dt->fo, &dt->ap);
 
 	return check_file(dt->fo, expected);
 }
@@ -284,7 +316,7 @@ int err_cst_glob(void* data) {
 	dt->ql[0].val = 42;
 	dt->ql[0].ctx = dt->main_int;
 
-	genasm("MIPS", dt->ql, 1, dt->fo);
+	genasm("MIPS", dt->ql, 1, dt->fo, &dt->ap);
 
 	return 0;
 }
@@ -295,7 +327,7 @@ int err_aff_glob(void* data) {
 	set_quad(dt->ql, 0, Q_AFF, &dt->root->entries[0], dt->lhs, NULL);
 	dt->ql[0].ctx = dt->main_int;
 
-	genasm("MIPS", dt->ql, 1, dt->fo);
+	genasm("MIPS", dt->ql, 1, dt->fo, &dt->ap);
 
 	return 0;
 }
@@ -306,11 +338,34 @@ int err_neg_glob(void* data) {
 	set_quad(dt->ql, 0, Q_NEG, &dt->root->entries[0], dt->lhs, NULL);
 	dt->ql[0].ctx = dt->main_int;
 
-	genasm("MIPS", dt->ql, 1, dt->fo);
+	genasm("MIPS", dt->ql, 1, dt->fo, &dt->ap);
 
 	return 0;
 }
 
+int empty_main(void* data) {
+	struct data* dt = data;
+
+	set_quad(dt->ql, 0, Q_END, NULL, NULL, NULL);
+	dt->ql[0].ctx = dt->main_int;
+	dt->main_int->used = 0; // no locals
+
+	const char* expected = ".data\n\n"
+			       "global: .word 0\n"
+			       "\n.text\n"
+				"__start:\n"
+				"call main\n"
+                                "move $a0 $v0\n"
+                                "li $v0 17\n"
+                                "syscall\n"
+                                "\n"
+			       "main:\n"
+			       "jr $ra\n";
+
+	genasm("MIPS", dt->ql, 1, dt->fo, &dt->ap);
+
+	return check_file(dt->fo, expected);
+}
 
 int main() {
 	struct test_suite ts = make_ts("Traduction MIPS d'expressions arithmetiques", setup, teardown);
@@ -320,6 +375,7 @@ int main() {
 	add_test(&ts, arith_cst_small, "Affectation de petites constantes (<=16b)");
 	add_test(&ts, arith_cst_big, "Affectation de grandes constantes (>16b)");
 	add_test(&ts, arith_no_locals, "Fonction sans variable locales");
+	add_test(&ts, empty_main, "Main vide");
 	add_test_assert(&ts, err_cst_glob, "Impossible d'affecter une constante à une variable globale");
 	add_test_assert(&ts, err_aff_glob, "Impossible d'affecter une variable à une variable globale");
 	add_test_assert(&ts, err_neg_glob, "Impossible d'affecter une négation à une variable globale");
