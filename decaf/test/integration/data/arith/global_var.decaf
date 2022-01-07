@@ -1,6 +1,6 @@
 class GlobalVar {
     int v1;
     int v3, v5, Vaze_;
-    bool _ssjid;
+    boolean _ssjid;
     void main () {}
 }
