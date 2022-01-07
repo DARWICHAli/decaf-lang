@@ -22,9 +22,8 @@ EALPHANUM ({EALPHA}|{EDIGIT})
 \/\/.*                  ; /* \/\/[^\n] */
 
 int                     { yylval.BType = BT_INT; return TYPE; }
-bool                    { yylval.BType = BT_BOOL; return TYPE; }
+boolean                 { yylval.BType = BT_BOOL; return TYPE; }
 class                   return CLASS;
-Program                 return PROGRAM; // NOTE: conflict
 void                    return VOID;
 if                      return IF;
 else                    return ELSE;
