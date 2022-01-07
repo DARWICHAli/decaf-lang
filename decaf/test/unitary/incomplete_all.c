@@ -15,15 +15,18 @@ struct data_qlst {
 
     struct quad_list qlst;
     struct quad  quadTab[QUADLIST_MAX_SIZE+1];
+    struct quad GTab[QUADLIST_MAX_SIZE];
     struct entry lhs;
     struct entry rhs;
     struct entry res;
+
+
 };
 
 int setup(void** data)
 {
     (void) data;
-	struct data_qlst* qlst = malloc(sizeof(struct quad_list)+(sizeof(struct quad)*QUADLIST_MAX_SIZE+1)+3*sizeof(struct entry));
+	struct data_qlst* qlst = malloc((sizeof(struct quad_list)) + (sizeof(struct quad)*((QUADLIST_MAX_SIZE)+1))+(3*sizeof(struct entry)));
 	if (!qlst)
 		return 0;
     ctx_pushctx();
@@ -44,13 +47,12 @@ int setup(void** data)
         gencode(qlst->quadTab[i]);
     }
 
-
-
-
 	*data = qlst;
 
 	return 1;
 }
+
+
 
 int teardown(void** data)
 {
@@ -66,6 +68,16 @@ int append_max(void *data)
     for (size_t i = 0; i < QUADLIST_MAX_SIZE; i++) {
         qlist_append(&dt->qlst,i);
     }
+    return 1;
+}
+
+
+int append_max_assert(void *data)
+{
+    struct data_qlst* dt = data;
+    for (size_t i = 0; i < QUADLIST_MAX_SIZE; i++) {
+        qlist_append(&dt->qlst,i);
+    }
     qlist_append(&dt->qlst,QUADLIST_MAX_SIZE);
     return 0;
 }
@@ -74,32 +86,37 @@ int append_max(void *data)
 int append_nonexist_assert(void *data)
 {
     struct data_qlst* dt = data;
-    qlist_append(&dt->qlst,QUADLIST_MAX_SIZE+100);
+    qlist_append(&dt->qlst,2*QUADLIST_MAX_SIZE+100);
     return 0;
 }
+
+int tt_complete(void *data)
+{
+    struct data_qlst* dt = data;
+    for (size_t i = 0; i < QUADLIST_MAX_SIZE; i++) {
+        qlist_append(&dt->qlst,i);
+    }
+    qlist_complete(&dt->qlst,4);
+    return 1;
+}
+
 int tt_complete_assert(void *data)
 {
     struct data_qlst* dt = data;
     qlist_complete(&dt->qlst,4);
     return 0;
 }
-int tt_complete_assert_type(void *data)
-{
-    struct data_qlst* dt = data;
-    qlist_complete(&dt->qlst,1);
-    return 0;
-}
 
 int main(void)
 {
 	struct test_suite qlst;
-
 	qlst = make_ts("incomplete", setup, teardown);
     add_test_assert(&qlst, append_nonexist_assert, "erreur si append quad n'existe pas");
     add_test_assert(&qlst, tt_complete_assert, "erreur complete vide");
-    add_test_assert(&qlst, append_max, "erreur si assert ne declanche pas");
-    add_test_assert(&qlst, tt_complete_assert, "erreur type or res non null");
-    add_test_assert(&qlst, tt_complete_assert_type, "erreur type ");
+    add_test_assert(&qlst, append_max_assert, "erreur si assert ne declanche pas");
+    add_test_assert(&qlst, tt_complete_assert, "erreur used = 0");
+    add_test(&qlst, append_max, "erreur si append quad n'existe pas");
+    add_test(&qlst, tt_complete, "erreur si quad non patchable");
 
 	return exec_ts(&qlst) ? EXIT_SUCCESS : EXIT_FAILURE;
 }
