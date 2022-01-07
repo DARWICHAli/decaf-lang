@@ -26,6 +26,8 @@ bool                    { yylval.BType = BT_BOOL; return TYPE; }
 class                   return CLASS;
 Program                 return PROGRAM; // NOTE: conflict
 void                    return VOID;
+if                      return IF;
+else                    return ELSE;
 
 0x{EHEXDIGIT}+          { yylval.Integer = strtol(yytext, NULL, 16); return HEXADECIMAL_CST; }
 {EDIGIT}+               { yylval.Integer = strtol(yytext, NULL, 10); return DECIMAL_CST; }

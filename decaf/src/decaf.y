@@ -30,7 +30,7 @@ void yyerror(const char *msg);
     struct context* Context;
 }
 
-%token CLASS PROGRAM VOID
+%token CLASS PROGRAM VOID IF ELSE
 
 %token <Integer> DECIMAL_CST HEXADECIMAL_CST
 %token <BType> TYPE
@@ -124,11 +124,31 @@ block: '{' { ctx_pushctx(); } optional_var_declarations optional_instructions '}
 optional_instructions: %empty
 		     | instructions
 		     | blocks
+			 | instructions_condi
 ;
 // liste d'instructions
 instructions: affectation ';'
 	    | affectation ';' instructions
 ;
+// instructions conditionnelles
+instructions_condi: instruction_condi
+	| instruction_condi instructions_condi
+;
+
+instruction_condi: IF '(' expression ')' block 
+	| IF '(' expression ')' block ELSE block
+;
+/*
+ * Expressions
+ */
+expression: location
+	| instructions
+	| arithmetique_exp
+;
+
+location: ID
+;
+
 /*
  * Expressions arithmétiques
  */

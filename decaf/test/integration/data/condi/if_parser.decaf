@@ -1,0 +1,11 @@
+class Program {
+	void main() {
+		int res, lhs, rhs;
+		if (1) {
+            rhs = 69;
+        } else {
+    		res = lhs + rhs;
+        }
+
+	}
+}
