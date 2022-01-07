@@ -24,6 +24,13 @@ enum ASM_LANG {
 	ASM_MIPS ///< Assembleur MIPS : "MIPS"
 };
 
+/**
+ * @brief Paramètres de génération de l'assembleur
+ */
+struct asm_params {
+	int generate_entrypoint; ///< Est-ce qu'on doit générer un point d'entrée ?
+};
+
 
 // forward declarations
 struct quad;
@@ -34,11 +41,17 @@ struct quad;
  * @param qlist Liste linéaire de quadruplets
  * @param liste_size Taille de la liste
  * @param[out] outfile descripteur de fichier en sortie
+ * @param genp Paramètres de génération
+ *
+ * @pre outfile ouvert
+ * @pre genp != NULL
+ * @pre qlist != NULL
+ * @pre liste_size > 0
  *
  * @note Pour voir la liste des langages toujours disponible voir ::ASM_LANG
  */
 
-void genasm(const char* to_lang, const struct quad* qlist, size_t liste_size, FILE* outfile);
+void genasm(const char* to_lang, const struct quad* qlist, size_t liste_size, FILE* outfile, const struct asm_params* genp);
 
 ///@}
 

@@ -4,6 +4,10 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <assert.h>
+
+#include "symbols.h" // TDS - TDS entries - descripteur de type - liste de type
 
 extern int yyparse();
 extern int yydebug;
@@ -18,6 +22,11 @@ int main (int argc, char* argv[])
 	    exit(EXIT_FAILURE);
     }
 
+    // Contexte super-global
+    ctx_pushctx();
+    struct typelist* one_int = typelist_new();
+    ctx_newname(tokenize("WriteInt"))->type = typedesc_make_function(BT_INT, one_int);
+
     yydebug = parameters.debug_mode;
     int r = yyparse();
     if (r == EXIT_FAILURE)
@@ -25,8 +34,10 @@ int main (int argc, char* argv[])
 
     size_t sz = 0;
     struct quad* quads = get_all_quads(&sz);
+    struct asm_params asmp = {.generate_entrypoint = parameters.generate_entrypoint };
 
-    genasm("MIPS", quads, sz, fo);
+    if (!parameters.no_gen)
+    	genasm("MIPS", quads, sz, fo, &asmp);
 
     return EXIT_SUCCESS;
 }

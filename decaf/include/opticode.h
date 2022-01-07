@@ -42,8 +42,6 @@ struct optim_params;
  * @param[out] liste_out le tableau des quads de sortie.
  * @param[out] liste_size_out la taille du tableau de sortie.
  * @param[in] params structure contenant des options d'optimisation.
- * 
- * @return Production d'un nouveau code intermediaire optimisé.
  */
 void opticode(const struct quad* liste_in, size_t liste_size_in, struct quad* liste_out, size_t* liste_size_out, const struct optim_params* params);
 

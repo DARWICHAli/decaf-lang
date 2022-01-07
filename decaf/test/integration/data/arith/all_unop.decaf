@@ -1,0 +1,8 @@
+class AllUnop {
+	void main() {
+		int res;
+		res = 42;
+		res = 78779797;
+		res = -res;
+	}
+}
