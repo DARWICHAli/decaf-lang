@@ -33,12 +33,12 @@ struct quad_list* qlist_append(struct quad_list* qlst, quad_id_t qid)
 
 void qlist_complete(struct quad_list* qlst, quad_id_t qid)
 {
+    // complete vide !!
+    assert(qlst->used>0);
+    assert(qid>0 && "complete with neg quad !");
     for (size_t i = 0; i < qlst->used; i++) {
-        assert(
-            ((getquad(qlst->quads[i])->op == Q_IFG) ||
-            (getquad(qlst->quads[i])->op == Q_GOT) ) &&
-            !(getquad(qlst->quads[i])->res)  &&
-            "quadruplets non patchables ou res non null");
+        assert(((getquad(qlst->quads[i])->op == Q_IFG) || (getquad(qlst->quads[i])->op == Q_GOT)) && "bad type" );
+        assert(!(getquad(qlst->quads[i])->res)  &&"quadruplets non patchables ou res non null");
         getquad(qlst->quads[i])->dst = qid;
     }
     return;

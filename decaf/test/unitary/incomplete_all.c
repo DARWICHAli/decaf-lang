@@ -83,16 +83,23 @@ int tt_complete_assert(void *data)
     qlist_complete(&dt->qlst,4);
     return 0;
 }
+int tt_complete_assert_type(void *data)
+{
+    struct data_qlst* dt = data;
+    qlist_complete(&dt->qlst,1);
+    return 0;
+}
+
 int main(void)
 {
 	struct test_suite qlst;
 
 	qlst = make_ts("incomplete", setup, teardown);
-    //add_test_assert(&qlst, append_nonexist_assert, "erreur si append quad n'existe pas");
-    //add_test_assert(&qlst, append_max, "erreur ");
+    add_test_assert(&qlst, append_nonexist_assert, "erreur si append quad n'existe pas");
+    add_test_assert(&qlst, tt_complete_assert, "erreur complete vide");
+    add_test_assert(&qlst, append_max, "erreur si assert ne declanche pas");
     add_test_assert(&qlst, tt_complete_assert, "erreur type or res non null");
-
-
+    add_test_assert(&qlst, tt_complete_assert_type, "erreur type ");
 
 	return exec_ts(&qlst) ? EXIT_SUCCESS : EXIT_FAILURE;
 }
