@@ -167,7 +167,7 @@ void MIPS_translate(const struct quad q, FILE* out) {
 			write_instruction(out, "move", "$v0", "$a0", "", 2, "=");
 			break;
 		case Q_NEG:
-			write_instruction(out, "xor", "$a1", "$a1", "a1", 3, "$a1 = 0");
+			write_instruction(out, "and", "$a1", "$a1", "$0", 3, "a1 = 0");
 			write_instruction(out, "sub", "$v0", "$a1", "$a0", 3, "0-x");
 			break;
 		case Q_CST:
@@ -318,12 +318,14 @@ void make_fct(const struct context* args_ctx, FILE* outfile) {
 
 /* Génère point d'entrée */
 void MIPS_start(FILE* outfile) {
-	fprintf(outfile, "__start:\n");
+	(void)outfile;
+	//inutile si on utilise spim -exception
+	/*fprintf(outfile, "__start:\n");
 	write_instruction(outfile, "call", "main", "", "", 1, "");
 	write_instruction(outfile, "move", "$a0", "$v0", "", 2, "store main return");
 	write_instruction(outfile, "li", "$v0", "17", "", 2, "");
 	write_instruction(outfile, "syscall", "", "", "", 0, "");
-	fprintf(outfile, "\n");
+	fprintf(outfile, "\n");*/
 }
 
 /*
