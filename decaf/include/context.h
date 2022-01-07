@@ -196,6 +196,12 @@ struct entry* ctx_search(const char* str, const struct context* ctx);
 const char* tokenize(const char* str);
 
 /**
+ * @brief Affiche la table ctx et tout ses fils. 
+ * 
+ */
+void ctx_fprint(FILE* fd, const struct context* ctx);
+
+/**
  * @}
  * @}
  */

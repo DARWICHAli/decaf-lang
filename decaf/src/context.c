@@ -223,3 +223,9 @@ const char* tokenize(const char* str) {
 	strncpy(buf, str, MAX_IDENTIFIER_SIZE);
 	return buf;
 }
+
+
+void ctx_fprint(FILE* fd, const struct context* ctx)
+{
+	
+}
