@@ -18,24 +18,15 @@
 extern size_t co_used;
 extern struct context* sommet;
 
-#define MAX_Q 256
+extern quad_id_t next;
 
 struct data {
 	struct context *sg, *root, *main, *main_int;
-	struct quad ql[MAX_Q];
 	struct entry *res, *rhs, *lhs;
 	FILE* fo;
 	struct asm_params ap;
+	size_t sz;
 };
-
-void make_var(struct context* ctx, const char* id) {
-	size_t idx = ctx->used;
-	strcpy(ctx->entries[idx].id, id);
-	ctx->entries[idx].type.mtype = MT_VAR;
-	ctx->entries[idx].type.btype = BT_INT;
-	ctx->entries[idx].ctx = ctx;
-	++ctx->used;
-}
 
 int setup(void** data) {
 	struct data* dt = malloc(sizeof(struct data));
@@ -45,6 +36,7 @@ int setup(void** data) {
 
 	co_used = 0;
 	sommet = NULL;
+	next = 0;
 
 	dt->sg = ctx_pushctx();
 	struct entry* ent = ctx_newname(tokenize("WriteInt"));
@@ -83,24 +75,16 @@ int teardown(void** data) {
 	struct data* dt = *data;
 	co_used = 0;
 	sommet = NULL;
+	next = 0;
 	free(*data);
 	return fclose(dt->fo) == 0;
-}
-
-void set_quad(struct quad quads[MAX_Q], size_t i, enum Q_OP op, struct entry* res, struct entry* lhs, struct entry* rhs) {
-	quads[i].op = op;
-	quads[i].res = res;
-	quads[i].lhs = lhs;
-	quads[i].rhs = rhs;
-	quads[i].ctx = res ? res->ctx : NULL;
 }
 
 int fun_param_err(void* data) {
 	struct data* dt = data;
 
-	set_quad(dt->ql, 0, Q_PAR, NULL, NULL, NULL);
-	dt->ql[0].ctx = dt->main_int;
-	genasm("MIPS", dt->ql, 1, dt->fo, &dt->ap);
+	gencode(quad_param(NULL));
+	genasm("MIPS", get_all_quads(&dt->sz), 1, dt->fo, &dt->ap);
 
 	return 0;
 }
@@ -109,12 +93,8 @@ int fun_param_err(void* data) {
 int fun_param(void* data) {
 	struct data* dt = data;
 
-	set_quad(dt->ql, 0, Q_PAR, NULL, dt->lhs, NULL);
-	dt->ql[0].ctx = dt->main_int;
-
-	
-
-	genasm("MIPS", dt->ql, 1, dt->fo, &dt->ap);
+	gencode(quad_param(dt->lhs));
+	genasm("MIPS", get_all_quads(&dt->sz), 1, dt->fo, &dt->ap);
 
 	return print_file(dt->fo);
 }
@@ -122,9 +102,8 @@ int fun_param(void* data) {
 int fun_proc_null(void* data) {
 	struct data* dt = data;
 
-	set_quad(dt->ql, 0, Q_PRO, NULL, NULL, NULL);
-	dt->ql[0].ctx = dt->main_int;
-	genasm("MIPS", dt->ql, 1, dt->fo, &dt->ap);
+	gencode(quad_proc(NULL));
+	genasm("MIPS", get_all_quads(&dt->sz), 1, dt->fo, &dt->ap);
 
 	return 0;
 }
@@ -132,9 +111,8 @@ int fun_proc_null(void* data) {
 int fun_proc_notproc(void* data) {
 	struct data* dt = data;
 
-	set_quad(dt->ql, 0, Q_PRO, NULL, dt->lhs, NULL);
-	dt->ql[0].ctx = dt->main_int;
-	genasm("MIPS", dt->ql, 1, dt->fo, &dt->ap);
+	gencode(quad_proc(dt->lhs));
+	genasm("MIPS", get_all_quads(&dt->sz), 1, dt->fo, &dt->ap);
 
 	return 0;
 }
@@ -143,12 +121,8 @@ int fun_proc_notproc(void* data) {
 int fun_proc(void* data) {
 	struct data* dt = data;
 
-	set_quad(dt->ql, 0, Q_PRO, NULL, ctx_lookup(tokenize("main")), NULL);
-	dt->ql[0].ctx = dt->main_int;
-
-	
-
-	genasm("MIPS", dt->ql, 1, dt->fo, &dt->ap);
+	gencode(quad_proc(ctx_lookup(tokenize("main"))));
+	genasm("MIPS", get_all_quads(&dt->sz), 1, dt->fo, &dt->ap);
 
 	return print_file(dt->fo);
 }
@@ -156,9 +130,8 @@ int fun_proc(void* data) {
 int fun_call_null(void* data) {
 	struct data* dt = data;
 
-	set_quad(dt->ql, 0, Q_CAL, NULL, NULL, NULL);
-	dt->ql[0].ctx = dt->main_int;
-	genasm("MIPS", dt->ql, 1, dt->fo, &dt->ap);
+	gencode(quad_call(NULL, NULL));
+	genasm("MIPS", get_all_quads(&dt->sz), 1, dt->fo, &dt->ap);
 
 	return 0;
 }
@@ -166,9 +139,8 @@ int fun_call_null(void* data) {
 int fun_call_nonfunc(void* data) {
 	struct data* dt = data;
 
-	set_quad(dt->ql, 0, Q_CAL, NULL, dt->lhs, NULL);
-	dt->ql[0].ctx = dt->main_int;
-	genasm("MIPS", dt->ql, 1, dt->fo, &dt->ap);
+	gencode(quad_call(dt->res, dt->lhs));
+	genasm("MIPS", get_all_quads(&dt->sz), 1, dt->fo, &dt->ap);
 
 	return 0;
 }
@@ -176,9 +148,8 @@ int fun_call_nonfunc(void* data) {
 int fun_call_void(void* data) {
 	struct data* dt = data;
 
-	set_quad(dt->ql, 0, Q_CAL, NULL, ctx_lookup(tokenize("main")), NULL);
-	dt->ql[0].ctx = dt->main_int;
-	genasm("MIPS", dt->ql, 1, dt->fo, &dt->ap);
+	gencode(quad_call(dt->res, ctx_lookup(tokenize("main"))));
+	genasm("MIPS", get_all_quads(&dt->sz), 1, dt->fo, &dt->ap);
 
 	return 0;
 }
@@ -193,10 +164,8 @@ int fun_call(void* data) {
 	foo->ctx = dt->root;
 
 
-	set_quad(dt->ql, 0, Q_CAL, dt->res, ctx_lookup(tokenize("foo")), NULL);
-	dt->ql[0].ctx = dt->main_int;
-
-	genasm("MIPS", dt->ql, 1, dt->fo, &dt->ap);
+	gencode(quad_call(dt->res, ctx_lookup(tokenize("foo"))));
+	genasm("MIPS", get_all_quads(&dt->sz), 1, dt->fo, &dt->ap);
 
 	return print_file(dt->fo);
 }
@@ -204,9 +173,8 @@ int fun_call(void* data) {
 int fun_ret_err(void* data) {
 	struct data* dt = data;
 
-	set_quad(dt->ql, 0, Q_RET, NULL, NULL, NULL);
-	dt->ql[0].ctx = dt->main_int;
-	genasm("MIPS", dt->ql, 1, dt->fo, &dt->ap);
+	gencode(quad_return(NULL));
+	genasm("MIPS", get_all_quads(&dt->sz), 1, dt->fo, &dt->ap);
 
 	return 0;
 }
@@ -214,10 +182,8 @@ int fun_ret_err(void* data) {
 int fun_ret(void* data) {
 	struct data* dt = data;
 
-	set_quad(dt->ql, 0, Q_RET, NULL, dt->lhs, NULL);
-	dt->ql[0].ctx = dt->main_int;
-
-	genasm("MIPS", dt->ql, 1, dt->fo, &dt->ap);
+	gencode(quad_return(dt->lhs));
+	genasm("MIPS", get_all_quads(&dt->sz), 1, dt->fo, &dt->ap);
 
 	return print_file(dt->fo);
 }
@@ -225,12 +191,11 @@ int fun_ret(void* data) {
 int fun_endproc(void* data) {
 	struct data* dt = data;
 
-	set_quad(dt->ql, 0, Q_RET, NULL, dt->lhs, NULL);
-	dt->ql[0].ctx = dt->main_int;
-
-	genasm("MIPS", dt->ql, 1, dt->fo, &dt->ap);
+	gencode(quad_endproc());
+	genasm("MIPS", get_all_quads(&dt->sz), 1, dt->fo, &dt->ap);
 
 	return print_file(dt->fo);
+
 }
 
 
@@ -247,7 +212,6 @@ int main() {
 	add_test_assert(&ts, fun_call_void, "call void function fails");
 	add_test(&ts, fun_ret, "return works as intended");
 	add_test_assert(&ts, fun_ret_err, "can't return NULL entry");
-
 
 	return exec_ts(&ts) ? EXIT_SUCCESS : EXIT_FAILURE;
 }
