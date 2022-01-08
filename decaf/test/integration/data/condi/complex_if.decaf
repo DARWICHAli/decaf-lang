@@ -1,0 +1,12 @@
+class ComplexIf {
+    boolean thatsMaBool;
+    boolean dbak;
+
+    void main () {
+        dbak = true;
+        thatsMaBool = false;
+        if (1 && (thatsMaBool || false) && !(thatsMaBool || dbak)) {
+            
+        }
+    }
+}

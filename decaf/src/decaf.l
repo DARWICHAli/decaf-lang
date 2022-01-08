@@ -1,6 +1,7 @@
 %{
 #include <stdio.h>
 #include <string.h>
+
 #include "decaf.tab.h"
 
 extern YYSTYPE yylval;
@@ -27,6 +28,20 @@ class                   return CLASS;
 void                    return VOID;
 if                      return IF;
 else                    return ELSE;
+
+return                  return RETURN;
+break                   return BREAK;
+continue                return CONTINUE;
+
+true                    { yylval.Boolean = true; return TRUE;}
+false                   { yylval.Boolean = false; return FALSE;}
+"&&"                    return LAND;
+"||"                    return LOR;
+"=="                    return EQUAL;
+"!="                    return NEQUAL;
+[<>]                    return yytext[0];
+">="                    return MORE_EQUAL;
+"<="                    return LESS_EQUAL;
 
 0x{EHEXDIGIT}+          { yylval.Integer = strtol(yytext, NULL, 16); return HEXADECIMAL_CST; }
 {EDIGIT}+               { yylval.Integer = strtol(yytext, NULL, 10); return DECIMAL_CST; }
