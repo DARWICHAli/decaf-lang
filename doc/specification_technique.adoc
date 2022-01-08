@@ -237,6 +237,10 @@ Une liste de quadruplets est modélisée par le type `struct quad_list`. Pour in
 
 NOTE: le type de retour permet de faire des appels imbriqués. Donc `@retour == @liste en paramètre`.
 
+===== Concaténation de liste
+
+* *_qlist_concat_* (_<<quadlist, struct quad_list>>*_, _<<quadlist, struct quad_list>>*_) -> _<<quadlist, struct quad_list>>_: Concatène les deux listes passées comme paramètres de la fonction et renvoie la nouvelle liste construite.
+
 ===== Patching
 
 Une liste de quadruplets **incomplets** peut être patchée avec la fonction suivante. C'est à dire que tous les <<quad021, quadruplets de type goto>> auront pour adresse d'arrivée le <<quadidt, _quad_id_t_>> en paramètre.
