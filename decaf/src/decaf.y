@@ -28,8 +28,14 @@ void yyerror(const char *msg);
     char Identifier[MAX_IDENTIFIER_SIZE];
     struct entry* Entry;
     enum BTYPE BType;
-    enum Q_OP Binop;
+    enum Q_OP Binop; // call in lexer, assign value directly
     struct context* Context;
+    // struct Incomplete {
+    //     struct entry* Entry;
+    //     struct quad_list * q_true;
+    //     struct quad_list * q_false;
+    // };
+    quad_id_t * Qid;
 }
 
 %token CLASS VOID IF ELSE RETURN BREAK CONTINUE
@@ -43,6 +49,7 @@ void yyerror(const char *msg);
 %type <Entry> new_entry existing_entry expr 
 %type <Integer> integer
 %type <Boolean> bool_literal
+%type <Qid> m
 
 %right MUNAIRE
 %right '!'
@@ -107,6 +114,7 @@ method_declaration: VOID  new_entry '(' ')' {
     /* Ici empiler les paramètres de la fonction */
     ctx_pushctx();
     } proc_block        {ctx_popctx(); ctx_popctx();}
+    // | TYPE new_entry '(' { struct typelist* tl = typelist_new(); $2->type = typedesc_make_function(BT_INT, tl); ctx_pushctx(); ctx_pushctx();} ')' {} proc_block {ctx_popctx(); ctx_popctx();}
 ;
 /*
  * Blocs et code
@@ -130,7 +138,9 @@ opt_statements: %empty
     | statement opt_statements
 ;
 statement: existing_entry '=' expr ';'
-    | IF '(' expr ')' block 
+    | IF '(' expr ')' block {
+        // SERRL(!typedesc_equals(&$3->type, &td_var_bool), fprintf(stderr, "type of expr is not boolean in if statement\n"));
+    }
 	| IF '(' expr ')' block ELSE block
     | RETURN ';'
     | RETURN expr ';'
@@ -140,8 +150,8 @@ statement: existing_entry '=' expr ';'
 ;
 
 expr: existing_entry                { $$ = $1; }
-    | integer                       { $$ = ctx_make_temp(); }
-    | bool_literal                  { $$ = ctx_make_temp(); }
+    | integer                       { $$ = ctx_make_temp(); $$->type = typedesc_make_var(BT_INT);}
+    | bool_literal                  { $$ = ctx_make_temp(); $$->type = typedesc_make_var(BT_BOOL);}
     | expr '+' expr                 { $$ = ctx_make_temp(); gencode(quad_arith($$, $1, Q_ADD, $3)); }
     | expr '-' expr                 { $$ = ctx_make_temp(); gencode(quad_arith($$, $1, Q_SUB, $3)); }
     | expr '*' expr                 { $$ = ctx_make_temp(); gencode(quad_arith($$, $1, Q_MUL, $3)); }
@@ -149,16 +159,21 @@ expr: existing_entry                { $$ = $1; }
     | expr '%' expr                 { $$ = ctx_make_temp(); gencode(quad_arith($$, $1, Q_MOD, $3)); }
     | expr EQUAL expr               { $$ = ctx_make_temp(); }
     | expr NEQUAL expr              { $$ = ctx_make_temp(); }
-    | expr LAND expr                { $$ = ctx_make_temp(); }
-    | expr LOR expr                 { $$ = ctx_make_temp(); }
+    | expr LAND m expr                { $$ = ctx_make_temp(); }
+    | expr LOR m expr                 { $$ = ctx_make_temp(); }
     | expr '<' expr                 { $$ = ctx_make_temp(); }
     | expr '>' expr                 { $$ = ctx_make_temp(); }
     | expr MORE_EQUAL expr          { $$ = ctx_make_temp(); }
     | expr LESS_EQUAL expr          { $$ = ctx_make_temp(); }
     | '-' expr                      { $$ = ctx_make_temp();gencode(quad_neg($$, $2)); } %prec MUNAIRE
     | '(' expr ')'                  { $$ = $2; }
-    | '!' expr                      { $$ = $2; }
+    | '!' expr                      { 
+        // SERRL(!typedesc_equals(&($2->type), &td_var_bool), fprintf(stderr, "type of expr is not boolean following NOT\n"));
+        $$ = $2; }
 
+;
+
+m: %empty      // NOTE: error here  {*($$) = nextquad();}
 ;
 
 /*
