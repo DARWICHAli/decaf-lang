@@ -37,7 +37,7 @@ int main(int argc, char* argv[])
 		exit(EXIT_FAILURE);
 
 	size_t sz = 0;
-	struct quad* quads = get_all_quads(&sz);
+	quad_id_t* quads = get_all_quads(&sz);
 	struct asm_params asmp = { .generate_entrypoint = parameters.generate_entrypoint };
 
 	if (!parameters.no_gen)

@@ -27,8 +27,8 @@ const char* Mips_op_str[INVALID] = { "add", "addi", "div", "mul", "negu", "rem",
 	"li",
 	"lw", "sw", "move",
 	"jal", "jr",
-	"syscall" ,
-	"b", "beq", "ble", "blt" };
+	"b", "beq", "ble", "blt",
+	"syscall" };
 
 void instr(enum Mips_op op, ...) {
 	assert(op >= 0 && op < INVALID && "Unknown MIPS operator");
