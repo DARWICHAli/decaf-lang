@@ -30,11 +30,11 @@ void yyerror(const char *msg);
     enum BTYPE BType;
     enum Q_OP Binop; // call in lexer, assign value directly
     struct context* Context;
-    // struct Incomplete {
-    //     struct entry* Entry;
-    //     struct quad_list * q_true;
-    //     struct quad_list * q_false;
-    // };
+    struct {
+        struct entry * Entry;
+        struct quad_list * true_list;
+        struct quad_list * false_list;
+    } Incomplete;
     quad_id_t * Qid;
 }
 
@@ -47,6 +47,7 @@ void yyerror(const char *msg);
 %token <Identifier> ID
 
 %type <Entry> new_entry existing_entry expr 
+%type <Incomplete> bexpr
 %type <Integer> integer
 %type <Boolean> bool_literal
 %type <Qid> m
@@ -151,14 +152,13 @@ statement: existing_entry '=' expr ';'
 
 expr: existing_entry                { $$ = $1; }
     | integer                       { $$ = ctx_make_temp(); $$->type = typedesc_make_var(BT_INT);}
-    | bool_literal                  { $$ = ctx_make_temp(); $$->type = typedesc_make_var(BT_BOOL);}
     | expr '+' expr                 { $$ = ctx_make_temp(); gencode(quad_arith($$, $1, Q_ADD, $3)); }
     | expr '-' expr                 { $$ = ctx_make_temp(); gencode(quad_arith($$, $1, Q_SUB, $3)); }
     | expr '*' expr                 { $$ = ctx_make_temp(); gencode(quad_arith($$, $1, Q_MUL, $3)); }
     | expr '/' expr                 { $$ = ctx_make_temp(); gencode(quad_arith($$, $1, Q_DIV, $3)); }
     | expr '%' expr                 { $$ = ctx_make_temp(); gencode(quad_arith($$, $1, Q_MOD, $3)); }
-    | expr EQUAL expr               { $$ = ctx_make_temp(); }
-    | expr NEQUAL expr              { $$ = ctx_make_temp(); }
+    | bexpr                         { $$ = $1.Entry; }
+
     | expr LAND m expr                { $$ = ctx_make_temp(); }
     | expr LOR m expr                 { $$ = ctx_make_temp(); }
     | expr '<' expr                 { $$ = ctx_make_temp(); }
@@ -170,7 +170,11 @@ expr: existing_entry                { $$ = $1; }
     | '!' expr                      { 
         // SERRL(!typedesc_equals(&($2->type), &td_var_bool), fprintf(stderr, "type of expr is not boolean following NOT\n"));
         $$ = $2; }
+;
 
+bexpr: bexpr EQUAL bexpr            { $$.Entry = ctx_make_temp(); }
+    | bexpr NEQUAL bexpr            { $$.Entry = ctx_make_temp(); }
+    | bool_literal                  { $$.Entry = ctx_make_temp(); $$.Entry->type = typedesc_make_var(BT_BOOL);}
 ;
 
 m: %empty      // NOTE: error here  {*($$) = nextquad();}
@@ -180,11 +184,11 @@ m: %empty      // NOTE: error here  {*($$) = nextquad();}
  * Constantes et litteraux
  */
 
-// Littérauux entiers
+// Littéraux entiers
 integer: DECIMAL_CST    { $$ = $1; }
     | HEXADECIMAL_CST   { $$ = $1; }
 ;
-// Littérauux booléens
+// Littéraux booléens
 bool_literal: TRUE      { $$ = $1;}
     | FALSE             { $$ = $1;}
 ;
