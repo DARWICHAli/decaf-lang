@@ -23,6 +23,9 @@
  * @{
  */
 
+/// @ brief Nombre maximums de quadruplets
+#define GLOBAL_QUADS_SIZE 10000
+
 /**
  * @brief récupère un tableau linéaire de tous les quadruplets pour la conversion vers assembleur
  * @param[out] size Taille du tableau renvoyé.
@@ -30,7 +33,7 @@
  *
  * Permet de préserver l'opacité de l'implémentation. La taille du tableau est écrire dans size
  */
-struct quad* get_all_quads(size_t* size);
+quad_id_t* get_all_quads(size_t* size);
 
 /**
  * @brief Récupère l'identifiant du prochain quadruplet qui SERA généré.

@@ -77,3 +77,8 @@ void mips_label(const char* lbl, const char* com) {
 		fprintf(out, "%s: #%s\n", lbl, com);
 	}
 }
+
+void mips_label_quad(quad_id_t qid) {
+	assert(qid != INCOMPLETE_QUAD_ID && "can't label incomplete quad");
+	fprintf(out, LBL_QUAD_FMT ":\n", qid);
+}

@@ -27,7 +27,12 @@ void print_loc(struct Mips_loc loc) {
 			fprintf(out, "%d", loc.imm);
 			break;
 		case SYM:
-			fprintf(out, "%s", loc.sym);
+			assert((loc.sym || loc.qid) && "Bad symbol");
+			if (loc.sym) {
+				fprintf(out, "%s", loc.sym);
+			} else {
+				fprintf(out, LBL_QUAD_FMT, loc.qid);
+			}
 			break;
 		// LCOV_EXCL_START
 		default:
@@ -58,3 +63,8 @@ struct Mips_loc entry_loc(const struct entry* ent) {
 	}
 }
 
+struct Mips_loc quad_loc(quad_id_t qid) {
+	assert(qid != INCOMPLETE_QUAD_ID && "Unexpected incomplete quad");
+	struct Mips_loc ret = { .adr = SYM, .sym = NULL, .qid = qid };
+	return ret;
+}

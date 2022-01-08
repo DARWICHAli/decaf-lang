@@ -15,11 +15,12 @@
 
 quad_id_t next = 0;
 struct quad global_quads[GLOBAL_QUADS_SIZE];
+quad_id_t global_qids[GLOBAL_QUADS_SIZE];
 
-struct quad* get_all_quads(size_t* size)
+quad_id_t* get_all_quads(size_t* size)
 {
 	*size = next;
-	return global_quads;
+	return global_qids;
 }
 
 quad_id_t nextquad()
@@ -38,5 +39,6 @@ quad_id_t gencode(struct quad quadop)
 	assert(next < GLOBAL_QUADS_SIZE && "Can't alloc more quads");
 	quadop.ctx = ctx_currentctx();
 	global_quads[next] = quadop;
+	global_qids[next] = next;
 	return next++;
 }

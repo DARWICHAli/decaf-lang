@@ -23,6 +23,7 @@ enum Q_OP req_lhs[REQ_LHS_SIZE] = {Q_ADD, Q_AFF, Q_DIV, Q_MOD, Q_MUL, Q_NEG, Q_S
 enum Q_OP req_rhs[REQ_RHS_SIZE] = {Q_ADD, Q_DIV, Q_MOD, Q_MUL, Q_SUB, Q_IFG};
 enum Q_OP req_res[REQ_RES_SIZE] = {Q_ADD, Q_AFF, Q_DIV, Q_MOD, Q_MUL, Q_NEG, Q_SUB, Q_CST, Q_CAL};
 
+struct geninfos qinfos = { .init = 0, .is_dst = {0} };
 
 int is_in(enum Q_OP op, enum Q_OP* tab, size_t size) {
 	for (size_t i = 0; i < size; ++i) {
@@ -101,4 +102,25 @@ void genasm(const char* to_lang, const struct quad* qlist, size_t liste_size, FI
 		fprintf(stderr, "Unknown lang: %s\n", to_lang);
 		exit(EXIT_FAILURE);
 	}
+}
+
+void first_pass(const struct quad* qlist, size_t liste_size) {
+	assert(liste_size < MAX_IS_DST_SIZE && "first_pass can't handle this many quads while having is_quad_dst being O(1))");
+
+	for (size_t i = 0; i < liste_size; ++i) {
+		if (qlist[i].op == Q_GOT || qlist[i].op == Q_IFG) {
+			assert(qlist[i].dst != INCOMPLETE_QUAD_ID && "Incomplete quad in final IR");
+			assert(getquad(qlist[i].dst) && "Bad quad in destination");
+			assert(qlist[i].dst < MAX_IS_DST_SIZE && "quad_id too big???");
+			qinfos.is_dst[qlist[i].dst] = 1;
+		}
+	}
+
+	qinfos.init = 1;
+}
+
+int is_quad_dst(quad_id_t qid) {
+	assert(qinfos.init && "First pass need to be done before calling this function");
+	assert((qid < MAX_IS_DST_SIZE && qid != INCOMPLETE_QUAD_ID) && "bad qid");
+	return qinfos.is_dst[qid];
 }
