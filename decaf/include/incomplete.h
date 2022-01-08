@@ -53,6 +53,16 @@ struct quad_list qlist_new();
 struct quad_list* qlist_append(struct quad_list* qlst, quad_id_t qid);
 
 /**
+ * @brief Concatène deux quad_list et renvoie la nouvelle liste
+ * @param[in] ql1 Première liste à ajouter à la liste finale
+ * @param[in] ql2 Deuxième liste à ajouter à la liste finale
+ * @return Une nouvelle liste de quadruplet contenant les quadruplet de ql1 et ql2
+ * @warning plante si impossible d'ajouter un quadruplet et si les tailles finales ne correspondent pas
+ */
+struct quad_list qlist_concat(struct quad_list* ql1, struct quad_list* ql2);
+
+
+/**
  * @brief complète tous les quadruplets incomplets par l'identifiant du quadruplet passé en paramètre
  * @param[in] qlst Liste à patcher
  * @param qid identifiant du quadruplet vers lequel compléter
