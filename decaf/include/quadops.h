@@ -24,6 +24,9 @@
 /// @brief Type de l'dentifiant unique associé à chaque quadruplet
 typedef size_t quad_id_t;
 
+/// @brief valeur de destination des quadruplets incomplets
+#define INCOMPLETE_QUAD_ID ((quad_id_t)-1)
+
 /**
  * @enum CMP_OP
  * @brief Opérateurs de comparaisons dans le if-goto
