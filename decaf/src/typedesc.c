@@ -161,7 +161,6 @@ void td_fprintf(FILE* fd, const struct typedesc* td)
 		tl = typedesc_function_args(td);
 		size_arglist = typelist_size(tl);
 		for(size_t i = 0; i < size_arglist -1 ; i++){
-			fprintf(fd,"%ld\n", i);
 			strcat(arglist, names[tl->btypes[i]]);
 			strcat(arglist, ", ");
 		}

@@ -4,6 +4,8 @@
 #include "context.h"
 #include "test_suite.h"
 #include "typedesc.h"
+#include "typelist.h"
+
 
 #include <stdlib.h>
 #include <memory.h>
@@ -503,21 +505,43 @@ int cgo_big_ctx(void* data) {
 int ctx_fprintf_null_entry(void* data){
 
 	struct data* dt = data;
-	struct context* ctx = ctx_pushctx();
-	// add
-	for (size_t i = 0; i < NB_ENTRIES_LOT; ++i) {
-		if (i > 0 && i % ENTRIES_PER_CTX_LOT == 0)
-			ctx = ctx_pushctx();
-		snprintf(dt->entries_names[i], MAX_IDENTIFIER_SIZE, "m%lu", i);
-		dt->entries[i] = ctx_newname(dt->entries_names[i]);
-		dt->expected_ctx[i] = ctx;
+	struct context* global = NULL;
+	/* struct context* root = NULL;
+	struct context* main_args = NULL;
+	struct context* main_body = NULL; */
+	fprintf(stderr,"\n");
+	global = ctx_pushctx(); // super-global
+	struct typelist* one_int = typelist_new();
+	typelist_append(one_int, BT_INT);
+	ctx_newname(tokenize("WriteInt"))->type = typedesc_make_function(BT_INT, one_int);
+
+	ctx_pushctx(); // root
+	ctx_newname(tokenize("global"))->type = typedesc_make_var(BT_BOOL);
+	struct typelist* two_int = typelist_new();
+	typelist_append(typelist_append(two_int, BT_INT), BT_INT);
+	ctx_newname(tokenize("main"))->type = typedesc_make_function(BT_INT, two_int); 
+	ctx_pushctx(); // main args
+	ctx_newname(tokenize("argc"))->type = typedesc_make_var(BT_INT);
+	ctx_newname(tokenize("argv"))->type = typedesc_make_var(BT_INT);
+
+	ctx_pushctx(); // contenu du main
+
+	
+	for (size_t i = 0; i < 15; ++i) {		
+		snprintf(dt->entries_names[i], MAX_IDENTIFIER_SIZE, "o%lu", i);
+		ASSERT_TRUE((dt->entries[i] = ctx_newname(dt->entries_names[i])) != NULL);
+		((struct entry*)dt->entries[i])->type = typedesc_make_var(BT_BOOL);	
 	}
+
+
 	FILE* fd = tmpfile();
 	
-	if(fd == NULL)
+	if(fd == NULL){
 		fprintf(stderr,"ctx_fprintf_4: erreur creation de fichier temporaire\n");
+		return 0;
+	}
 
-	ctx_fprintf(stderr, ctx);
+	ctx_fprintf(stderr, global);
 
 	fclose(fd);
 	return 0;
@@ -562,10 +586,5 @@ int main()
 	add_test_assert(&ts_cgo, cgo_error_if_no_ctx, "erreur si entry pas de context");
 	add_test(&ts_cgo, cgo_big_ctx, "fonctionne avec context etendu");
 	
-	
-	
-
-
-
 	return exec_ts(&misc) && exec_ts(&add_lookup) && exec_ts(&octal) && exec_ts(&ts_cgo) ? EXIT_SUCCESS : EXIT_FAILURE;
 }

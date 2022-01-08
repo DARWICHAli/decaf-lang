@@ -224,29 +224,45 @@ const char* tokenize(const char* str) {
 	return buf;
 }
 
-#define COMP 10
+#define COMP 2
 
 void ctx_fprintf_aux(FILE* fd, const struct context* ctx, int espace)
 {
 	assert(ctx && "ctx_fprintf expecting NON null entry");
 	assert(fd && "ctx_fprintf expecting NON null entry");
 	
+	size_t idx;
 	size_t entrysize = ctx_count_entries(ctx);
+	struct context* pos;
 	
 
+	// recherche de ctx
+	for (idx= 0; idx < co_used; ++idx) {
+		pos = &global_context[idx];
+		if (pos == ctx) // ctx trouvé
+			break;	
+	}
     for(int i = 0; i < espace; i++){
-        fprintf(fd, "|__ ");
+        fprintf(fd, "---");
 	}   
-	for(size_t i = 0; i < entrysize; i++){
-		fprintf(fd, "%s ", ctx->entries->id);
-		td_fprintf(fd, &global_context[0].entries[i].type);
+
+	fprintf(fd, "%s: ", global_context[idx].entries[0].id);
+	td_fprintf(fd, &global_context[idx].entries[0].type);
+	fprintf(fd, "\n");
+
+	for(size_t i = 1; i < entrysize; i++){
+		for(int i = 0; i < espace; i++)
+        	fprintf(fd, "   ");
+		fprintf(fd, "%s: ", global_context[idx].entries[i].id);
+		td_fprintf(fd, &global_context[idx].entries[i].type);
 		fprintf(fd, "\n");
 	}
 	// recherche des fils
-	for (size_t i = 0; i < co_used; ++i) {
+	for (size_t i = idx; i < co_used; ++i) {
 		struct context* potentiel_fils = &global_context[i];
 		if (potentiel_fils->parent == ctx) { // fils de ctx
 			ctx_fprintf_aux(fd, potentiel_fils,espace + COMP);
+			break;
 		}
 	}
 }
