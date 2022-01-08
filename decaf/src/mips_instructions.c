@@ -13,19 +13,22 @@ int Mips_op_nums[INVALID] = {3, 3, 3, 3, 2, 3, 3, 3,
 	2, 
 	2, 2, 2,
 	1, 1,
+	1, 3, 3, 3,
 	0 };
 
 enum Mips_adr Mips_op_fmt[INVALID][3] = { {REG, REG, REG}, {REG, REG, IMM}, {REG, REG, REG}, {REG, REG, REG}, {REG, REG, -1}, {REG, REG, REG}, {REG, REG, REG}, {REG, REG, REG}, 
 	{REG, IMM, -1},
 	{REG, IMR, -1},{REG, IMR, -1},{REG, REG, -1},
 	{SYM, -1, -1}, {REG, -1, -1},
-	{-1, -1, -1}};
+	{-1, -1, -1},
+	{SYM, -1, -1},{REG, REG, SYM},{REG, REG, SYM},{REG, REG, SYM}};
 
 const char* Mips_op_str[INVALID] = { "add", "addi", "div", "mul", "negu", "rem", "sub", "xor", 
 	"li",
 	"lw", "sw", "move",
 	"jal", "jr",
-	"syscall" };
+	"syscall" ,
+	"b", "beq", "ble", "blt" };
 
 void instr(enum Mips_op op, ...) {
 	assert(op >= 0 && op < INVALID && "Unknown MIPS operator");

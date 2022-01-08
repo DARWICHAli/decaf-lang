@@ -44,6 +44,7 @@ enum Mips_op { ADD, ADDI, DIV, MUL, NEGU, REM, SUB, XOR,
 	LW, SW, MOVE,
 	JAL, JR,
 	SYSCALL,
+	B, BEQ, BLE, BLT,
 	INVALID };
 
 extern int Mips_op_nums[INVALID];
