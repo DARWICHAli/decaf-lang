@@ -1,0 +1,12 @@
+class EasyProcOneArgument {
+	void foo(int p) {
+		int x;
+		x = 42;
+	}
+
+	void main() {
+		int z;
+		z = 6;
+		foo(z);
+	}
+}

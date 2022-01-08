@@ -1,0 +1,9 @@
+class FuncWithArgs {
+	int foo(int x, int y, int z) {
+		return x*(y+z);
+	}
+	void main() {
+		int res;
+		res = foo(42, 65, 128);
+	}
+}

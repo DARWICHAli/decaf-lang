@@ -1,0 +1,10 @@
+class EasyProcMultipleArgument {
+	void foo(int p, int q, int r) {
+		int x;
+		x = p + q * r;
+	}
+
+	void main() {
+		foo(42, 13, 999);
+	}
+}

@@ -12,32 +12,36 @@
 extern int yyparse();
 extern int yydebug;
 
-int main (int argc, char* argv[])
+int main(int argc, char* argv[])
 {
-    struct params parameters = parse_args(argc, argv);
+	struct params parameters = parse_args(argc, argv);
 
-    FILE* fo = fopen(parameters.output_file, "w");
-    if (!fo) {
-	    perror("Cannot open output file for writing");
-	    exit(EXIT_FAILURE);
-    }
+	FILE* fo;
+	if (!parameters.no_gen) {
+		fo = fopen(parameters.output_file, "w");
+		if (!fo) {
+			perror("Cannot open output file for writing");
+			exit(EXIT_FAILURE);
+		}
+	}
 
-    // Contexte super-global
-    ctx_pushctx();
-    struct typelist* one_int = typelist_new();
-    ctx_newname(tokenize("WriteInt"))->type = typedesc_make_function(BT_INT, one_int);
+	// Contexte super-global, factoriser quelque part
+	ctx_pushctx();
+	struct typelist* one_int = typelist_new();
+	typelist_append(one_int, BT_INT);
+	ctx_newname(tokenize("WriteInt"))->type = typedesc_make_function(BT_INT, one_int);
 
-    yydebug = parameters.debug_mode;
-    int r = yyparse();
-    if (r == EXIT_FAILURE)
-	    exit(EXIT_FAILURE);
+	yydebug = parameters.debug_mode;
+	int r = yyparse();
+	if (r == EXIT_FAILURE)
+		exit(EXIT_FAILURE);
 
-    size_t sz = 0;
-    struct quad* quads = get_all_quads(&sz);
-    struct asm_params asmp = {.generate_entrypoint = parameters.generate_entrypoint };
+	size_t sz = 0;
+	struct quad* quads = get_all_quads(&sz);
+	struct asm_params asmp = { .generate_entrypoint = parameters.generate_entrypoint };
 
-    if (!parameters.no_gen)
-    	genasm("MIPS", quads, sz, fo, &asmp);
+	if (!parameters.no_gen)
+		genasm("MIPS", quads, sz, fo, &asmp);
 
-    return EXIT_SUCCESS;
+	return EXIT_SUCCESS;
 }

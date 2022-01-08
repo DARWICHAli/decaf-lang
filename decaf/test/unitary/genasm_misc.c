@@ -15,8 +15,6 @@
 #include <string.h>
 
 extern enum Q_OP req_rhs[7];
-int is_in(enum Q_OP op, enum Q_OP* tab, size_t size);
-void write_instruction(FILE* out, const char* op, const char* one, const char* two, const char* three, size_t nb_op, const char* com);
 
 int ii_setup(void** data) {
 	(void)(data);
@@ -65,79 +63,6 @@ int wi_teardown(void** data) {
 	return 1;
 }
 
-int wi_1(void* data) {
-	struct wid* dt = data;
-	write_instruction(dt->fo, "OP", "one", "", "", 1, "");
-
-	fseek(dt->fo, 0, SEEK_SET);
-	fread(dt->buf, sizeof(char), wid_BUF_SIZE, dt->fo);
-
-	ASSERT_EQSTR(dt->buf, "OP one\n");
-	return 1;
-}
-
-int wi_2(void* data) {
-	struct wid* dt = data;
-	write_instruction(dt->fo, "OP", "a", "two", "", 2, "");
-
-	fseek(dt->fo, 0, SEEK_SET);
-	fread(dt->buf, sizeof(char), wid_BUF_SIZE, dt->fo);
-
-	ASSERT_EQSTR(dt->buf, "OP a two\n");
-	return 1;
-}
-
-int wi_3(void* data) {
-	struct wid* dt = data;
-	write_instruction(dt->fo, "OP", "a", "b", "three", 3, "");
-
-	fseek(dt->fo, 0, SEEK_SET);
-	fread(dt->buf, sizeof(char), wid_BUF_SIZE, dt->fo);
-
-	ASSERT_EQSTR(dt->buf, "OP a b three\n");
-	return 1;
-}
-
-int wi_err(void* data) {
-	struct wid* dt = data;
-	write_instruction(dt->fo, "OP", "one", "lm", "po", 72, "");
-	return 0;
-}
-
-int wi_empty_op(void* data) {
-	struct wid* dt = data;
-	write_instruction(dt->fo, "", "one", "lm", "po", 3, "");
-	return 0;
-}
-
-int wi_empty_1(void* data) {
-	struct wid* dt = data;
-	write_instruction(dt->fo, "OP", "", "", "", 1, "");
-	return 0;
-}
-
-int wi_empty_2(void* data) {
-	struct wid* dt = data;
-	write_instruction(dt->fo, "OP", "pl", "", "", 2, "");
-	return 0;
-}
-
-int wi_empty_3(void* data) {
-	struct wid* dt = data;
-	write_instruction(dt->fo, "OP", "pl", "", "ol", 3, "");
-	return 0;
-}
-
-int wi_com(void* data) {
-	struct wid* dt = data;
-	write_instruction(dt->fo, "OP", "a", "b", "three", 3, "com with spaces");
-
-	fseek(dt->fo, 0, SEEK_SET);
-	fread(dt->buf, sizeof(char), wid_BUF_SIZE, dt->fo);
-
-	ASSERT_EQSTR(dt->buf, "OP a b three # com with spaces\n");
-	return 1;
-}
 
 struct gmd {
 	FILE* fo;
@@ -237,22 +162,11 @@ int genasm_err_unknown_instr(void* data) {
 
 
 int main() {
-	struct test_suite ii, wi, gm;
+	struct test_suite ii, gm;
 
 	ii = make_ts("is_in", ii_setup, ii_teardown);
 	add_test(&ii, ii_in, "is_in correctly assert if inside");
 	add_test(&ii, ii_out, "is_in correctly assert if outside");
-
-	wi = make_ts("write_instruction", wi_setup, wi_teardown);
-	add_test(&wi, wi_1, "Instruction with 1 operand");
-	add_test(&wi, wi_2, "Instruction with 2 operand");
-	add_test(&wi, wi_3, "Instruction with 3 operand");
-	add_test_assert(&wi, wi_err, "Instruction with wrong number of operands fails");
-	add_test_assert(&wi, wi_empty_op, "Instruction with empty operator crash");
-	add_test_assert(&wi, wi_empty_1, "Instruction with empty operand crash (1)");
-	add_test_assert(&wi, wi_empty_2, "Instruction with empty operand crash (2)");
-	add_test_assert(&wi, wi_empty_3, "Instruction with empty operand crash (3)");
-	add_test(&wi, wi_com, "Comments are appended correctly");
 
 	gm = make_ts("genasm", genasm_setup, genasm_teardown);
 	add_test_failure(&gm, genasm_err_lang, "Error if unknown lang");
@@ -262,6 +176,6 @@ int main() {
 	add_test_assert(&gm, genasm_err_params, "Vérifie les paramètres");
 	add_test_assert(&gm, genasm_err_unknown_instr, "Instruction inconnue délenche assert");
 
-	return exec_ts(&ii) && exec_ts(&wi) && exec_ts(&gm) ? EXIT_SUCCESS : EXIT_FAILURE;
+	return exec_ts(&ii) && exec_ts(&gm) ? EXIT_SUCCESS : EXIT_FAILURE;
 }
 

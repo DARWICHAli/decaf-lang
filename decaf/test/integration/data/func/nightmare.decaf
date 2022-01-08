@@ -1,0 +1,27 @@
+class Nightmare {
+	int fct(int x, int y, int z) {
+		return (x+y) * (y-z)*(y-z) / ((x%z)+1);
+	}
+	int glob2(int x) {
+		return (x / 2) * 3;
+	}
+	int glob(int x) {
+		return glob2(glob2(glob2(glob2(glob2(glob2(x))))));
+	}
+	int foobar(int x, int y, int z) {
+		return glob(fct(fct(x, y, z), fct(y, x, z), fct(z, y, x)));
+	}
+
+	int bar(int x, int y) {
+		return foobar(x*2, y+y, x+y);
+	}
+
+	int foo(int x) {
+		return bar(x*2, x);
+	}
+	void main() {
+		int res;
+		res = foo(1);
+		WriteInt(res);
+	}
+}

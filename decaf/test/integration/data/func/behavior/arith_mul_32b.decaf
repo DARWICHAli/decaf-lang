@@ -1,0 +1,6 @@
+//33554432
+class Basic {
+	void main() {
+		WriteInt(4096 * 8192);
+	}
+}
