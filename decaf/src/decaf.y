@@ -11,7 +11,7 @@ void yyerror(const char *msg);
 
 #define SERR(x, msg) do { if ((x)) { fprintf(stderr, "Erreur semantique: " msg); exit(EXIT_FAILURE);} } while(0)
 #define SERRL(x, fct) do { if ((x)) { fprintf(stderr, "Erreur semantique: "); fct; exit(EXIT_FAILURE);} } while(0)
-
+#define QLIST_NEWADD(lst) do { lst = qlist_new();qlist_append(&lst, nextquad()); } while(0)
 %}
 %define parse.error verbose
 
@@ -32,10 +32,10 @@ void yyerror(const char *msg);
     struct context* Context;
     struct {
         struct entry * Entry;
-        struct quad_list * true_list;
-        struct quad_list * false_list;
+        struct quad_list true_list;
+        struct quad_list false_list;
     } Incomplete;
-    quad_id_t * Qid;
+    quad_id_t Qid;
 }
 
 %token CLASS VOID IF ELSE RETURN BREAK CONTINUE
@@ -46,10 +46,10 @@ void yyerror(const char *msg);
 %token <BType> TYPE
 %token <Identifier> ID
 
-%type <Entry> new_entry existing_entry expr 
-%type <Incomplete> bexpr
+%type <Entry> new_entry existing_entry  
+%type <Incomplete> expr bool_literal
 %type <Integer> integer
-%type <Boolean> bool_literal
+// %type <Boolean> bool_literal
 %type <Qid> m
 
 %right MUNAIRE
@@ -140,7 +140,7 @@ opt_statements: %empty
 ;
 statement: existing_entry '=' expr ';'
     | IF '(' expr ')' block {
-        // SERRL(!typedesc_equals(&$3->type, &td_var_bool), fprintf(stderr, "type of expr is not boolean in if statement\n"));
+        SERRL(!typedesc_equals(&$3.Entry->type, &td_var_bool), fprintf(stderr, "type of expr is not boolean in if statement\n"));
     }
 	| IF '(' expr ')' block ELSE block
     | RETURN ';'
@@ -149,35 +149,78 @@ statement: existing_entry '=' expr ';'
     | CONTINUE ';'
     | block
 ;
-
-expr: existing_entry                { $$ = $1; }
-    | integer                       { $$ = ctx_make_temp(); $$->type = typedesc_make_var(BT_INT);}
-    | expr '+' expr                 { $$ = ctx_make_temp(); gencode(quad_arith($$, $1, Q_ADD, $3)); }
-    | expr '-' expr                 { $$ = ctx_make_temp(); gencode(quad_arith($$, $1, Q_SUB, $3)); }
-    | expr '*' expr                 { $$ = ctx_make_temp(); gencode(quad_arith($$, $1, Q_MUL, $3)); }
-    | expr '/' expr                 { $$ = ctx_make_temp(); gencode(quad_arith($$, $1, Q_DIV, $3)); }
-    | expr '%' expr                 { $$ = ctx_make_temp(); gencode(quad_arith($$, $1, Q_MOD, $3)); }
-    | bexpr                         { $$ = $1.Entry; }
-
-    | expr LAND m expr                { $$ = ctx_make_temp(); }
-    | expr LOR m expr                 { $$ = ctx_make_temp(); }
-    | expr '<' expr                 { $$ = ctx_make_temp(); }
-    | expr '>' expr                 { $$ = ctx_make_temp(); }
-    | expr MORE_EQUAL expr          { $$ = ctx_make_temp(); }
-    | expr LESS_EQUAL expr          { $$ = ctx_make_temp(); }
-    | '-' expr                      { $$ = ctx_make_temp();gencode(quad_neg($$, $2)); } %prec MUNAIRE
-    | '(' expr ')'                  { $$ = $2; }
-    | '!' expr                      { 
-        // SERRL(!typedesc_equals(&($2->type), &td_var_bool), fprintf(stderr, "type of expr is not boolean following NOT\n"));
-        $$ = $2; }
-;
-
-bexpr: bexpr EQUAL bexpr            { $$.Entry = ctx_make_temp(); }
-    | bexpr NEQUAL bexpr            { $$.Entry = ctx_make_temp(); }
+    // NOTE: il faut effectuer les vérification de types ici 
+    // "==" "!=" "&&" "||" sont les seuls opérateurs sur les booléens autorisées
+    // Il faut lever une erreur, (la syntaxe est bonne mais pas la sémantique)
+expr: existing_entry                { $$.Entry = $1; }
+    | integer                       { $$.Entry = ctx_make_temp(); $$.Entry->type = typedesc_make_var(BT_INT);}
     | bool_literal                  { $$.Entry = ctx_make_temp(); $$.Entry->type = typedesc_make_var(BT_BOOL);}
+    | expr '+' expr                 { $$.Entry = ctx_make_temp(); gencode(quad_arith($$.Entry, $1.Entry, Q_ADD, $3.Entry)); }
+    | expr '-' expr                 { $$.Entry = ctx_make_temp(); gencode(quad_arith($$.Entry, $1.Entry, Q_SUB, $3.Entry)); }
+    | expr '*' expr                 { $$.Entry = ctx_make_temp(); gencode(quad_arith($$.Entry, $1.Entry, Q_MUL, $3.Entry)); }
+    | expr '/' expr                 { $$.Entry = ctx_make_temp(); gencode(quad_arith($$.Entry, $1.Entry, Q_DIV, $3.Entry)); }
+    | expr '%' expr                 { $$.Entry = ctx_make_temp(); gencode(quad_arith($$.Entry, $1.Entry, Q_MOD, $3.Entry)); }
+    | expr EQUAL expr               { $$.Entry = ctx_make_temp(); }
+    | expr NEQUAL expr              { $$.Entry = ctx_make_temp(); }
+    | expr LOR m expr             {
+        qlist_complete(&$1.false_list, $3);
+        $$.true_list = qlist_concat(&$1.true_list, &$4.true_list);
+        $$.false_list = $4.false_list;
+    }
+    | expr LAND m expr              {
+        qlist_complete(&$1.false_list, $3);
+        $$.true_list = $4.true_list;
+        $$.false_list = qlist_concat(&$1.false_list, &$4.false_list);
+    }
+    | expr '<' expr                 {
+        QLIST_NEWADD($$.true_list);
+        // $$.true_list = qlist_new();
+        // qlist_append(&$$.true_list, nextquad());
+        gencode(quad_ifgoto($1.Entry, CMP_LT, $3.Entry, 0));
+        QLIST_NEWADD($$.false_list);
+        // $$.false_list = qlist_new();
+        // qlist_append(&$$.false_list, nextquad());
+        gencode(quad_goto(0));
+    }
+    | expr '>' expr                 {
+        $$.true_list = qlist_new();
+        qlist_append(&$$.true_list, nextquad());
+        gencode(quad_ifgoto($1.Entry, CMP_GT, $3.Entry, 0));
+        $$.false_list = qlist_new();
+        qlist_append(&$$.false_list, nextquad());
+        gencode(quad_goto(0));
+    }
+    | expr MORE_EQUAL expr          {
+        $$.true_list = qlist_new();
+        qlist_append(&$$.true_list, nextquad());
+        gencode(quad_ifgoto($1.Entry, CMP_GE, $3.Entry, 0));
+        $$.false_list = qlist_new();
+        qlist_append(&$$.false_list, nextquad());
+        gencode(quad_goto(0));
+    }
+    | expr LESS_EQUAL expr          {
+        $$.true_list = qlist_new();
+        qlist_append(&$$.true_list, nextquad());
+        gencode(quad_ifgoto($1.Entry, CMP_LE, $3.Entry, 0));
+        $$.false_list = qlist_new();
+        qlist_append(&$$.false_list, nextquad());
+        gencode(quad_goto(0));
+    }
+    | '-' expr                      {
+        $$.Entry = ctx_make_temp();
+        gencode(quad_neg($$.Entry, $2.Entry));
+    } %prec MUNAIRE
+    | '(' expr ')'                  { $$ = $2; }
+    | '!' expr                      {
+        SERRL(!typedesc_equals(&($2.Entry->type), &td_var_bool), fprintf(stderr, "type of expr is not boolean following NOT\n"));
+        struct quad_list temp = $$.true_list;
+        $$.true_list = $$.false_list;
+        $$.false_list = temp; 
+    }
 ;
 
-m: %empty      // NOTE: error here  {*($$) = nextquad();}
+
+m: %empty      { $$ = nextquad();}
 ;
 
 /*
@@ -189,10 +232,17 @@ integer: DECIMAL_CST    { $$ = $1; }
     | HEXADECIMAL_CST   { $$ = $1; }
 ;
 // Littéraux booléens
-bool_literal: TRUE      { $$ = $1;}
-    | FALSE             { $$ = $1;}
+bool_literal: TRUE  {
+        $$.true_list = qlist_new();
+        qlist_append(&$$.true_list, nextquad());
+        gencode(quad_goto(0));
+    }
+    | FALSE         {
+        $$.false_list = qlist_new();
+        qlist_append(&$$.false_list, nextquad());
+        gencode(quad_goto(0));
+    }
 ;
-
 %%
 void yyerror(const char *msg)
 {
