@@ -2,7 +2,7 @@
  * @file
  * @author Léo Chéneau <leo.cheneau@etu.unistra.fr
  * @version 1.0
- * @brief Quadruplets, structures et fonctions associées
+ * @brief Génération du code assembleur
  * @ingroup ASM
  */
 #ifndef INCLUDE__GENASM__H
@@ -10,6 +10,8 @@
 
 #include <stddef.h> // size_t
 #include <stdio.h> // FILE (obligatoire, pas possible de FD)
+
+#include "quadops.h"
 
 /**
  * @addtogroup ASM
@@ -34,6 +36,7 @@ struct asm_params {
 
 // forward declarations
 struct quad;
+struct context;
 
 /**
  * @brief traduit du code intermédiaire vers du code assembleur dans un fichier
@@ -53,6 +56,26 @@ struct quad;
 
 void genasm(const char* to_lang, const struct quad* qlist, size_t liste_size, FILE* outfile, const struct asm_params* genp);
 
+/**
+ * @defgroup ASM_helpers ASM_helpers
+ * @brief Aide à la génération ASM
+ * @addtogroup ASM_helpers
+ * @{
+ */
+
+int contains_func(const struct context* ctx);
+
+int is_in(enum Q_OP op, enum Q_OP* tab, size_t size);
+
+int check_quad(struct quad q);
+
+const struct context* ctx_argsfun(const struct context* ctx);
+
+const struct context* ctx_root_ctx();
+
+int is_in(enum Q_OP op, enum Q_OP* tab, size_t size);
+
+///@}
 ///@}
 
 #endif

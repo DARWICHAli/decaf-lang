@@ -1,0 +1,27 @@
+class MultipleFunc {
+	void foo() {
+		int x;
+		x = 4;
+	}
+
+	void main() {
+		int res, lhs, rhs;
+		lhs = 42;
+		rhs = 69;
+		res = lhs + rhs;
+	}
+
+	void fct() {
+		int b, c, d;
+		b = 87*4;
+		d = b +3;
+		c = d % b;
+	}
+
+	void bar() {
+		int z, y, a;
+		a = 5;
+		z = a;
+		y = a+z;
+	}
+}

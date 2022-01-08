@@ -1,0 +1,15 @@
+class FuncAsArgs {
+	int foo(int a, int b, int c) {
+		return a + b + c;
+	}
+	int bar(int a, int b) {
+		return a *b;
+	}
+	int one(int x) {
+		return x+x;
+	}
+	void main() {
+		int res;
+		res = foo(bar(6, 8), bar(foo(4, 9), one(one(one(43)))));
+	}
+}

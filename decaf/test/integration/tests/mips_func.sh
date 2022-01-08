@@ -2,9 +2,9 @@
 # Vérifie que le parseur est capable de parser des programme simples
 # C'est à dire des programmes vides ou bien seulement des opérations arithmétiques
 
-printf "[Exécution de programmes simples]\n"
+printf "[Exécution de programmes avec des fonctions]\n"
 
-decaf_files=$2/arith/*.decaf
+decaf_files=$2/func/*.decaf
 binary=$1/decaf
 sim=spim
 simopt="-exception -file"

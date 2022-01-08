@@ -2,13 +2,13 @@
 # Vérifie que le parseur est capable de parser des programme simples
 # C'est à dire des programmes vides ou bien seulement des opérations arithmétiques
 
-printf "[Exécution de programmes simples]\n"
+printf "[Analyse du comportement de programmes avec des fonctions]\n"
 
-decaf_files=$2/arith/*.decaf
+decaf_files=$2/func/behavior/*.decaf
 binary=$1/decaf
 sim=spim
 simopt="-exception -file"
-killafter=0.1s
+killafter=1s
 
 GRE='\033[0;32m'
 RED='\033[0;31m'
@@ -27,6 +27,8 @@ for f in $decaf_files; do
 	printf "Compiling file $i of $count: $f... "
 	outfile="/tmp/$(basename $f).mips"
 
+	expected=$(cat $f | head -n 1 | grep -Po "//\K.*")
+
 	if OUTPUT=$($binary -o $outfile < $f 2>&1)
 	then
 		printf "${GRE}Ok!${NOR}\n"
@@ -34,12 +36,13 @@ for f in $decaf_files; do
 		echo -e "> Executing $sim "$simopt" $outfile..."
 		MIPSOUT=$(timeout $killafter $sim $simopt $outfile 2>&1)
 		GREPOUT=$(echo -e "$MIPSOUT" | grep -E "(error|Exception|undefined|out of bounds)")
-		if [ "$GREPOUT" == "" ]
+		VALUEOUT=$(echo -e "$MIPSOUT" | tail -n 1)
+		if [ "$VALUEOUT" == "$expected" ]
 		then
 			printf "${GRE}Ok!${NOR}\n"
 			ok=$((ok+1))
 		else
-			printf "${RED}Error...${NOR}\n"
+			printf "${RED}Error... expected \"${expected}\", got \"${VALUEOUT}\".${NOR}\n"
 			printf "output:\n===\n$MIPSOUT\n===\n"
 		fi
 	else

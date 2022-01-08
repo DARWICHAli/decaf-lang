@@ -41,5 +41,15 @@ int typelist_equals(const struct typelist* lhs, const struct typelist* rhs)
 
 size_t typelist_size(const struct typelist* tl)
 {
+	assert(tl && "Expected non-NULL typelist");
 	return tl->used;
+}
+
+size_t typelist_bytesize(const struct typelist* tl) {
+	assert(tl && "Expected non-NULL typelist");
+	size_t res = 0;
+	for (size_t i = 0; i < typelist_size(tl); ++i) {
+		res += bt_sizeof(tl->btypes[i]);
+	}
+	return res;
 }

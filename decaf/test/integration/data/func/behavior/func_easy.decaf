@@ -1,0 +1,9 @@
+//1
+class Easy {
+	int foo() {
+		return 1;
+	}
+	void main() {
+		WriteInt(foo());
+	}
+}

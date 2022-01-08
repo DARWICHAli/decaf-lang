@@ -1,0 +1,8 @@
+class Program {
+	int foo(int x, int y) {
+		return x / y;
+	}
+	void main() {
+		WriteInt(foo(0, 1));
+	}
+}
