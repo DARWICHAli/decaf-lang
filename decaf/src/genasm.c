@@ -96,6 +96,8 @@ void genasm(const char* to_lang, const quad_id_t* qlist, size_t liste_size, FILE
 	assert(qlist && liste_size > 0 && "Empty list not allowed");
 	assert(genp && "Parameters cannot be NULL");
 	assert(outfile && "Bad file");
+
+	first_pass(qlist, liste_size);
 	if (strcmp(to_lang, "MIPS") == 0) {
 		genMIPS(qlist, liste_size, outfile, genp);
 	} else {
