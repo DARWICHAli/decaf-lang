@@ -224,8 +224,36 @@ const char* tokenize(const char* str) {
 	return buf;
 }
 
+#define COMP 10
 
-void ctx_fprint(FILE* fd, const struct context* ctx)
+void ctx_fprintf_aux(FILE* fd, const struct context* ctx, int espace)
 {
+	assert(ctx && "ctx_fprintf expecting NON null entry");
+	assert(fd && "ctx_fprintf expecting NON null entry");
 	
+	size_t entrysize = ctx_count_entries(ctx);
+	
+
+    for(int i = 0; i < espace; i++){
+        fprintf(fd, "|__ ");
+	}   
+	for(size_t i = 0; i < entrysize; i++){
+		fprintf(fd, "%s ", ctx->entries->id);
+		td_fprintf(fd, &global_context[0].entries[i].type);
+		fprintf(fd, "\n");
+	}
+	// recherche des fils
+	for (size_t i = 0; i < co_used; ++i) {
+		struct context* potentiel_fils = &global_context[i];
+		if (potentiel_fils->parent == ctx) { // fils de ctx
+			ctx_fprintf_aux(fd, potentiel_fils,espace + COMP);
+		}
+	}
 }
+
+void ctx_fprintf(FILE* fd, const struct context* ctx)
+{
+   ctx_fprintf_aux(fd, ctx, 0);
+}
+	
+

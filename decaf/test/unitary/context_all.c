@@ -500,6 +500,29 @@ int cgo_big_ctx(void* data) {
 	return 1;
 }
 
+int ctx_fprintf_null_entry(void* data){
+
+	struct data* dt = data;
+	struct context* ctx = ctx_pushctx();
+	// add
+	for (size_t i = 0; i < NB_ENTRIES_LOT; ++i) {
+		if (i > 0 && i % ENTRIES_PER_CTX_LOT == 0)
+			ctx = ctx_pushctx();
+		snprintf(dt->entries_names[i], MAX_IDENTIFIER_SIZE, "m%lu", i);
+		dt->entries[i] = ctx_newname(dt->entries_names[i]);
+		dt->expected_ctx[i] = ctx;
+	}
+	FILE* fd = tmpfile();
+	
+	if(fd == NULL)
+		fprintf(stderr,"ctx_fprintf_4: erreur creation de fichier temporaire\n");
+
+	ctx_fprintf(stderr, ctx);
+
+	fclose(fd);
+	return 0;
+}
+
 int main()
 {
 	struct test_suite add_lookup, misc, octal, ts_cgo;
@@ -529,6 +552,7 @@ int main()
 	add_test(&octal, count_bytes_lot, "Allocate bytes big context");
 	add_test(&octal, longest_path_simple, "Longest path (spec)");
 	add_test(&octal, ctx_longest_path_lot, "Longest path (long)");
+	add_test(&octal, ctx_fprintf_null_entry, "Mauvais affichage des contextes");
 
 	ts_cgo = make_ts("ctx_byte_idx", cgo_setup, cgo_teardown);
 	add_test(&ts_cgo, cgo_good_idx_simple, "bon idx une seule entry");
@@ -537,6 +561,10 @@ int main()
 	add_test_assert(&ts_cgo, cgo_NULL_entry_fail, "erreur si entry == NULL");
 	add_test_assert(&ts_cgo, cgo_error_if_no_ctx, "erreur si entry pas de context");
 	add_test(&ts_cgo, cgo_big_ctx, "fonctionne avec context etendu");
+	
+	
+	
+
 
 
 	return exec_ts(&misc) && exec_ts(&add_lookup) && exec_ts(&octal) && exec_ts(&ts_cgo) ? EXIT_SUCCESS : EXIT_FAILURE;
