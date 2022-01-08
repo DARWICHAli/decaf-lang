@@ -11,8 +11,6 @@
 
 #include <assert.h>
 
-#define GLOBAL_QUADS_SIZE 10000
-
 quad_id_t next = 0;
 struct quad global_quads[GLOBAL_QUADS_SIZE];
 quad_id_t global_qids[GLOBAL_QUADS_SIZE];
