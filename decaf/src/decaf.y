@@ -44,9 +44,14 @@ void yyerror(const char *msg);
 %type <Integer> integer
 %type <Boolean> bool_literal
 
-%left '-' '+'
+%right MUNAIRE
+%right '!'
 %left '*' '/' '%'
-%left MUNAIRE
+%left '-' '+'
+%left '<' LESS_EQUAL MORE_EQUAL '>'
+%left EQUAL NEQUAL
+%left LAND 
+%left LOR
 
 %start program
 
@@ -152,6 +157,7 @@ expr: existing_entry                { $$ = $1; }
     | expr LESS_EQUAL expr          { $$ = ctx_make_temp(); }
     | '-' expr                      { $$ = ctx_make_temp();gencode(quad_neg($$, $2)); } %prec MUNAIRE
     | '(' expr ')'                  { $$ = $2; }
+    | '!' expr                      { $$ = $2; }
 
 ;
 
