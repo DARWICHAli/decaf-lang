@@ -1,0 +1,9 @@
+class SimpleComparison {
+    void main () {
+        int a, b;
+        boolean res;
+        a = 4;
+        b = 9;
+        res = a < b;
+    }
+}

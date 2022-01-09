@@ -1,0 +1,13 @@
+//1
+class SimpleIf {
+    void main () {
+        boolean a, b, c, d;
+        a = true;
+        b = false;
+        if (a) {
+            WriteInt(1);
+        } else {
+            WriteInt(2);
+        }
+    }
+}
