@@ -15,7 +15,7 @@ extern int yydebug;
 int main(int argc, char* argv[])
 {
 	struct params parameters = parse_args(argc, argv);
-
+    struct context* ctx;
 	FILE* fo;
 	if (!parameters.no_gen) {
 		fo = fopen(parameters.output_file, "w");
@@ -26,7 +26,7 @@ int main(int argc, char* argv[])
 	}
 
 	// Contexte super-global, factoriser quelque part
-	ctx_pushctx();
+	ctx = ctx_pushctx();
 	struct typelist* one_int = typelist_new();
 	typelist_append(one_int, BT_INT);
 	ctx_newname(tokenize("WriteInt"))->type = typedesc_make_function(BT_INT, one_int);
@@ -40,8 +40,13 @@ int main(int argc, char* argv[])
 	struct quad* quads = get_all_quads(&sz);
 	struct asm_params asmp = { .generate_entrypoint = parameters.generate_entrypoint };
 
+	if(parameters.print_table){
+        ctx_fprintf(stdout, ctx);
+    }
+
 	if (!parameters.no_gen)
 		genasm("MIPS", quads, sz, fo, &asmp);
 
+    
 	return EXIT_SUCCESS;
 }
