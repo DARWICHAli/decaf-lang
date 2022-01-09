@@ -108,13 +108,7 @@ optional_method_declarations: %empty
 ;
 
 // Déclaration de méthodes
-method_declaration: VOID  new_entry '(' ')' {
-    struct typelist* tl = typelist_new();
-    $2->type = typedesc_make_function(BT_VOID, tl);
-    ctx_pushctx();
-    /* Ici empiler les paramètres de la fonction */
-    ctx_pushctx();
-    } proc_block        {ctx_popctx(); ctx_popctx();}
+method_declaration: VOID  new_entry '(' ')' {struct typelist* tl = typelist_new();$2->type = typedesc_make_function(BT_VOID, tl);ctx_pushctx();/* Ici empiler les paramètres de la fonction */ctx_pushctx();} proc_block        {ctx_popctx(); ctx_popctx();}
     // | TYPE new_entry '(' { struct typelist* tl = typelist_new(); $2->type = typedesc_make_function(BT_INT, tl); ctx_pushctx(); ctx_pushctx();} ')' {} proc_block {ctx_popctx(); ctx_popctx();}
 ;
 /*
@@ -138,7 +132,10 @@ var_declaration: TYPE new_entry ';' { $2->type = typedesc_make_var($1); }
 opt_statements: %empty
     | statement opt_statements
 ;
-statement: existing_entry '=' expr ';'
+statement: existing_entry '=' expr ';' {
+        SERRL(!typedesc_equals(&$1->type, &$3.Entry->type), fprintf(stderr, "type of values in assignement statement does not match\n"));
+        gencode(quad_aff($1, $3.Entry));
+    }
     | IF '(' expr ')' block {
         SERRL(!typedesc_equals(&$3.Entry->type, &td_var_bool), fprintf(stderr, "type of expr is not boolean in if statement\n"));
     }
@@ -155,12 +152,48 @@ statement: existing_entry '=' expr ';'
 expr: existing_entry                { $$.Entry = $1; }
     | integer                       { $$.Entry = ctx_make_temp(); $$.Entry->type = typedesc_make_var(BT_INT);}
     | bool_literal                  { $$.Entry = ctx_make_temp(); $$.Entry->type = typedesc_make_var(BT_BOOL);}
-    | expr '+' expr                 { $$.Entry = ctx_make_temp(); gencode(quad_arith($$.Entry, $1.Entry, Q_ADD, $3.Entry)); }
-    | expr '-' expr                 { $$.Entry = ctx_make_temp(); gencode(quad_arith($$.Entry, $1.Entry, Q_SUB, $3.Entry)); }
-    | expr '*' expr                 { $$.Entry = ctx_make_temp(); gencode(quad_arith($$.Entry, $1.Entry, Q_MUL, $3.Entry)); }
-    | expr '/' expr                 { $$.Entry = ctx_make_temp(); gencode(quad_arith($$.Entry, $1.Entry, Q_DIV, $3.Entry)); }
-    | expr '%' expr                 { $$.Entry = ctx_make_temp(); gencode(quad_arith($$.Entry, $1.Entry, Q_MOD, $3.Entry)); }
-    | expr EQUAL expr               { $$.Entry = ctx_make_temp(); }
+    | expr '+' expr                 {
+        SERRL(!typedesc_equals(&$1.Entry->type, &td_var_int), fprintf(stderr, "type of expr is not int in arithmetic statement\n"));
+        SERRL(!typedesc_equals(&$3.Entry->type, &td_var_int), fprintf(stderr, "type of expr is not int in arithmetic statement\n"));
+        $$.Entry = ctx_make_temp();
+        $$.Entry->type = typedesc_make_var(BT_INT);
+        gencode(quad_arith($$.Entry, $1.Entry, Q_ADD, $3.Entry));
+    }
+    | expr '-' expr                 {
+        SERRL(!typedesc_equals(&$1.Entry->type, &td_var_int), fprintf(stderr, "type of expr is not int in arithmetic statement\n"));
+        SERRL(!typedesc_equals(&$3.Entry->type, &td_var_int), fprintf(stderr, "type of expr is not int in arithmetic statement\n"));
+        $$.Entry = ctx_make_temp();
+        $$.Entry->type = typedesc_make_var(BT_INT);
+        gencode(quad_arith($$.Entry, $1.Entry, Q_SUB, $3.Entry));
+    }
+    | expr '*' expr                 {
+        SERRL(!typedesc_equals(&$1.Entry->type, &td_var_int), fprintf(stderr, "type of expr is not int in arithmetic statement\n"));
+        SERRL(!typedesc_equals(&$3.Entry->type, &td_var_int), fprintf(stderr, "type of expr is not int in arithmetic statement\n"));
+        $$.Entry = ctx_make_temp();
+        $$.Entry->type = typedesc_make_var(BT_INT);
+        gencode(quad_arith($$.Entry, $1.Entry, Q_MUL, $3.Entry));
+    }
+    | expr '/' expr                 {
+        SERRL(!typedesc_equals(&$1.Entry->type, &td_var_int), fprintf(stderr, "type of expr is not int in arithmetic statement\n"));
+        SERRL(!typedesc_equals(&$3.Entry->type, &td_var_int), fprintf(stderr, "type of expr is not int in arithmetic statement\n"));
+        $$.Entry = ctx_make_temp();
+        $$.Entry->type = typedesc_make_var(BT_INT);
+        gencode(quad_arith($$.Entry, $1.Entry, Q_DIV, $3.Entry)); }
+    | expr '%' expr                 {
+        SERRL(!typedesc_equals(&$1.Entry->type, &td_var_int), fprintf(stderr, "type of expr is not int in arithmetic statement\n"));
+        SERRL(!typedesc_equals(&$3.Entry->type, &td_var_int), fprintf(stderr, "type of expr is not int in arithmetic statement\n"));
+        $$.Entry = ctx_make_temp();
+        $$.Entry->type = typedesc_make_var(BT_INT);
+        gencode(quad_arith($$.Entry, $1.Entry, Q_MOD, $3.Entry));
+    }
+    | expr EQUAL expr               {
+        SERRL(!typedesc_equals(&$1.Entry->type, &$3.Entry->type), fprintf(stderr, "type of lexpr is not the same as rexpr\n"));
+
+        QLIST_NEWADD($$.true_list); // $$.true_list = qlist_new(); // qlist_append(&$$.true_list, nextquad());
+        gencode(quad_ifgoto($1.Entry, CMP_EQ, $3.Entry, 0));
+        QLIST_NEWADD($$.false_list); // $$.false_list = qlist_new(); // qlist_append(&$$.false_list, nextquad());
+        gencode(quad_goto(0));
+    }
     | expr NEQUAL expr              { $$.Entry = ctx_make_temp(); }
     | expr LOR m expr             {
         qlist_complete(&$1.false_list, $3);
@@ -173,41 +206,46 @@ expr: existing_entry                { $$.Entry = $1; }
         $$.false_list = qlist_concat(&$1.false_list, &$4.false_list);
     }
     | expr '<' expr                 {
-        QLIST_NEWADD($$.true_list);
-        // $$.true_list = qlist_new();
-        // qlist_append(&$$.true_list, nextquad());
+        SERRL(!typedesc_equals(&$1.Entry->type, &td_var_int), fprintf(stderr, "type of expr is not int in comparison statement\n"));
+        SERRL(!typedesc_equals(&$3.Entry->type, &td_var_int), fprintf(stderr, "type of expr is not int in comparison statement\n"));
+
+        QLIST_NEWADD($$.true_list); // $$.true_list = qlist_new(); // qlist_append(&$$.true_list, nextquad());
         gencode(quad_ifgoto($1.Entry, CMP_LT, $3.Entry, 0));
-        QLIST_NEWADD($$.false_list);
-        // $$.false_list = qlist_new();
-        // qlist_append(&$$.false_list, nextquad());
+        QLIST_NEWADD($$.false_list); // $$.false_list = qlist_new(); // qlist_append(&$$.false_list, nextquad());
         gencode(quad_goto(0));
     }
     | expr '>' expr                 {
-        $$.true_list = qlist_new();
-        qlist_append(&$$.true_list, nextquad());
+        SERRL(!typedesc_equals(&$1.Entry->type, &td_var_int), fprintf(stderr, "type of expr is not int in comparison statement\n"));
+        SERRL(!typedesc_equals(&$3.Entry->type, &td_var_int), fprintf(stderr, "type of expr is not int in comparison statement\n"));
+
+        QLIST_NEWADD($$.true_list); // $$.true_list = qlist_new(); // qlist_append(&$$.true_list, nextquad());
         gencode(quad_ifgoto($1.Entry, CMP_GT, $3.Entry, 0));
-        $$.false_list = qlist_new();
-        qlist_append(&$$.false_list, nextquad());
+        QLIST_NEWADD($$.false_list); // $$.false_list = qlist_new(); // qlist_append(&$$.false_list, nextquad());
         gencode(quad_goto(0));
     }
     | expr MORE_EQUAL expr          {
-        $$.true_list = qlist_new();
-        qlist_append(&$$.true_list, nextquad());
+        SERRL(!typedesc_equals(&$1.Entry->type, &td_var_int), fprintf(stderr, "type of expr is not int in comparison statement\n"));
+        SERRL(!typedesc_equals(&$3.Entry->type, &td_var_int), fprintf(stderr, "type of expr is not int in comparison statement\n"));
+
+        QLIST_NEWADD($$.true_list);
         gencode(quad_ifgoto($1.Entry, CMP_GE, $3.Entry, 0));
-        $$.false_list = qlist_new();
-        qlist_append(&$$.false_list, nextquad());
+        QLIST_NEWADD($$.false_list);
         gencode(quad_goto(0));
     }
     | expr LESS_EQUAL expr          {
-        $$.true_list = qlist_new();
-        qlist_append(&$$.true_list, nextquad());
+        SERRL(!typedesc_equals(&$1.Entry->type, &td_var_int), fprintf(stderr, "type of expr is not int in comparison statement\n"));
+        SERRL(!typedesc_equals(&$3.Entry->type, &td_var_int), fprintf(stderr, "type of expr is not int in comparison statement\n"));
+
+        QLIST_NEWADD($$.true_list);
         gencode(quad_ifgoto($1.Entry, CMP_LE, $3.Entry, 0));
-        $$.false_list = qlist_new();
-        qlist_append(&$$.false_list, nextquad());
+        QLIST_NEWADD($$.false_list);
         gencode(quad_goto(0));
     }
     | '-' expr                      {
+        SERRL(!typedesc_equals(&$2.Entry->type, &td_var_int), fprintf(stderr, "type of expr is not int in arithmetic statement\n"));
+
         $$.Entry = ctx_make_temp();
+        $$.Entry->type = typedesc_make_var(BT_INT);
         gencode(quad_neg($$.Entry, $2.Entry));
     } %prec MUNAIRE
     | '(' expr ')'                  { $$ = $2; }
@@ -233,14 +271,14 @@ integer: DECIMAL_CST    { $$ = $1; }
 ;
 // Littéraux booléens
 bool_literal: TRUE  {
-        $$.true_list = qlist_new();
-        qlist_append(&$$.true_list, nextquad());
-        gencode(quad_goto(0));
+        $$.Entry = ctx_make_temp();
+        $$.Entry->type = typedesc_make_var(BT_BOOL);
+        quad_cst($$.Entry, 1);    // cst, $$.true_list = qlist_new(); qlist_append(&$$.true_list, nextquad()); gencode(quad_goto(0));
     }
     | FALSE         {
-        $$.false_list = qlist_new();
-        qlist_append(&$$.false_list, nextquad());
-        gencode(quad_goto(0));
+        $$.Entry = ctx_make_temp();
+        $$.Entry->type = typedesc_make_var(BT_BOOL);
+        quad_cst($$.Entry, 0);
     }
 ;
 %%

@@ -49,11 +49,10 @@ struct quad_list qlist_concat(struct quad_list* ql1, struct quad_list* ql2)
 void qlist_complete(struct quad_list* qlst, quad_id_t qid)
 {
     // complete vide !!
-    assert(qlst->used>0);
-    assert(qid>0 && "complete with neg quad !");
+    // assert(qlst->used > 0);
+    // assert(qid > 0 && "complete with neg quad !");
     for (size_t i = 0; i < qlst->used; i++) {
         if(((getquad(qlst->quads[i])->op == Q_IFG) || (getquad(qlst->quads[i])->op == Q_GOT)) && !(getquad(qlst->quads[i])->res))
             getquad(qlst->quads[i])->dst = qid;
     }
-    return;
 }
