@@ -1,6 +1,7 @@
 #include "quadops.h"
 #include "context.h"
 #include "entry.h"
+#include "incomplete.h"
 #include "test_suite.h"
 #include <stdlib.h>
 
@@ -130,20 +131,20 @@ int spec_ok_cst(void* data) {
 
 int spec_ok_goto(void* data) {
 	(void)(data);
-	struct quad q = quad_goto(0);
+	struct quad q = quad_goto(INCOMPLETE_QUAD_ID);
 	ASSERT_EQ(q.op, Q_GOT);
-	ASSERT_EQ(q.dst, 0);
+	ASSERT_EQ(q.dst, INCOMPLETE_QUAD_ID);
 	return 1;
 }
 
 int spec_ok_ifgoto(void* data) {
 	struct donnees* dt = data;
-	struct quad q = quad_ifgoto(&dt->lhs, CMP_EQ, &dt->rhs, 0);
+	struct quad q = quad_ifgoto(&dt->lhs, CMP_EQ, &dt->rhs, INCOMPLETE_QUAD_ID);
 	ASSERT_EQ(q.op, Q_IFG);
 	ASSERT_EQ(q.lhs, &dt->lhs);
 	ASSERT_EQ(q.cmp, CMP_EQ);
 	ASSERT_EQ(q.rhs, &dt->rhs);
-	ASSERT_EQ(q.dst, 0);
+	ASSERT_EQ(q.dst, INCOMPLETE_QUAD_ID);
 	return 1;
 }
 

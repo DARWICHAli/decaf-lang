@@ -4,6 +4,8 @@
 
 #include "mips.h"
 
+#include "incomplete.h"
+
 #include <assert.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -13,18 +15,21 @@ int Mips_op_nums[INVALID] = {3, 3, 3, 3, 2, 3, 3, 3,
 	2, 
 	2, 2, 2,
 	1, 1,
+	1, 3, 3, 3,
 	0 };
 
 enum Mips_adr Mips_op_fmt[INVALID][3] = { {REG, REG, REG}, {REG, REG, IMM}, {REG, REG, REG}, {REG, REG, REG}, {REG, REG, -1}, {REG, REG, REG}, {REG, REG, REG}, {REG, REG, REG}, 
 	{REG, IMM, -1},
 	{REG, IMR, -1},{REG, IMR, -1},{REG, REG, -1},
 	{SYM, -1, -1}, {REG, -1, -1},
+	{SYM, -1, -1},{REG, REG, SYM},{REG, REG, SYM},{REG, REG, SYM},{REG, REG, SYM},
 	{-1, -1, -1}};
 
 const char* Mips_op_str[INVALID] = { "add", "addi", "div", "mul", "negu", "rem", "sub", "xor", 
 	"li",
 	"lw", "sw", "move",
 	"jal", "jr",
+	"b", "beq", "bne", "ble", "blt",
 	"syscall" };
 
 void instr(enum Mips_op op, ...) {
@@ -73,4 +78,9 @@ void mips_label(const char* lbl, const char* com) {
 	} else {
 		fprintf(out, "%s: #%s\n", lbl, com);
 	}
+}
+
+void mips_label_quad(quad_id_t qid) {
+	assert(qid != INCOMPLETE_QUAD_ID && "can't label incomplete quad");
+	fprintf(out, LBL_QUAD_FMT ":\n", qid);
 }

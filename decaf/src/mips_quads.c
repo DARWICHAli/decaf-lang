@@ -99,3 +99,43 @@ void mips_Q_PRO(const struct entry* pro) {
 	}
 	pop_stack_args(pro);
 }
+
+void mips_Q_GOT(quad_id_t dst) {
+	save_reg_tmp();
+	clear_reg_tmp();
+	instr(B, quad_loc(dst));
+}
+
+static inline void eswap(const struct entry** lhs, const struct entry** rhs) {
+	const struct entry* tmp = *lhs;
+	*lhs = *rhs;
+	*rhs = tmp;
+}
+
+void mips_Q_IFG(const struct entry* lhs, enum CMP_OP cop, const struct entry* rhs, quad_id_t dst) {
+	save_reg_tmp();
+	clear_reg_tmp();
+
+	switch (cop) {
+		case CMP_EQ:
+			instr(BEQ, entry_to_reg(lhs), entry_to_reg(rhs), quad_loc(dst));
+			break;
+		case CMP_NQ:
+			instr(BNE, entry_to_reg(lhs), entry_to_reg(rhs), quad_loc(dst));
+			break;
+
+		case CMP_GE:
+			eswap(&rhs, &lhs); // a >= b eq b <= a
+			// fall through
+		case CMP_LE:
+			instr(BLE, entry_to_reg(lhs), entry_to_reg(rhs), quad_loc(dst));
+			break;
+
+		case CMP_GT:
+			eswap(&rhs, &lhs); // a >= b eq b <= a
+			// fall through
+		case CMP_LT:
+			instr(BLT, entry_to_reg(lhs), entry_to_reg(rhs), quad_loc(dst));
+			break;
+	}
+}

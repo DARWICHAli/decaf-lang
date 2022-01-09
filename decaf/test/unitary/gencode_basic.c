@@ -9,6 +9,7 @@
 #include "context.h"
 #include "genasm.h"
 #include "typelist.h"
+#include "incomplete.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -63,7 +64,7 @@ int all_quads_empty(void* data)
 {
 	(void)data;
 	size_t sz = 0;
-	struct quad* qs = get_all_quads(&sz);
+	quad_id_t* qs = get_all_quads(&sz);
 	ASSERT_EQ(sz, 0);
 	ASSERT_TRUE(qs != NULL);
 	return 1;
@@ -87,7 +88,7 @@ int gq_ok(void* data)
 {
 	(void)(data);
 
-	struct quad q = quad_goto(0);
+	struct quad q = quad_goto(INCOMPLETE_QUAD_ID);
 	gencode(q);
 
 	ASSERT_EQ(getquad(0)->dst, q.dst);

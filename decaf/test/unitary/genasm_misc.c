@@ -15,6 +15,8 @@
 #include <string.h>
 
 extern enum Q_OP req_rhs[7];
+extern size_t next;
+extern quad_id_t global_qids[GLOBAL_QUADS_SIZE];
 
 int ii_setup(void** data) {
 	(void)(data);
@@ -38,36 +40,11 @@ int ii_out(void* data) {
 	return 1;
 }
 
-#define wid_BUF_SIZE 512
-
-struct wid {
-	FILE* fo;
-	char buf[wid_BUF_SIZE];
-};
-
-int wi_setup(void** data) {
-	*data = malloc(sizeof(struct wid));
-	if (!data)
-		return 0;
-
-	struct wid* dt = *data;
-	dt->fo = fopen("/tmp/genasm_wid.mips", "w+");
-
-	return dt->fo ? 1 : 0;
-}
-
-int wi_teardown(void** data) {
-	struct wid* dt = *data;
-	fclose(dt->fo);
-	free(*data);
-	return 1;
-}
-
-
 struct gmd {
 	FILE* fo;
 	struct quad quads[1];
 	struct asm_params ap;
+	size_t sz;
 };
 
 int genasm_setup(void** data) {
@@ -91,7 +68,9 @@ int genasm_teardown(void** data) {
 
 int genasm_err_lang(void* data) {
 	struct gmd* dt = data;
-	genasm("", dt->quads, 1, dt->fo, &dt->ap);
+	next = 1;
+	*getquad(0) = quad_endproc();
+	genasm("", get_all_quads(&dt->sz), 1, dt->fo, &dt->ap);
 	return 0;
 }
 
@@ -103,19 +82,19 @@ int genasm_err_quads(void* data) {
 
 int genasm_err_size(void* data) {
 	struct gmd* dt = data;
-	genasm("MIPS", dt->quads, 0, dt->fo, &dt->ap);
+	genasm("MIPS", get_all_quads(&dt->sz), 0, dt->fo, &dt->ap);
 	return 0;
 }
 
 int genasm_err_file(void* data) {
 	struct gmd* dt = data;
-	genasm("MIPS", dt->quads, 1, NULL, &dt->ap);
+	genasm("MIPS", get_all_quads(&dt->sz), 1, NULL, &dt->ap);
 	return 0;
 }
 
 int genasm_err_params(void* data) {
 	struct gmd* dt = data;
-	genasm("MIPS", dt->quads, 1, dt->fo, NULL);
+	genasm("MIPS", get_all_quads(&dt->sz), 1, dt->fo, NULL);
 	return 0;
 }
 
@@ -156,7 +135,10 @@ int genasm_err_unknown_instr(void* data) {
 	dt->quads[0].res = &main_i.entries[0];
 	dt->quads[0].op = (enum Q_OP) -1;
 
-	genasm("MIPS", dt->quads, 1, dt->fo, &dt->ap);
+	next = 1;
+	*getquad(0) = dt->quads[0];
+
+	genasm("MIPS", get_all_quads(&dt->sz), 1, dt->fo, &dt->ap);
 	return 0;
 }
 

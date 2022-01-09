@@ -113,6 +113,8 @@ Les opérateurs de comparaison utilisables dans le *_Q_IFG_* sont définies dans
 
 * *_CMP_EQ_* : "=".
 
+* *_CMP_NQ_* : "!=".
+
 * *_CMP_LE_* : "<=".
 
 * *_CMP_GE_* : ">=".
@@ -236,6 +238,10 @@ Une liste de quadruplets est modélisée par le type `struct quad_list`. Pour in
 * *_qlist_append_* : (_<<quadlist, struct quad_list>>*_, _<<quad_id_t,quad_id_t>>_) -> _<<quadlist, struct quad_list>>*_ : Ajoute un quadruplet à la liste, puis renvoie un pointeur sur la liste.
 
 NOTE: le type de retour permet de faire des appels imbriqués. Donc `@retour == @liste en paramètre`.
+
+===== Concaténation de liste
+
+* *_qlist_concat_* (_<<quadlist, struct quad_list>>*_, _<<quadlist, struct quad_list>>*_) -> _<<quadlist, struct quad_list>>_: Concatène les deux listes passées comme paramètres de la fonction et renvoie la nouvelle liste construite.
 
 ===== Patching
 

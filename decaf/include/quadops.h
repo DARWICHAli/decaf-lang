@@ -32,6 +32,7 @@ enum CMP_OP {
 	CMP_LT, ///< Inférieur strict
 	CMP_GT, ///< Supérieur strict
 	CMP_EQ, ///< Égalité
+	CMP_NQ, ///< Différents
 	CMP_LE, ///< Inférieur ou égal
 	CMP_GE, ///< Supérieur ou égal
 };

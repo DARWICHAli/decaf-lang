@@ -1,5 +1,7 @@
 #include "quadops.h"
+#include "gencode.h"
 #include "entry.h"
+#include "incomplete.h"
 
 #include <assert.h>
 
@@ -43,6 +45,7 @@ struct quad quad_neg(const struct entry* res, const struct entry* val)
 
 struct quad quad_goto(quad_id_t qid)
 {
+	assert((qid == INCOMPLETE_QUAD_ID || getquad(qid) != NULL) && "Expected either incomplete or good destination");
 	struct quad q = { .op = Q_GOT, .dst = qid };
 	return q;
 }
@@ -51,6 +54,7 @@ struct quad quad_ifgoto(const struct entry* lhs, enum CMP_OP cmp_op, const struc
 {
 	assert(lhs && "quad_ifgoto expecting NON null lhs entry");
 	assert(rhs && "quad_ifgoto expecting NON null rhs entry");
+	assert((qid == INCOMPLETE_QUAD_ID || getquad(qid) != NULL) && "Expected either incomplete or good destination");
 	struct quad q = { .op = Q_IFG, .lhs = lhs, .cmp = cmp_op, .rhs = rhs, .dst = qid };
 	return q;
 }
