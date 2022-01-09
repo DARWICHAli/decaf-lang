@@ -15,6 +15,7 @@ struct params {
 	int no_gen; ///< Aucune génération de code
 	int generate_entrypoint; ///< Génération d'un point d'entrée assembleur
 	const char* output_file; ///< Fichier de sortie
+	const char* ir_outfile; ///< Sortie de IR
 };
 
 /**
@@ -26,6 +27,17 @@ struct params {
  * @return Vrai si tout s'est bien passé, 0 sinon
  */
 int arg_tos(struct params* p, char* const args[]);
+
+/**
+ * @brief Argument Sauvegarde le code intermédiaire
+ *
+ * @param p paramètres
+ * @param args args
+ *
+ * @return Vrai si tout s'est bien passé, 0 sinon
+ */
+int arg_ir(struct params* p, char* const args[]);
+
 
 /**
  * @brief Argument pas de génération de code

@@ -50,6 +50,12 @@ void mips_translate(quad_id_t qid) {
 		case Q_AFF:
 			mips_Q_AFF(q->res, q->lhs);
 			break;
+		case Q_ACC:
+			mips_Q_ACC(q->res, q->lhs, q->rhs);
+			break;
+		case Q_AFT:
+			mips_Q_AFT(q->res, q->lhs, q->rhs);
+			break;
 		case Q_NEG:
 			mips_Q_NEG(q->res, q->lhs);
 			break;
