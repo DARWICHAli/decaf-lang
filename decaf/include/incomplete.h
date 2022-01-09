@@ -27,6 +27,9 @@
 ///< Taille maximale d'une liste
 #define QUADLIST_MAX_SIZE 100
 
+/// @brief valeur de destination des quadruplets incomplets
+#define INCOMPLETE_QUAD_ID ((quad_id_t)-1)
+
 /**
  * @brief Liste de quadruplets
  * @warning à ne pas utiliser directement !

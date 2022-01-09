@@ -1,6 +1,7 @@
 #include "quadops.h"
 #include "context.h"
 #include "entry.h"
+#include "incomplete.h"
 #include "test_suite.h"
 #include <stdlib.h>
 

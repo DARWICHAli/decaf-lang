@@ -4,6 +4,8 @@
 
 #include "mips.h"
 
+#include "incomplete.h"
+
 #include <assert.h>
 #include <stdarg.h>
 #include <stdio.h>
