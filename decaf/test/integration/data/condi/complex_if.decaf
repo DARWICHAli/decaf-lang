@@ -5,7 +5,7 @@ class ComplexIf {
     void main () {
         dbak = true;
         thatsMaBool = false;
-        if (1 && (thatsMaBool || false) && !(thatsMaBool || dbak)) {
+        if ((thatsMaBool || false) && !(thatsMaBool || dbak)) {
             
         }
     }

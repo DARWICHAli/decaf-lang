@@ -1,0 +1,25 @@
+class RelOp {
+
+    void main () {
+        int i, j;
+        i = 0;
+        j = 90;
+
+        if (i < 10) {
+            boolean _b_val;
+            _b_val = false;
+        }
+        if (i <= j) {
+            boolean ratata;
+            ratata = true;
+        }
+        if (i + 78 > 10) {
+            boolean sup;
+            sup = false;
+        }
+        if (i + 198 >= 10) {
+            boolean supeq;
+            supeq = true;
+        }
+    }
+}

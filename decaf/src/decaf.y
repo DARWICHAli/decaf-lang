@@ -155,40 +155,35 @@ statement: existing_entry '=' expr ';' {
     // "==" "!=" "&&" "||" sont les seuls opérateurs sur les booléens autorisées
     // Il faut lever une erreur, (la syntaxe est bonne mais pas la sémantique)
 expr: existing_entry                { $$.Entry = $1; }
-    | integer                       { $$.Entry = ctx_make_temp(); $$.Entry->type = typedesc_make_var(BT_INT);}
-    | bool_literal                  { $$.Entry = ctx_make_temp(); $$.Entry->type = typedesc_make_var(BT_BOOL);}
+    | integer                       { $$.Entry = ctx_make_temp(BT_INT);}
+    | bool_literal                  { $$.Entry = ctx_make_temp(BT_BOOL);}
     | expr '+' expr                 {
         SERRL(!typedesc_equals(&$1.Entry->type, &td_var_int), fprintf(stderr, "type of expr is not int in arithmetic statement\n"));
         SERRL(!typedesc_equals(&$3.Entry->type, &td_var_int), fprintf(stderr, "type of expr is not int in arithmetic statement\n"));
-        $$.Entry = ctx_make_temp();
-        $$.Entry->type = typedesc_make_var(BT_INT);
+        $$.Entry = ctx_make_temp(BT_INT);
         gencode(quad_arith($$.Entry, $1.Entry, Q_ADD, $3.Entry));
     }
     | expr '-' expr                 {
         SERRL(!typedesc_equals(&$1.Entry->type, &td_var_int), fprintf(stderr, "type of expr is not int in arithmetic statement\n"));
         SERRL(!typedesc_equals(&$3.Entry->type, &td_var_int), fprintf(stderr, "type of expr is not int in arithmetic statement\n"));
-        $$.Entry = ctx_make_temp();
-        $$.Entry->type = typedesc_make_var(BT_INT);
+        $$.Entry = ctx_make_temp(BT_INT);
         gencode(quad_arith($$.Entry, $1.Entry, Q_SUB, $3.Entry));
     }
     | expr '*' expr                 {
         SERRL(!typedesc_equals(&$1.Entry->type, &td_var_int), fprintf(stderr, "type of expr is not int in arithmetic statement\n"));
         SERRL(!typedesc_equals(&$3.Entry->type, &td_var_int), fprintf(stderr, "type of expr is not int in arithmetic statement\n"));
-        $$.Entry = ctx_make_temp();
-        $$.Entry->type = typedesc_make_var(BT_INT);
+        $$.Entry = ctx_make_temp(BT_INT);
         gencode(quad_arith($$.Entry, $1.Entry, Q_MUL, $3.Entry));
     }
     | expr '/' expr                 {
         SERRL(!typedesc_equals(&$1.Entry->type, &td_var_int), fprintf(stderr, "type of expr is not int in arithmetic statement\n"));
         SERRL(!typedesc_equals(&$3.Entry->type, &td_var_int), fprintf(stderr, "type of expr is not int in arithmetic statement\n"));
-        $$.Entry = ctx_make_temp();
-        $$.Entry->type = typedesc_make_var(BT_INT);
+        $$.Entry = ctx_make_temp(BT_INT);
         gencode(quad_arith($$.Entry, $1.Entry, Q_DIV, $3.Entry)); }
     | expr '%' expr                 {
         SERRL(!typedesc_equals(&$1.Entry->type, &td_var_int), fprintf(stderr, "type of expr is not int in arithmetic statement\n"));
         SERRL(!typedesc_equals(&$3.Entry->type, &td_var_int), fprintf(stderr, "type of expr is not int in arithmetic statement\n"));
-        $$.Entry = ctx_make_temp();
-        $$.Entry->type = typedesc_make_var(BT_INT);
+        $$.Entry = ctx_make_temp(BT_INT);
         gencode(quad_arith($$.Entry, $1.Entry, Q_MOD, $3.Entry));
     }
     | expr EQUAL expr               {
@@ -199,7 +194,14 @@ expr: existing_entry                { $$.Entry = $1; }
         QLIST_NEWADD($$.false_list); // $$.false_list = qlist_new(); // qlist_append(&$$.false_list, nextquad());
         gencode(quad_goto(0));
     }
-    | expr NEQUAL expr              { $$.Entry = ctx_make_temp(); }
+    | expr NEQUAL expr              {
+        SERRL(!typedesc_equals(&$1.Entry->type, &$3.Entry->type), fprintf(stderr, "type of lexpr is not the same as rexpr\n"));
+
+        QLIST_NEWADD($$.true_list); // $$.true_list = qlist_new(); // qlist_append(&$$.true_list, nextquad());
+        gencode(quad_ifgoto($1.Entry, CMP_EQ, $3.Entry, 0)); // NOTE: to change
+        QLIST_NEWADD($$.false_list); // $$.false_list = qlist_new(); // qlist_append(&$$.false_list, nextquad());
+        gencode(quad_goto(0));
+    }
     | expr LOR m expr             {
         qlist_complete(&$1.false_list, $3);
         $$.true_list = qlist_concat(&$1.true_list, &$4.true_list);
@@ -249,12 +251,12 @@ expr: existing_entry                { $$.Entry = $1; }
     | '-' expr                      {
         SERRL(!typedesc_equals(&$2.Entry->type, &td_var_int), fprintf(stderr, "type of expr is not int in arithmetic statement\n"));
 
-        $$.Entry = ctx_make_temp();
-        $$.Entry->type = typedesc_make_var(BT_INT);
+        $$.Entry = ctx_make_temp(BT_INT);
         gencode(quad_neg($$.Entry, $2.Entry));
     } %prec MUNAIRE
     | '(' expr ')'                  { $$ = $2; }
     | '!' expr                      {
+        $$.Entry = ctx_make_temp(BT_BOOL);
         SERRL(!typedesc_equals(&($2.Entry->type), &td_var_bool), fprintf(stderr, "type of expr is not boolean following NOT\n"));
         struct quad_list temp = $$.true_list;
         $$.true_list = $$.false_list;
@@ -276,13 +278,11 @@ integer: DECIMAL_CST    { $$ = $1; }
 ;
 // Littéraux booléens
 bool_literal: TRUE  {
-        $$.Entry = ctx_make_temp();
-        $$.Entry->type = typedesc_make_var(BT_BOOL);
+        $$.Entry = ctx_make_temp(BT_BOOL);
         quad_cst($$.Entry, 1);    // cst, $$.true_list = qlist_new(); qlist_append(&$$.true_list, nextquad()); gencode(quad_goto(0));
     }
     | FALSE         {
-        $$.Entry = ctx_make_temp();
-        $$.Entry->type = typedesc_make_var(BT_BOOL);
+        $$.Entry = ctx_make_temp(BT_BOOL);
         quad_cst($$.Entry, 0);
     }
 ;
