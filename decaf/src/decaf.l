@@ -45,6 +45,7 @@ return                  return RETURN;
 [+\-*/%]                return yytext[0];
 [(){},;]                return yytext[0];
 [=]                     return yytext[0];
+[\[\]]                  return yytext[0];
 
 [[:space:]]             ;
 .                       {fprintf(stderr, "(lex) Caractère illégal (%d)\n", yytext[0]);}

@@ -1,0 +1,12 @@
+//5
+class Hard {
+	int tab[16];
+	void main() {
+		int res;
+		tab[8] = 5;
+		tab[5] = 5;
+		res = tab[tab[tab[tab[tab[tab[8]]]]]];
+
+		WriteInt(res);
+	}
+}

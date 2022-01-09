@@ -1,0 +1,9 @@
+//42
+class Easy {
+	int tab[42];
+	void main() {
+		int res;
+		tab[0] = 42;
+		WriteInt(tab[0]);
+	}
+}
