@@ -50,12 +50,11 @@ void yyerror(const char *msg);
 %token <Identifier> ID
 
 %type <Entry> new_entry existing_entry  
+%type <Entry>  arithmetique_expression negation_exp call parameter integer litteral arg lvalue rvalue
 %type <Incomplete> expr bool_literal
 %type <Integer> integer
 %type <Qid> m
-%type <Entry> new_entry existing_entry arithmetique_expression negation_exp call parameter integer litteral arg lvalue rvalue
-%type <TypeList> optional_parameters
-%type <TypeList> parameters
+%type <TypeList> optional_parameters parameters
 
 %right MUNAIRE
 %right '!'
