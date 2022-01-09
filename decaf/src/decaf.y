@@ -84,18 +84,18 @@ global_declarations: %empty
  */
 // Déclaration de variables globales
 g_var_declaration: TYPE new_entry ';' { $2->type = typedesc_make_var($1); }
-		| TYPE new_entry ',' { $2->type = typedesc_make_var($1); } new_id_list ';'
+    | TYPE new_entry ',' { $2->type = typedesc_make_var($1); } new_id_list ';'
 ;
 // Liste de nouveelles entrées
 new_id_list: new_entry { $1->type = $<Entry>-2->type; }
-	    | new_entry ',' { $1->type = $<Entry>-2->type; } new_id_list
+    | new_entry ',' { $1->type = $<Entry>-2->type; } new_id_list
 ;
 // Nouvel identifiant
 new_entry: ID {
-			struct entry* ent = ctx_newname($1);
-			SERRL(ent == NULL, fprintf(stderr, "%s is already declared in this context\n", $1));
-			$$ = ent;
-	      }
+        struct entry* ent = ctx_newname($1);
+        SERRL(ent == NULL, fprintf(stderr, "%s is already declared in this context\n", $1));
+        $$ = ent;
+    }
 ;
 // identifiant préalablement déclaré (location)
 existing_entry: ID {
