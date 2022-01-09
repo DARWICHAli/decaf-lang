@@ -20,14 +20,14 @@ enum Mips_adr Mips_op_fmt[INVALID][3] = { {REG, REG, REG}, {REG, REG, IMM}, {REG
 	{REG, IMM, -1},
 	{REG, IMR, -1},{REG, IMR, -1},{REG, REG, -1},
 	{SYM, -1, -1}, {REG, -1, -1},
-	{SYM, -1, -1},{REG, REG, SYM},{REG, REG, SYM},{REG, REG, SYM},
+	{SYM, -1, -1},{REG, REG, SYM},{REG, REG, SYM},{REG, REG, SYM},{REG, REG, SYM},
 	{-1, -1, -1}};
 
 const char* Mips_op_str[INVALID] = { "add", "addi", "div", "mul", "negu", "rem", "sub", "xor", 
 	"li",
 	"lw", "sw", "move",
 	"jal", "jr",
-	"b", "beq", "ble", "blt",
+	"b", "beq", "bne", "ble", "blt",
 	"syscall" };
 
 void instr(enum Mips_op op, ...) {

@@ -43,7 +43,7 @@ enum Mips_op { ADD, ADDI, DIV, MUL, NEGU, REM, SUB, XOR,
 	LI,
 	LW, SW, MOVE,
 	JAL, JR,
-	B, BEQ, BLE, BLT,
+	B, BEQ, BNE, BLE, BLT,
 	SYSCALL,
 	INVALID };
 

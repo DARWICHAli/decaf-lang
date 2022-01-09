@@ -120,6 +120,9 @@ void mips_Q_IFG(const struct entry* lhs, enum CMP_OP cop, const struct entry* rh
 		case CMP_EQ:
 			instr(BEQ, entry_to_reg(lhs), entry_to_reg(rhs), quad_loc(dst));
 			break;
+		case CMP_NQ:
+			instr(BNE, entry_to_reg(lhs), entry_to_reg(rhs), quad_loc(dst));
+			break;
 
 		case CMP_GE:
 			eswap(&rhs, &lhs); // a >= b eq b <= a
