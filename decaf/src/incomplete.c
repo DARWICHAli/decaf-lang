@@ -22,8 +22,6 @@ struct quad_list qlist_new()
 struct quad_list* qlist_append(struct quad_list* qlst, quad_id_t qid)
 {
 	assert(qlst->used < QUADLIST_MAX_SIZE && "QUADLIST_MAX_SIZE reached!");
-	assert(getquad(qid) && "The quad to complete must exists");
-	assert((getquad(qid)->op == Q_IFG || getquad(qid)->op == Q_GOT) && "can't complete non-jump instructions");
 	qlst->quads[qlst->used] = qid;
 	qlst->used++;
 	return qlst;
@@ -46,7 +44,10 @@ struct quad_list qlist_concat(struct quad_list* ql1, struct quad_list* ql2)
 
 void qlist_complete(struct quad_list* qlst, quad_id_t qid)
 {
-	assert(qid != INCOMPLETE_QUAD_ID && "Can't set jump destination to INCOMPLETE_QUAD_ID");
+	assert(qid != INCOMPLETE_QUAD_ID && "Can't complete jump destination to INCOMPLETE_QUAD_ID");
+	assert(getquad(qid) && "The quad to complete must exists");
+	assert((getquad(qid)->op == Q_IFG || getquad(qid)->op == Q_GOT) && "can't complete non-jump instructions");
+
 	for (size_t i = 0; i < qlst->used; i++) {
 		struct quad* q = getquad(qlst->quads[i]);
 		q->dst = qid;
