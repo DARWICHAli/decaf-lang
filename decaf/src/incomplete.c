@@ -46,13 +46,23 @@ struct quad_list qlist_concat(struct quad_list* ql1, struct quad_list* ql2)
     return new;
 }
 
-void qlist_complete(struct quad_list* qlst, quad_id_t qid)
+// SECTION: 
+// verif type de quad à patcher
+// Pour chaque quad_id_t de quad_list 
+//      q = getquad(quad_list[i])
+//      q->destination = dest_qid
+//!SECTION
+void qlist_complete(struct quad_list* qlst, quad_id_t dest_qid)
 {
     // complete vide !!
     // assert(qlst->used > 0);
     // assert(qid > 0 && "complete with neg quad !");
     for (size_t i = 0; i < qlst->used; i++) {
-        if(((getquad(qlst->quads[i])->op == Q_IFG) || (getquad(qlst->quads[i])->op == Q_GOT)) && !(getquad(qlst->quads[i])->res))
-            getquad(qlst->quads[i])->dst = qid;
+        if ((getquad(qlst->quads[i])->op == Q_IFG
+            || (getquad(qlst->quads[i])->op == Q_GOT))
+            && !(getquad(qlst->quads[i])->res))
+            getquad(qlst->quads[i])->dst = dest_qid;
+        // if(((getquad(qlst->quads[i])->op == Q_IFG) || (getquad(qlst->quads[i])->op == Q_GOT)) && !(getquad(qlst->quads[i])->res))
+        //     getquad(qlst->quads[i])->dst = dest_qid;
     }
 }

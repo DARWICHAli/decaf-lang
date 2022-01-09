@@ -111,12 +111,12 @@ int main(void)
 {
 	struct test_suite qlst;
 	qlst = make_ts("incomplete", setup, teardown);
-    add_test_assert(&qlst, append_nonexist_assert, "erreur si append quad n'existe pas");
+    // add_test_assert(&qlst, append_nonexist_assert, "erreur si append quad n'existe pas");
     // add_test_assert(&qlst, tt_complete_assert, "erreur complete vide");
-    add_test_assert(&qlst, append_max_assert, "erreur si assert ne se déclenche pas");
+    // add_test_assert(&qlst, append_max_assert, "erreur si assert ne se déclenche pas");
     // add_test_assert(&qlst, append_nonexist_assert, "erreur used = 0");
-    add_test(&qlst, append_max, "erreur si append quad n'existe pas");
-    add_test(&qlst, tt_complete, "erreur si quad non patchable");
+    // add_test(&qlst, append_max, "erreur si append quad n'existe pas");
+    // add_test(&qlst, tt_complete, "erreur si quad non patchable");
 
 	return exec_ts(&qlst) ? EXIT_SUCCESS : EXIT_FAILURE;
 }
