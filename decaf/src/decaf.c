@@ -41,7 +41,7 @@ int main(int argc, char* argv[])
 	struct asm_params asmp = { .generate_entrypoint = parameters.generate_entrypoint };
 
 	if(parameters.print_table){
-        ctx_fprintf(stdout, ctx);
+        ctx_fprintf(stdout, ctx->next);
     }
 
 	if (!parameters.no_gen)
