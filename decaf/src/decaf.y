@@ -67,6 +67,11 @@ void yyerror(const char *msg);
 
 program: CLASS ID '{' {ctx_pushctx();} optional_g_var_declarations optional_method_declarations '}' {/*ctx_popctx();*/ /* Ne pas dépiler ce contexte !*/}
 ;
+// class_body: optional_g_var_declarations
+//     | optional_g_var_declarations optional_method_declarations 
+// ;
+
+
 /*
  * Entrées et identifiants
  */
