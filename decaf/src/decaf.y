@@ -255,6 +255,7 @@ expr: existing_entry                { $$.Entry = $1; }
         gencode(quad_ifgoto($1.Entry, CMP_EQ, $3.Entry, INCOMPLETE_QUAD_ID));
         QLIST_NEWADD($$.false_list); // $$.false_list = qlist_new(); // qlist_append(&$$.false_list, nextquad());
         gencode(quad_goto(INCOMPLETE_QUAD_ID));
+        $$.Entry->type = typedesc_make_var(BT_BOOL);
     }
     | expr NEQUAL expr              {
         SERRL(!typedesc_equals(&$1.Entry->type, &$3.Entry->type), fprintf(stderr, "type of lexpr is not the same as rexpr\n"));
@@ -263,25 +264,29 @@ expr: existing_entry                { $$.Entry = $1; }
         gencode(quad_ifgoto($1.Entry, CMP_NQ, $3.Entry, INCOMPLETE_QUAD_ID));
         QLIST_NEWADD($$.false_list); // $$.false_list = qlist_new(); // qlist_append(&$$.false_list, nextquad());
         gencode(quad_goto(INCOMPLETE_QUAD_ID));
+        $$.Entry->type = typedesc_make_var(BT_BOOL);
     }
     | expr LOR m expr             {
         qlist_complete(&$1.false_list, $3);
         $$.true_list = qlist_concat(&$1.true_list, &$4.true_list);
         $$.false_list = $4.false_list;
+        $$.Entry->type = typedesc_make_var(BT_BOOL);
     }
     | expr LAND m expr              {
         qlist_complete(&$1.false_list, $3);
         $$.true_list = $4.true_list;
         $$.false_list = qlist_concat(&$1.false_list, &$4.false_list);
+        $$.Entry->type = typedesc_make_var(BT_BOOL);
     }
     | expr '<' expr                 {
         SERRL(!typedesc_equals(&$1.Entry->type, &td_var_int), fprintf(stderr, "type of expr is not int in comparison statement\n"));
         SERRL(!typedesc_equals(&$3.Entry->type, &td_var_int), fprintf(stderr, "type of expr is not int in comparison statement\n"));
-        // NOTE: fail
+
         QLIST_NEWADD($$.true_list); // $$.true_list = qlist_new(); // qlist_append(&$$.true_list, nextquad());
         gencode(quad_ifgoto($1.Entry, CMP_LT, $3.Entry, INCOMPLETE_QUAD_ID));
         QLIST_NEWADD($$.false_list); // $$.false_list = qlist_new(); // qlist_append(&$$.false_list, nextquad());
         gencode(quad_goto(INCOMPLETE_QUAD_ID));
+        $$.Entry->type = typedesc_make_var(BT_BOOL);
     }
     | expr '>' expr                 {
         SERRL(!typedesc_equals(&$1.Entry->type, &td_var_int), fprintf(stderr, "type of expr is not int in comparison statement\n"));
@@ -291,6 +296,7 @@ expr: existing_entry                { $$.Entry = $1; }
         gencode(quad_ifgoto($1.Entry, CMP_GT, $3.Entry, INCOMPLETE_QUAD_ID));
         QLIST_NEWADD($$.false_list); // $$.false_list = qlist_new(); // qlist_append(&$$.false_list, nextquad());
         gencode(quad_goto(INCOMPLETE_QUAD_ID));
+        $$.Entry->type = typedesc_make_var(BT_BOOL);
     }
     | expr MORE_EQUAL expr          {
         SERRL(!typedesc_equals(&$1.Entry->type, &td_var_int), fprintf(stderr, "type of expr is not int in comparison statement\n"));
@@ -300,6 +306,7 @@ expr: existing_entry                { $$.Entry = $1; }
         gencode(quad_ifgoto($1.Entry, CMP_GE, $3.Entry, INCOMPLETE_QUAD_ID));
         QLIST_NEWADD($$.false_list);
         gencode(quad_goto(INCOMPLETE_QUAD_ID));
+        $$.Entry->type = typedesc_make_var(BT_BOOL);
     }
     | expr LESS_EQUAL expr          {
         SERRL(!typedesc_equals(&$1.Entry->type, &td_var_int), fprintf(stderr, "type of expr is not int in comparison statement\n"));
@@ -309,11 +316,12 @@ expr: existing_entry                { $$.Entry = $1; }
         gencode(quad_ifgoto($1.Entry, CMP_LE, $3.Entry, INCOMPLETE_QUAD_ID));
         QLIST_NEWADD($$.false_list);
         gencode(quad_goto(INCOMPLETE_QUAD_ID));
+        $$.Entry->type = typedesc_make_var(BT_BOOL);
     }
     | '(' expr ')'                  { $$ = $2; }
     | '!' expr                      {
-        $$.Entry = ctx_make_temp(BT_BOOL);
         SERRL(!typedesc_equals(&($2.Entry->type), &td_var_bool), fprintf(stderr, "type of expr is not boolean following NOT\n"));
+        $$.Entry = ctx_make_temp(BT_BOOL);
         struct quad_list temp = $$.true_list;
         $$.true_list = $$.false_list;
         $$.false_list = temp; 
