@@ -9,6 +9,7 @@
 #define INCLUDE__QUADOPS__H
 
 #include <stddef.h> // size_t
+#include <stdio.h>
 
 /**
  * @addtogroup IR
@@ -52,6 +53,8 @@ enum Q_OP {
 	Q_DIV, ///< Division, 3 opérandes
 	Q_MOD, ///< Modulo, 3 opérandes
 	Q_NEG, ///< Négation, 2 opérandes
+	Q_ACC, ///< Accède à un élément de tableau
+	Q_AFT, ///< Affecte à un tableau
 	Q_IFG, ///< If E then goto Y, 2 opérandes
 	Q_GOT, ///< Goto simple 1 opérande
 	Q_AFF, ///< Affectation, 2 opérandes
@@ -83,6 +86,8 @@ struct quad {
 	enum CMP_OP cmp; ///< Opérateur de comparaison du if-goto
 	int val; ///< Valeur pour l'affectation constante
 };
+
+void quad_fprint(FILE* fo, const struct quad* q);
 
 /**
  * @defgroup helpers helpers
@@ -120,6 +125,30 @@ struct quad quad_arith(const struct entry* res, const struct entry* lhs, enum Q_
  * @return Un quadruplet de la forme "res := val"
  */
 struct quad quad_aff(const struct entry* res, const struct entry* val);
+
+/**
+ * @brief Accède à un tableau
+ *
+ * @param res où stocker
+ * @param tab Tableau
+ * @param idx index en élém
+ *
+ *
+ * @return Un quadruplet de la forme "res := tab[idx]"
+ */
+struct quad quad_acc(const struct entry* res, const struct entry* tab, const struct entry* idx);
+
+/**
+ * @brief Affecte à un tableau
+ *
+ * @param tab Tableau
+ * @param idx index en nombre d'elem
+ * @param val valeur à affecter
+ *
+ *
+ * @return Un quadruplet de la forme "tab[idx] := val"
+ */
+struct quad quad_aft(const struct entry* tab, const struct entry* idx, const struct entry* val);
 
 /**
  * @brief Crée un quadruplet de négation

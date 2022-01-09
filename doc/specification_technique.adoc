@@ -128,7 +128,7 @@ En langage C, un **quadruplet** est une structure de données `struct quad` à 4
 
 * *_op_* : _<<operator,enum Q_OP>>_ : Un enum stockant l'opérateur dont l'alias est conforme à celui défini dans <<Opérateurs>>.
 
-* *_lhs_* : _const <<entry,struct entry>>*_ : Une entrée dans la table des symboles correspondant à l'opérande de **gauche** de l'opérateur. **C'est aussi la valeur de param, call, proc et return**.
+* *_lhs_* : _const <<entry,struct entry>>*_ : Une entrée dans la table des symboles correspondant à l'opérande de **gauche** de l'opérateur. **C'est aussi la valeur de param, call, proc et return**
 
 * *_rhs_* : _const <<entry,struct entry>>*_ : Une entrée dans la table des symboles correspondant à l'opérande de **droite** de l'opérateur.
 
@@ -512,6 +512,12 @@ Les entrées associent un identifiant `id` à des champs, pour l'instant seuleme
 * `type` : _<<typedesc, struct typedesc>>_ : type de l'entrée.
 
 WARNING: ne pas modifier `id` !
+
+===== Élément de tableau
+
+Les éléments de tableaux sont des entrées spéciales à créer avec la fonction suivante :
+
+* *_entry_tab_* : (_const <<entry, struct entry>>*_, _const <<entry, struct entry>>*_) -> <<entry, struct entry>>*
 
 ===== Modifier le type
 

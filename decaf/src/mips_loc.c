@@ -46,6 +46,7 @@ struct Mips_loc entry_loc(const struct entry* ent) {
 	assert(ent && "ctx_get_access expects non-NULL entry");
 	assert(ent->ctx && "Entry must have context");
 	assert((typedesc_is_function(&ent->type) || ent->ctx->parent) && "No variable allowed in super-global table");
+
 	if (ent->ctx->parent == NULL || ent->ctx->parent->parent == NULL) { // racine ou super-global
 		assert(ctx_search(ent->id, ent->ctx) && "Entry exists in its context");
 		return sym(ent->id);

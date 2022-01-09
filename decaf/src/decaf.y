@@ -55,7 +55,7 @@ void yyerror(const char *msg);
 %type <TypeList> optional_parameters
 %type <TypeList> parameters
 %type <Incomplete> expr
-%type <IncompleteStatements> statement g
+%type <IncompleteStatements> proc_block block statement statement_list g opt_statements 
 %type <Qid> m
 
 
@@ -141,12 +141,12 @@ parameter: TYPE new_entry       { $2->type = typedesc_make_var($1); $$ = $2; } /
  */
 
 // Bloc de procédure
-proc_block: '{'         { ctx_pushctx(); } optional_var_declarations opt_statements '}' { gencode(quad_endproc()); ctx_popctx();}
+proc_block: '{'         { ctx_pushctx(); } optional_var_declarations opt_statements '}' { $$.next_list = $<IncompleteStatements>3.next_list; gencode(quad_endproc()); ctx_popctx();}
 ;
 // Bloc de code
-block: '{'              { ctx_pushctx(); } optional_var_declarations opt_statements '}' { ctx_popctx();}
+block: '{'              { ctx_pushctx(); } optional_var_declarations opt_statements '}' { $$.next_list = $<IncompleteStatements>3.next_list; ctx_popctx();}
 ;
-    // NOTE: OK
+    // NOTE OK
 optional_var_declarations: %empty
     | var_declaration optional_var_declarations
 ;
@@ -181,8 +181,16 @@ arg: expr { $$ = $1.Entry; }
 
 /*-----------------*/
 
-opt_statements: %empty
-    | statement opt_statements
+opt_statements: %empty              {$$.next_list = qlist_new(); }
+    | statement_list                {$$.next_list = $1.next_list;}
+;
+statement_list: statement_list m statement {
+        qlist_complete(&$1.next_list, $2);
+        $$.next_list = $3.next_list; 
+    }
+    | statement {
+        $$.next_list = $1.next_list;
+    }
 ;
 statement: existing_entry '=' expr ';' {
         SERRL(!typedesc_equals(&$1->type, &$3.Entry->type), fprintf(stderr, "type of values in assignement statement does not match\n"));
@@ -191,15 +199,21 @@ statement: existing_entry '=' expr ';' {
     | proc_call ';'       { }
     | IF '(' expr ')' m block             {
         SERRL(!typedesc_equals(&$3.Entry->type, &td_var_bool), fprintf(stderr, "type of expr is not boolean in if statement\n"));
+        qlist_complete(&$3.true_list, $5);
+        $$.next_list = qlist_concat(&$3.false_list, &$6.next_list);
     }
 	| IF '(' expr ')' m block g ELSE m block  {
         SERRL(!typedesc_equals(&$3.Entry->type, &td_var_bool), fprintf(stderr, "type of expr is not boolean in if statement\n"));
+        qlist_complete(&$3.true_list, $5);
+        qlist_complete(&$3.false_list, $9);
+        struct quad_list temp = qlist_concat(&$6.next_list, &$7.next_list);
+        $$.next_list = qlist_concat(&temp, &$10.next_list);
     }
     | RETURN ';'            {}
     | RETURN expr ';'       { gencode(quad_return($2.Entry)); }
     | BREAK ';'             {}
     | CONTINUE ';'          {}
-    | block                 {}
+    | block                 { $$.next_list = $1.next_list;}
 ;
 // Marqueur G
 g: %empty {

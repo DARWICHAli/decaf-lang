@@ -38,9 +38,10 @@ extern const char* Mips_reg_str[INVALID_REGISTER];
 extern enum Mips_reg Mips_reg_temp[MIPS_REG_TMP_NB];
 extern const struct entry* Mips_reg_storing[MIPS_REG_TMP_NB];
 extern int Mips_tmp_last_used[MIPS_REG_TMP_NB];
+extern int Mips_tmp_reserved[MIPS_REG_TMP_NB];
 
 enum Mips_op { ADD, ADDI, DIV, MUL, NEGU, REM, SUB, XOR,
-	LI,
+	LI, LA,
 	LW, SW, MOVE,
 	JAL, JR,
 	B, BEQ, BNE, BLE, BLT,
@@ -101,7 +102,10 @@ void function_footer(const struct context* body_ctx);
 struct Mips_loc entry_loc(const struct entry* ent);
 struct Mips_loc quad_loc(quad_id_t qid);
 
+enum Mips_reg reserve_tmp_register();
+void free_tmp_register(enum Mips_reg reg);
 struct Mips_loc entry_to_reg(const struct entry* ent);
+void save_reg_to_entry(enum Mips_reg r, const struct entry* ent);
 struct Mips_loc available_register(const struct entry* ent);
 struct Mips_loc alloc_tmp_register(const struct entry* ent, enum Mips_reg t);
 int entry_in_tmp(const struct entry* ent);
@@ -137,6 +141,8 @@ void mips_Q_MUL(const struct entry* res, const struct entry* lhs, const struct e
 void mips_Q_DIV(const struct entry* res, const struct entry* lhs, const struct entry* rhs);
 void mips_Q_MOD(const struct entry* res, const struct entry* lhs, const struct entry* rhs);
 void mips_Q_AFF(const struct entry* res, const struct entry* val);
+void mips_Q_ACC(const struct entry* res, const struct entry* tab, const struct entry* idx);
+void mips_Q_AFT(const struct entry* tab, const struct entry* idx, const struct entry* val);
 void mips_Q_NEG(const struct entry* res, const struct entry* val);
 void mips_Q_CST(const struct entry* res, int cst);
 void mips_Q_END(const struct context* ctx);
