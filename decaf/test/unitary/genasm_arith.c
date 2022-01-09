@@ -7,6 +7,7 @@
 #include "genasm.h"
 #include "quadops.h"
 #include "context.h"
+#include "gencode.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -16,25 +17,17 @@
 extern size_t co_used;
 extern struct context* sommet;
 
+extern quad_id_t next;
+
 #define MAX_Q 256
 
 struct data {
 	struct context *sg, *root, *main, *main_int;
-	struct quad ql[MAX_Q];
 	struct entry *res, *rhs, *lhs;
 	FILE* fo;
 	struct asm_params ap;
+	size_t sz;
 };
-
-void make_var(struct context* ctx, const char* id)
-{
-	size_t idx = ctx->used;
-	strcpy(ctx->entries[idx].id, id);
-	ctx->entries[idx].type.mtype = MT_VAR;
-	ctx->entries[idx].type.btype = BT_INT;
-	ctx->entries[idx].ctx = ctx;
-	++ctx->used;
-}
 
 int setup(void** data)
 {
@@ -45,6 +38,7 @@ int setup(void** data)
 
 	co_used = 0;
 	sommet = NULL;
+	next = 0;
 
 	dt->sg = ctx_pushctx();
 	struct entry* ent = ctx_newname(tokenize("WriteInt"));
@@ -78,27 +72,19 @@ int teardown(void** data)
 {
 	struct data* dt = *data;
 	co_used = 0;
+	next = 0;
 	sommet = NULL;
 	free(*data);
 	return fclose(dt->fo) == 0;
 }
 
-void set_quad(struct quad quads[MAX_Q], size_t i, enum Q_OP op, struct entry* res, struct entry* lhs, struct entry* rhs)
-{
-	quads[i].op = op;
-	quads[i].res = res;
-	quads[i].lhs = lhs;
-	quads[i].rhs = rhs;
-	quads[i].ctx = res ? res->ctx : NULL;
-}
-
 int arith_add(void* data)
 {
 	struct data* dt = data;
+	
+	gencode(quad_arith(dt->res, dt->lhs, Q_ADD, dt->rhs));
 
-	set_quad(dt->ql, 0, Q_ADD, dt->res, dt->lhs, dt->rhs);
-
-	genasm("MIPS", dt->ql, 1, dt->fo, &dt->ap);
+	genasm("MIPS", get_all_quads(&dt->sz), 1, dt->fo, &dt->ap);
 
 	return print_file(dt->fo);
 }
@@ -107,13 +93,13 @@ int arith_all_binary(void* data)
 {
 	struct data* dt = data;
 
-	set_quad(dt->ql, 0, Q_ADD, dt->res, dt->lhs, dt->rhs);
-	set_quad(dt->ql, 1, Q_SUB, dt->res, dt->lhs, dt->rhs);
-	set_quad(dt->ql, 2, Q_MUL, dt->res, dt->lhs, dt->rhs);
-	set_quad(dt->ql, 3, Q_DIV, dt->res, dt->lhs, dt->rhs);
-	set_quad(dt->ql, 4, Q_MOD, dt->res, dt->lhs, dt->rhs);
+	gencode(quad_arith(dt->res, dt->lhs, Q_ADD, dt->rhs));
+	gencode(quad_arith(dt->res, dt->lhs, Q_SUB, dt->rhs));
+	gencode(quad_arith(dt->res, dt->lhs, Q_MUL, dt->rhs));
+	gencode(quad_arith(dt->res, dt->lhs, Q_DIV, dt->rhs));
+	gencode(quad_arith(dt->res, dt->lhs, Q_MOD, dt->rhs));
 
-	genasm("MIPS", dt->ql, 5, dt->fo, &dt->ap);
+	genasm("MIPS", get_all_quads(&dt->sz), 5, dt->fo, &dt->ap);
 
 	return print_file(dt->fo);
 }
@@ -122,10 +108,10 @@ int arith_aff_neg(void* data)
 {
 	struct data* dt = data;
 
-	set_quad(dt->ql, 0, Q_AFF, dt->res, dt->lhs, NULL);
-	set_quad(dt->ql, 1, Q_NEG, dt->res, dt->rhs, NULL);
+	gencode(quad_aff(dt->res, dt->lhs));
+	gencode(quad_neg(dt->res, dt->rhs));
 
-	genasm("MIPS", dt->ql, 2, dt->fo, &dt->ap);
+	genasm("MIPS", get_all_quads(&dt->sz), 2, dt->fo, &dt->ap);
 
 	return print_file(dt->fo);
 }
@@ -134,10 +120,9 @@ int arith_cst_small(void* data)
 {
 	struct data* dt = data;
 
-	set_quad(dt->ql, 0, Q_CST, dt->res, NULL, NULL);
-	dt->ql[0].val = 42;
+	gencode(quad_cst(dt->res, 42));
 
-	genasm("MIPS", dt->ql, 1, dt->fo, &dt->ap);
+	genasm("MIPS", get_all_quads(&dt->sz), 1, dt->fo, &dt->ap);
 
 	return print_file(dt->fo);
 }
@@ -146,10 +131,9 @@ int arith_cst_big(void* data)
 {
 	struct data* dt = data;
 
-	set_quad(dt->ql, 0, Q_CST, dt->res, NULL, NULL);
-	dt->ql[0].val = 65535 << 4;
+	gencode(quad_cst(dt->res, 65535 << 4));
 
-	genasm("MIPS", dt->ql, 1, dt->fo, &dt->ap);
+	genasm("MIPS", get_all_quads(&dt->sz), 1, dt->fo, &dt->ap);
 
 	return print_file(dt->fo);
 }
@@ -158,11 +142,11 @@ int arith_no_locals(void* data)
 {
 	struct data* dt = data;
 
-	set_quad(dt->ql, 0, Q_AFF, &dt->main->entries[0], &dt->main->entries[1], NULL);
-	dt->ql[0].ctx = dt->main_int;
+	gencode(quad_aff(&dt->main->entries[0], &dt->main->entries[1]));
+	getquad(0)->ctx = dt->main_int;
 	dt->main_int->used = 0; // no locals
 
-	genasm("MIPS", dt->ql, 1, dt->fo, &dt->ap);
+	genasm("MIPS", get_all_quads(&dt->sz), 1, dt->fo, &dt->ap);
 
 	return print_file(dt->fo);
 }
@@ -171,11 +155,9 @@ int cst_glob(void* data)
 {
 	struct data* dt = data;
 
-	set_quad(dt->ql, 0, Q_CST, &dt->root->entries[0], NULL, NULL);
-	dt->ql[0].val = 42;
-	dt->ql[0].ctx = dt->main_int;
+	gencode(quad_cst(&dt->root->entries[0], 42));
 
-	genasm("MIPS", dt->ql, 1, dt->fo, &dt->ap);
+	genasm("MIPS", get_all_quads(&dt->sz), 1, dt->fo, &dt->ap);
 
 	return print_file(dt->fo);
 }
@@ -184,11 +166,10 @@ int empty_main(void* data)
 {
 	struct data* dt = data;
 
-	set_quad(dt->ql, 0, Q_END, NULL, NULL, NULL);
-	dt->ql[0].ctx = dt->main_int;
+	gencode(quad_endproc());
 	dt->main_int->used = 0; // no locals
 
-	genasm("MIPS", dt->ql, 1, dt->fo, &dt->ap);
+	genasm("MIPS", get_all_quads(&dt->sz), 1, dt->fo, &dt->ap);
 
 	return print_file(dt->fo);
 }

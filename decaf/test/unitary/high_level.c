@@ -79,7 +79,7 @@ int gencode_arith_add(void* data)
 			   ctx_lookup(tokenize("rhs"))));
 
 	size_t sz = 0;
-	const struct quad* q_all = get_all_quads(&sz);
+	quad_id_t* q_all = get_all_quads(&sz);
 
 	ASSERT_EQ(sz, 3);
 
@@ -138,7 +138,7 @@ int gencode_func(void* data)
 	gencode(quad_call(ctx_lookup(tokenize("res")), ctx_lookup(tokenize("foo"))));
 
 	size_t sz = 0;
-	const struct quad* q_all = get_all_quads(&sz);
+	quad_id_t* q_all = get_all_quads(&sz);
 
 	FILE* fo = fopen("/tmp/gencode_hl.mips", "w+");
 	struct asm_params ap = {.generate_entrypoint = 0 };
@@ -146,7 +146,6 @@ int gencode_func(void* data)
 	genasm("MIPS", q_all, sz, fo, &ap);
 
 	return 1;
-
 }
 
 
