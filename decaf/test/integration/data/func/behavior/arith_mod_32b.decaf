@@ -1,0 +1,6 @@
+//9363671
+class Basic {
+	void main() {
+		WriteInt(421365234 / 45);
+	}
+}

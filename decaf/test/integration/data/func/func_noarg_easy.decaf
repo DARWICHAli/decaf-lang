@@ -1,0 +1,13 @@
+class MultipleFunc {
+	int foo() {
+		int x;
+		x = 4;
+		return x;
+	}
+	void main() {
+		int res, lhs, rhs;
+		lhs = foo();
+		rhs = 69;
+		res = lhs + rhs;
+	}
+}

@@ -1,0 +1,12 @@
+class MultipleProc {
+	void main() {
+		int res, lhs, rhs;
+		lhs = 42;
+		rhs = 69;
+		res = lhs + rhs;
+	}
+	void foo() {
+		int x;
+		x = 4;
+	}
+}

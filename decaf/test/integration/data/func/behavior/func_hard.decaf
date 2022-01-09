@@ -1,0 +1,20 @@
+//76
+class Hard {
+	int foo() { return 1; }
+	int bro(int r) { return r + r; }
+	int barfoo(int a, int b, int c) {
+	  return bro(bro(bro(a))) - bro(bro(b % (c + 2))) % (bro(bro(bro(a - b + c))));
+	}
+	int foobar(int x, int y, int z) {
+	  return bro(x - y + z) % (barfoo(foo(), bro(bro(bro(bro(1)))), x + z - y) + 2);
+	}
+	int cal(int p) { return foobar(p, barfoo(p, p + 1, p - 1), p + p); }
+	int bar(int x) {
+	  return (foo() + foo()) *
+		 foobar(barfoo(x * 4, x, x + 1), bro(5),
+			cal(foobar(bro(6), foo(), barfoo(x, x * 2, x * x))));
+	}
+	void main() {
+		WriteInt(bar(foo()+1));
+	}
+}

@@ -1,0 +1,10 @@
+class EasyProc {
+	void foo() {
+		int x;
+		x = 42;
+	}
+
+	void main() {
+		foo();
+	}
+}

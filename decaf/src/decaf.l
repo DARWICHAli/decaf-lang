@@ -13,6 +13,8 @@ int fileno(FILE *stream);
 %option noinput
 %option noyywrap
 
+%option yylineno
+
     /* Expressions rationnelles nommées */
 EDIGIT [0-9]
 EALPHA [a-zA-Z_]
@@ -25,6 +27,7 @@ int                     { yylval.BType = BT_INT; return TYPE; }
 boolean                 { yylval.BType = BT_BOOL; return TYPE; }
 class                   return CLASS;
 void                    return VOID;
+return                  return RETURN;
 
 0x{EHEXDIGIT}+          { yylval.Integer = strtol(yytext, NULL, 16); return HEXADECIMAL_CST; }
 {EDIGIT}+               { yylval.Integer = strtol(yytext, NULL, 10); return DECIMAL_CST; }
