@@ -7,16 +7,17 @@
 
 #define VERSION "V1-arith"
 
-#define NB_ARGS 7
+#define NB_ARGS 8
 static const char* args_str[NB_ARGS][3] = { { "-t", "-tos", "Affiche la table des symboles" },
 					    { "-v", "-version", "Version du programme et noms des auteurs" },
 					    { "-o", "-out", "Nom du fichier de sortie" },
+					    { "-i", "-ir", "Print intermediate representation" },
 					    { "-d", "-debug", "Active le mode debug du compilateur" },
 					    { "-n", "-nogen", "Ne fait que le parsing" },
 					    { "-e", "-entrypoint", "Génère un point d'entrée dans l'assembleur final" },
 					    { "-h", "-help", "Affiche ce message" } };
-static int args_need[NB_ARGS] = { 0, 0, 1, 0, 0, 0, 0};
-static int (*args_fct[NB_ARGS])(struct params* p, char* const args[]) = { arg_tos,   arg_version,    arg_out, arg_debug,
+static int args_need[NB_ARGS] = { 0, 0, 1, 1, 0, 0, 0, 0};
+static int (*args_fct[NB_ARGS])(struct params* p, char* const args[]) = { arg_tos,   arg_version,    arg_out, arg_ir, arg_debug,
 									  arg_nogen, arg_entrypoint, arg_help };
 
 struct params default_args()
@@ -27,6 +28,7 @@ struct params default_args()
 	ret.no_gen = 0;
 	ret.generate_entrypoint = 0;
 	ret.output_file = "out.mips";
+	ret.ir_outfile = NULL;
 	return ret;
 }
 
@@ -91,6 +93,13 @@ int arg_out(struct params* p, char* const args[])
 {
 	assert(args && args[0] && "Expected arg");
 	p->output_file = args[0]; // argv alloué, ok
+	return 2;
+}
+
+int arg_ir(struct params* p, char* const args[])
+{
+	assert(args && args[0] && "Expected arg");
+	p->ir_outfile = args[0]; // argv alloué, ok
 	return 2;
 }
 

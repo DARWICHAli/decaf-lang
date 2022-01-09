@@ -41,6 +41,7 @@ void yyerror(const char *msg);
 %type <Entry> new_entry existing_entry arithmetique_expression negation_exp call parameter integer litteral arg lvalue rvalue
 %type <TypeList> optional_parameters
 %type <TypeList> parameters
+%type <Integer> int_cst
 
 %left '-' '+'
 %left '*' '/' '%'
@@ -59,6 +60,7 @@ program: CLASS ID '{' {ctx_pushctx();} global_declarations '}' {/*ctx_popctx();*
 // Déclarations dans le contexte global
 global_declarations: %empty
 		     | var_declaration global_declarations
+		     | tab_declaration global_declarations
 		     | method_declarations
 
 optional_var_declarations: %empty
@@ -68,6 +70,10 @@ optional_var_declarations: %empty
 var_declaration: TYPE new_entry ';' { $2->type = typedesc_make_var($1); }
 		| TYPE new_entry ',' { $2->type = typedesc_make_var($1); } new_id_list ';'
 ;
+
+// Déclarations de tableaux
+tab_declaration: TYPE new_entry '[' int_cst ']' ';' { $2->type = typedesc_make_tab($1, $4); }
+
 // Liste de nouveelles entrées
 new_id_list: new_entry { $1->type = $<Entry>-2->type; }
 	    | new_entry ',' { $1->type = $<Entry>-2->type; } new_id_list
@@ -97,6 +103,10 @@ integer: DECIMAL_CST { $$ = ctx_make_temp(); gencode(quad_cst($$, $1)); $$->type
 
 // litteraux
 litteral: integer { $$ = $1; }
+
+int_cst: DECIMAL_CST {$$ = $1; }
+       | HEXADECIMAL_CST {$$ = $1; }
+
 /*
  * Méthodes et fonctions
  */
@@ -195,6 +205,7 @@ return: RETURN rvalue { gencode(quad_return($2)); }
 
 // affectation
 affectation: lvalue '=' rvalue { gencode(quad_aff($1, $3)); }
+	   | existing_entry '[' rvalue ']' '=' rvalue { gencode(quad_aft($1, $3, $6)); }
 ;
 
 arithmetique_expression: rvalue '+' rvalue { $$ = ctx_make_temp(); $$->type = typedesc_make_var(BT_INT); gencode(quad_arith($$, $1, Q_ADD, $3)); }
@@ -221,6 +232,15 @@ rvalue: arithmetique_expression { $$ = $1; }
       | integer { $$ = $1; }
       | lvalue {$$ = $1; }
       | call {$$ = $1;}
+      | existing_entry '[' rvalue ']' {
+      					if (!typedesc_is_tab(&$1->type))
+						yyerror("Pas un tableau");
+
+					$$ = ctx_make_temp();
+					$$->type = typedesc_make_var(typedesc_tab_type(&$1->type));
+					gencode(quad_acc($$, $1, $3));
+				      }
+
 
 lvalue: existing_entry {$$ = $1;}
 
@@ -228,7 +248,7 @@ lvalue: existing_entry {$$ = $1;}
 void yyerror(const char *msg)
 {
     fprintf(stderr, "yyerror on line %d: %s\n", yylineno, msg);
-    return;
+    exit(EXIT_FAILURE);
 }
 
 void quads_print() {
