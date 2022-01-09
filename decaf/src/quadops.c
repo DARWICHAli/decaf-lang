@@ -1,6 +1,7 @@
 #include "quadops.h"
 #include "gencode.h"
 #include "entry.h"
+#include "incomplete.h"
 
 #include <assert.h>
 

@@ -9,6 +9,7 @@
 #include "context.h"
 #include "genasm.h"
 #include "typelist.h"
+#include "incomplete.h"
 
 #include <stdlib.h>
 #include <string.h>

@@ -4,6 +4,7 @@
 
 #include "mips.h"
 #include "genasm.h"
+#include "incomplete.h"
 
 #include <assert.h>
 
