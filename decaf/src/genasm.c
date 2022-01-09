@@ -9,6 +9,7 @@
 #include "context.h"
 #include "typedesc.h"
 #include "entry.h"
+#include "incomplete.h"
 
 #include <string.h> // strcmp
 #include <stdio.h> // fwrite
