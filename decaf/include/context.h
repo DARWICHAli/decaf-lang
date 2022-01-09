@@ -74,7 +74,9 @@ struct context* ctx_currentctx();
 struct entry* ctx_newname(const char id[MAX_IDENTIFIER_SIZE]);
 
 /**
- * @brief Crée un entrée dans le contexte courant
+ * @brief Crée une variable temporaire
+ *
+ * @param type Type de la variable
  *
  * @return Une entrée valide et unique
  *
@@ -82,7 +84,7 @@ struct entry* ctx_newname(const char id[MAX_IDENTIFIER_SIZE]);
  *
  * Les identifiants sont générés automatiquements et sont uniques.
  */
-struct entry* ctx_make_temp();
+struct entry* ctx_make_temp(enum BTYPE type);
 
 /**
  * @brief Recherche un identifiant depuis la table des symoles courante

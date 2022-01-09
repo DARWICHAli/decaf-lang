@@ -98,7 +98,7 @@ struct entry* ctx_newname(const char id[MAX_IDENTIFIER_SIZE])
 	return newe;
 }
 
-struct entry* ctx_make_temp()
+struct entry* ctx_make_temp(enum BTYPE type)
 {
 	struct context* curr = ctx_currentctx();
 	assert(curr && "current context is NULL");
@@ -107,7 +107,9 @@ struct entry* ctx_make_temp()
 	do {
 		rand_string(str);
 	} while (ctx_search(str, curr));
-	return ctx_newname(str);
+	struct entry* ent = ctx_newname(str);
+	ent->type = typedesc_make_var(type);
+	return ent;
 }
 
 struct entry* ctx_lookup(const char id[MAX_IDENTIFIER_SIZE])

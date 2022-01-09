@@ -125,7 +125,7 @@ int tmp_entries(void* data)
 {
 	(void)(data);
 	ctx_pushctx();
-	const struct entry* tmp = ctx_make_temp();
+	const struct entry* tmp = ctx_make_temp(BT_INT);
 	ASSERT_EQ(ctx_lookup(tmp->id), tmp);
 	return 1;
 }
@@ -138,7 +138,7 @@ int lot_make_tmp_multiple_ctx(void* data)
 	for (size_t i = 0; i < NB_ENTRIES_LOT; ++i) {
 		if (i > 0 && i % ENTRIES_PER_CTX_LOT == 0)
 			ctx = ctx_pushctx();
-		ASSERT_TRUE((dt->entries[i] = ctx_make_temp(dt->entries_names[i])) != NULL);
+		ASSERT_TRUE((dt->entries[i] = ctx_make_temp(BT_INT)) != NULL);
 		dt->expected_ctx[i] = ctx;
 	}
 
@@ -336,30 +336,30 @@ int longest_path_simple(void* data)
 	struct entry* ent;
 	// Exemple de la spec
 	ctx_pushctx(); // A 16
-	ent = ctx_make_temp();
+	ent = ctx_make_temp(BT_INT);
 	ent->type.mtype = MT_TAB;
 	ent->type.btype = BT_INT;
 	ent->type.dist.size = 4;
 
 	ctx_pushctx(); // B 8
-	ent = ctx_make_temp();
+	ent = ctx_make_temp(BT_INT);
 	ent->type.mtype = MT_VAR;
 	ent->type.btype = BT_INT;
-	ent = ctx_make_temp();
+	ent = ctx_make_temp(BT_INT);
 	ent->type.mtype = MT_VAR;
 	ent->type.btype = BT_BOOL;
 
 	ctx_popctx();
 	ctx_pushctx(); // C 4
-	ent = ctx_make_temp();
+	ent = ctx_make_temp(BT_INT);
 	ent->type.mtype = MT_VAR;
 	ent->type.btype = BT_INT;
 
 	ctx_pushctx(); // D 8
-	ent = ctx_make_temp();
+	ent = ctx_make_temp(BT_INT);
 	ent->type.mtype = MT_VAR;
 	ent->type.btype = BT_INT;
-	ent = ctx_make_temp();
+	ent = ctx_make_temp(BT_INT);
 	ent->type.mtype = MT_VAR;
 	ent->type.btype = BT_INT;
 
@@ -391,7 +391,7 @@ void create_path(int left, int goodpath)
 		ctx_pushctx();
 		int alloc = MAX(rand() % (PATH_LEN / MIN_DEPTH), left);
 		for (int j = 0; j < alloc; ++j) {
-			struct entry* e = ctx_make_temp();
+			struct entry* e = ctx_make_temp(BT_INT);
 			e->type.mtype = MT_VAR;
 			e->type.btype = BT_INT;
 		}
