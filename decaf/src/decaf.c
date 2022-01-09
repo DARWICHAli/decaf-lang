@@ -1,6 +1,7 @@
 #include "argparse.h"
 #include "gencode.h"
 #include "genasm.h"
+#include "quadops.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -33,11 +34,20 @@ int main(int argc, char* argv[])
 
 	yydebug = parameters.debug_mode;
 	int r = yyparse();
+
+	size_t sz = 0;
+	quad_id_t* quads = get_all_quads(&sz);
+
+	if (parameters.ir_outfile) {
+		FILE* fir = fopen(parameters.ir_outfile, "w");
+		for (size_t i = 0; i < sz; ++i) {
+			quad_fprint(fir, getquad(quads[i]));
+		}
+	}
+
 	if (r == EXIT_FAILURE)
 		exit(EXIT_FAILURE);
 
-	size_t sz = 0;
-	struct quad* quads = get_all_quads(&sz);
 	struct asm_params asmp = { .generate_entrypoint = parameters.generate_entrypoint };
 
 	if (!parameters.no_gen)

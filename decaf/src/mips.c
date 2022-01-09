@@ -24,47 +24,64 @@ void set_parameters(const struct asm_params* params) {
 }
 
 
-void mips_translate(const struct quad q) {
+void mips_translate(quad_id_t qid) {
+	const struct quad* q = getquad(qid);
 	check_quad(q);
-	switch (q.op) {
+
+	if (is_quad_dst(qid))
+		mips_label_quad(qid);
+
+	switch (q->op) {
 		case Q_ADD:
-			mips_Q_ADD(q.res, q.lhs, q.rhs);
+			mips_Q_ADD(q->res, q->lhs, q->rhs);
 			break;
 		case Q_SUB:
-			mips_Q_SUB(q.res, q.lhs, q.rhs);
+			mips_Q_SUB(q->res, q->lhs, q->rhs);
 			break;
 		case Q_MUL:
-			mips_Q_MUL(q.res, q.lhs, q.rhs);
+			mips_Q_MUL(q->res, q->lhs, q->rhs);
 			break;
 		case Q_DIV:
-			mips_Q_DIV(q.res, q.lhs, q.rhs);
+			mips_Q_DIV(q->res, q->lhs, q->rhs);
 			break;
 		case Q_MOD:
-			mips_Q_MOD(q.res, q.lhs, q.rhs);
+			mips_Q_MOD(q->res, q->lhs, q->rhs);
 			break;
 		case Q_AFF:
-			mips_Q_AFF(q.res, q.lhs);
+			mips_Q_AFF(q->res, q->lhs);
+			break;
+		case Q_ACC:
+			mips_Q_ACC(q->res, q->lhs, q->rhs);
+			break;
+		case Q_AFT:
+			mips_Q_AFT(q->res, q->lhs, q->rhs);
 			break;
 		case Q_NEG:
-			mips_Q_NEG(q.res, q.lhs);
+			mips_Q_NEG(q->res, q->lhs);
 			break;
 		case Q_CST:
-			mips_Q_CST(q.res, q.val);
+			mips_Q_CST(q->res, q->val);
 			break;
 		case Q_END:
-			mips_Q_END(q.ctx);
+			mips_Q_END(q->ctx);
 			break;
 		case Q_PAR:
-			mips_Q_PAR(q.lhs);
+			mips_Q_PAR(q->lhs);
 			break;
 		case Q_PRO:
-			mips_Q_PRO(q.lhs);
+			mips_Q_PRO(q->lhs);
 			break;
 		case Q_CAL:
-			mips_Q_CAL(q.res, q.lhs);
+			mips_Q_CAL(q->res, q->lhs);
 			break;
 		case Q_RET:
-			mips_Q_RET(q.ctx, q.lhs);
+			mips_Q_RET(q->ctx, q->lhs);
+			break;
+		case Q_GOT:
+			mips_Q_GOT(q->dst);
+			break;
+		case Q_IFG:
+			mips_Q_IFG(q->lhs, q->cmp, q->rhs, q->dst);
 			break;
 		// LCOV_EXCL_START
 		default:
@@ -111,16 +128,18 @@ void make_fct(const struct context* args_ctx) {
 }
 
 
-void MIPS_text_segment(const struct quad* qlist, size_t liste_size) {
+void MIPS_text_segment(const quad_id_t* qlist, size_t liste_size) {
 	assert(liste_size > 0 && qlist && "Expected non-null qlist");
 	assert(ctx_lookup(tokenize("main")) && typedesc_is_function(&ctx_lookup(tokenize("main"))->type) && "main function required");
 	fprintf(out, "\n.text\n");
 	MIPS_start();
 
+	const struct quad* q;
 	const struct context* last_args_ctx = NULL, *cur;
 	for (size_t i = 0; i < liste_size; ++i) {
-		assert(qlist[i].ctx && "Quad must have a context");
-		cur = ctx_argsfun(qlist[i].ctx);
+		q = getquad(qlist[i]);
+		assert(q->ctx && "Quad must have a context");
+		cur = ctx_argsfun(q->ctx);
 		if (last_args_ctx != cur) { // changement de fonction
 			make_fct(cur);
 		}
@@ -129,7 +148,7 @@ void MIPS_text_segment(const struct quad* qlist, size_t liste_size) {
 	}
 }
 
-void genMIPS(const struct quad* qlist, size_t liste_size, FILE* outfile, const struct asm_params* genp) {
+void genMIPS(const quad_id_t* qlist, size_t liste_size, FILE* outfile, const struct asm_params* genp) {
 	assert(outfile && genp);
 	set_output(outfile);
 	set_parameters(genp);

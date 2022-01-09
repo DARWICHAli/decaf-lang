@@ -1,5 +1,4 @@
-// Commentaire ici
-class Com { // commentaire cookie
+class Com {
 	// commentaire là
 	void main() { // Commentaire coucou
 	} // comentaire yeah

@@ -38,11 +38,13 @@ extern const char* Mips_reg_str[INVALID_REGISTER];
 extern enum Mips_reg Mips_reg_temp[MIPS_REG_TMP_NB];
 extern const struct entry* Mips_reg_storing[MIPS_REG_TMP_NB];
 extern int Mips_tmp_last_used[MIPS_REG_TMP_NB];
+extern int Mips_tmp_reserved[MIPS_REG_TMP_NB];
 
 enum Mips_op { ADD, ADDI, DIV, MUL, NEGU, REM, SUB, XOR,
-	LI,
+	LI, LA,
 	LW, SW, MOVE,
 	JAL, JR,
+	B, BEQ, BNE, BLE, BLT,
 	SYSCALL,
 	INVALID };
 
@@ -55,6 +57,7 @@ struct Mips_loc {
 	int imm;
 	enum Mips_reg reg;
 	const char* sym;
+	quad_id_t qid;
 };
 
 #define MIPS_BUILTINS_NB 5
@@ -82,7 +85,11 @@ void print_loc(struct Mips_loc loc);
 
 void instr(enum Mips_op op, ...);
 void instrc(enum Mips_op op, ...);
+
+#define LBL_QUAD_FMT "q__%lu"
+
 void mips_label(const char* lbl, const char* com);
+void mips_label_quad(quad_id_t qid);
 
 void alloc_stack(int size);
 void push_stack(struct Mips_loc loc, int size);
@@ -93,16 +100,19 @@ void function_header(const struct context* body_ctx);
 void function_footer(const struct context* body_ctx);
 
 struct Mips_loc entry_loc(const struct entry* ent);
+struct Mips_loc quad_loc(quad_id_t qid);
 
-
+enum Mips_reg reserve_tmp_register();
+void free_tmp_register(enum Mips_reg reg);
 struct Mips_loc entry_to_reg(const struct entry* ent);
+void save_reg_to_entry(enum Mips_reg r, const struct entry* ent);
 struct Mips_loc available_register(const struct entry* ent);
 struct Mips_loc alloc_tmp_register(const struct entry* ent, enum Mips_reg t);
 int entry_in_tmp(const struct entry* ent);
 void clear_reg_tmp();
 void save_reg_tmp();
 
-void mips_translate(const struct quad q);
+void mips_translate(quad_id_t qid);
 
 #define MIPS_TYPES_NB 1
 extern const char* MIPS_types[MIPS_TYPES_NB];
@@ -112,10 +122,10 @@ extern size_t MIPS_types_size[MIPS_TYPES_NB];
 void MIPS_type(const struct typedesc* td, char buf[MAX_TYPE_SIZE]);
 
 void make_fct(const struct context* args_ctx);
-void MIPS_text_segment(const struct quad* qlist, size_t liste_size);
+void MIPS_text_segment(const quad_id_t* qlist, size_t liste_size);
 void MIPS_data_segment();
 void MIPS_start();
-void genMIPS(const struct quad* qlist, size_t liste_size, FILE* outfile, const struct asm_params* genp);
+void genMIPS(const quad_id_t* qlist, size_t liste_size, FILE* outfile, const struct asm_params* genp);
 
 /**
  * @defgroup Quadtrad Quadtrad
@@ -131,6 +141,8 @@ void mips_Q_MUL(const struct entry* res, const struct entry* lhs, const struct e
 void mips_Q_DIV(const struct entry* res, const struct entry* lhs, const struct entry* rhs);
 void mips_Q_MOD(const struct entry* res, const struct entry* lhs, const struct entry* rhs);
 void mips_Q_AFF(const struct entry* res, const struct entry* val);
+void mips_Q_ACC(const struct entry* res, const struct entry* tab, const struct entry* idx);
+void mips_Q_AFT(const struct entry* tab, const struct entry* idx, const struct entry* val);
 void mips_Q_NEG(const struct entry* res, const struct entry* val);
 void mips_Q_CST(const struct entry* res, int cst);
 void mips_Q_END(const struct context* ctx);
@@ -138,6 +150,8 @@ void mips_Q_RET(const struct context* ctx, const struct entry* result);
 void mips_Q_PAR(const struct entry* arg);
 void mips_Q_CAL(const struct entry* res, const struct entry* fct);
 void mips_Q_PRO(const struct entry* pro);
+void mips_Q_GOT(quad_id_t dst);
+void mips_Q_IFG(const struct entry* lhs, enum CMP_OP cop, const struct entry* rhs, quad_id_t dst);
 
 /**
  * @}

@@ -113,6 +113,8 @@ Les opérateurs de comparaison utilisables dans le *_Q_IFG_* sont définies dans
 
 * *_CMP_EQ_* : "=".
 
+* *_CMP_NQ_* : "!=".
+
 * *_CMP_LE_* : "<=".
 
 * *_CMP_GE_* : ">=".
@@ -126,7 +128,7 @@ En langage C, un **quadruplet** est une structure de données `struct quad` à 4
 
 * *_op_* : _<<operator,enum Q_OP>>_ : Un enum stockant l'opérateur dont l'alias est conforme à celui défini dans <<Opérateurs>>.
 
-* *_lhs_* : _const <<entry,struct entry>>*_ : Une entrée dans la table des symboles correspondant à l'opérande de **gauche** de l'opérateur. **C'est aussi la valeur de param, call, proc et return**.
+* *_lhs_* : _const <<entry,struct entry>>*_ : Une entrée dans la table des symboles correspondant à l'opérande de **gauche** de l'opérateur. **C'est aussi la valeur de param, call, proc et return**
 
 * *_rhs_* : _const <<entry,struct entry>>*_ : Une entrée dans la table des symboles correspondant à l'opérande de **droite** de l'opérateur.
 
@@ -236,6 +238,10 @@ Une liste de quadruplets est modélisée par le type `struct quad_list`. Pour in
 * *_qlist_append_* : (_<<quadlist, struct quad_list>>*_, _<<quad_id_t,quad_id_t>>_) -> _<<quadlist, struct quad_list>>*_ : Ajoute un quadruplet à la liste, puis renvoie un pointeur sur la liste.
 
 NOTE: le type de retour permet de faire des appels imbriqués. Donc `@retour == @liste en paramètre`.
+
+===== Concaténation de liste
+
+* *_qlist_concat_* (_<<quadlist, struct quad_list>>*_, _<<quadlist, struct quad_list>>*_) -> _<<quadlist, struct quad_list>>_: Concatène les deux listes passées comme paramètres de la fonction et renvoie la nouvelle liste construite.
 
 ===== Patching
 
@@ -506,6 +512,12 @@ Les entrées associent un identifiant `id` à des champs, pour l'instant seuleme
 * `type` : _<<typedesc, struct typedesc>>_ : type de l'entrée.
 
 WARNING: ne pas modifier `id` !
+
+===== Élément de tableau
+
+Les éléments de tableaux sont des entrées spéciales à créer avec la fonction suivante :
+
+* *_entry_tab_* : (_const <<entry, struct entry>>*_, _const <<entry, struct entry>>*_) -> <<entry, struct entry>>*
 
 ===== Modifier le type
 
