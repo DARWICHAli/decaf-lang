@@ -5,6 +5,7 @@
 #include "test_suite.h"
 
 #include "genasm.h"
+#include "mips.h"
 #include "context.h"
 #include "entry.h"
 #include "context.h"
@@ -77,6 +78,7 @@ int setup(void** data) {
 	ctx_newname(tokenize("loc2"))->type = typedesc_make_var(BT_INT);
 
 	dt->fo = fopen("/tmp/genasm_mips_ds.mips", "w+");
+	set_output(dt->fo);
 	if (!dt->fo)
 		return 0;
 
@@ -93,13 +95,11 @@ int teardown(void** data) {
 	return 1;
 }
 
-void MIPS_data_segment(FILE* out);
-
 int ds_one_var(void* data) {
 	struct donnees* dt = data;
 	dt->root->used = 1;
 
-	MIPS_data_segment(dt->fo);
+	MIPS_data_segment();
 
 	fseek(dt->fo, 0, SEEK_SET);
 
@@ -114,7 +114,7 @@ int ds_one_var(void* data) {
 int ds_two_glob(void* data) {
 	struct donnees* dt = data;
 
-	MIPS_data_segment(dt->fo);
+	MIPS_data_segment();
 
 	fseek(dt->fo, 0, SEEK_SET);
 
@@ -134,7 +134,7 @@ int ds_unknown_mtype(void* data) {
 	strcpy(dt->root->entries[dt->root->used].id, "bad_entryM");
 	dt->root->used++;
 
-	MIPS_data_segment(dt->fo);
+	MIPS_data_segment();
 
 	return 0;
 }

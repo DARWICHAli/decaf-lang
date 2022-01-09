@@ -113,6 +113,8 @@ Les opérateurs de comparaison utilisables dans le *_Q_IFG_* sont définies dans
 
 * *_CMP_EQ_* : "=".
 
+* *_CMP_NQ_* : "!=".
+
 * *_CMP_LE_* : "<=".
 
 * *_CMP_GE_* : ">=".

@@ -1,0 +1,9 @@
+//39
+class Basic {
+	void main() {
+		int res, lhs;
+		res = 39;
+		lhs = res;
+		WriteInt(lhs);
+	}
+}

@@ -1,0 +1,29 @@
+class MultipleFunc {
+	int foo() {
+		return 4;
+	}
+
+	int bar() {
+		int z, y, a;
+		a = 5;
+		z = a;
+		y = a+z;
+		return y * 4;
+	}
+
+	int fct() {
+		int b, c, d;
+		b = 87*4;
+		d = b +3;
+		c = d % b;
+		return c;
+	}
+
+	void main() {
+		int res, lhs, rhs;
+		lhs = foo();
+		rhs = fct();
+		res = lhs + rhs * bar();
+	}
+
+}

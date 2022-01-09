@@ -14,6 +14,8 @@ int fileno(FILE *stream);
 %option noinput
 %option noyywrap
 
+%option yylineno
+
     /* Expressions rationnelles nommées */
 EDIGIT [0-9]
 EALPHA [a-zA-Z_]

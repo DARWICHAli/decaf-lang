@@ -1,0 +1,6 @@
+//55
+class Basic {
+	void main() {
+		WriteInt(42+13);
+	}
+}

@@ -84,6 +84,15 @@ int typelist_equals(const struct typelist* lhs, const struct typelist* rhs);
 size_t typelist_size(const struct typelist* tl);
 
 /**
+ * @brief Taille en octets à allouer pour les arguments
+ *
+ * @param tl Liste de types
+ *
+ * @return La taille en octets de chasue type bout à bout
+ */
+size_t typelist_bytesize(const struct typelist* tl);
+
+/**
  * @}
  * @}
  */
