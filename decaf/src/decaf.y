@@ -38,6 +38,9 @@ void yyerror(const char *msg);
     } Incomplete;
     struct typelist* TypeList;
     quad_id_t Qid;
+    struct {
+        struct quad_list next_list;
+    } IncompleteStatements;
 }
 
 %token CLASS VOID IF ELSE RETURN BREAK CONTINUE
@@ -52,7 +55,7 @@ void yyerror(const char *msg);
 %type <TypeList> optional_parameters
 %type <TypeList> parameters
 %type <Incomplete> expr
-// %type <Integer> integer
+%type <IncompleteStatements> statement g
 %type <Qid> m
 
 
@@ -159,7 +162,7 @@ method_call: existing_entry '(' args_list_opt ')' {
 		$$ = ctx_make_temp(typedesc_function_type(&$1->type));
 		// $$->type = typedesc_make_var(typedesc_function_type(&$1->type));
     	gencode(quad_call($$, $1)); // no type test !!!
-		}
+	}
 ;
 // appel de procédure
 proc_call: existing_entry '(' args_list_opt ')' { gencode(quad_proc($1)); }
@@ -169,8 +172,8 @@ args_list_opt: %empty
     | args
 ;
 // arguments
-args: arg { gencode(quad_param($1)); }
-    | arg ',' args { gencode(quad_param($1)); }
+args: arg           { gencode(quad_param($1)); }
+    | arg ',' args  { gencode(quad_param($1)); }
 ;
 // argument
 arg: expr { $$ = $1.Entry; }
@@ -186,16 +189,25 @@ statement: existing_entry '=' expr ';' {
         gencode(quad_aff($1, $3.Entry));
     }
     | proc_call ';'       { }
-    | IF '(' expr ')' block {
+    | IF '(' expr ')' m block             {
         SERRL(!typedesc_equals(&$3.Entry->type, &td_var_bool), fprintf(stderr, "type of expr is not boolean in if statement\n"));
     }
-	| IF '(' expr ')' block ELSE block
-    | RETURN ';'
+	| IF '(' expr ')' m block g ELSE m block  {
+        SERRL(!typedesc_equals(&$3.Entry->type, &td_var_bool), fprintf(stderr, "type of expr is not boolean in if statement\n"));
+    }
+    | RETURN ';'            {}
     | RETURN expr ';'       { gencode(quad_return($2.Entry)); }
-    | BREAK ';'
-    | CONTINUE ';'
-    | block
+    | BREAK ';'             {}
+    | CONTINUE ';'          {}
+    | block                 {}
 ;
+// Marqueur G
+g: %empty {
+    QLIST_NEWADD($$.next_list);
+    gencode(quad_goto(INCOMPLETE_QUAD_ID));
+}
+;
+
 // NOTE il faut effectuer les verification de types ici (== != && || -> BOOL)
 expr: existing_entry                { $$.Entry = $1; }
     | method_call                   { $$.Entry = $1; }
