@@ -502,21 +502,36 @@ int cgo_big_ctx(void* data) {
 	return 1;
 }
 
-int ctx_fprintf_null_entry(void* data){
+int ctx_fprintf_null_entry_fd(void* data)
+{
+	(void) data;
+	struct context* global = NULL;
+	global = ctx_pushctx();
+	ctx_fprintf(NULL, global);
+	return 0;
+}
+
+int ctx_fprintf_null_entry_ctx(void* data)
+{
+	(void) data;
+	ctx_fprintf(stderr, NULL);
+	return 0;
+}
+
+
+int ctx_fprintf_test_1(void* data){
 
 	struct data* dt = data;
 	struct context* global = NULL;
-	/* struct context* root = NULL;
-	struct context* main_args = NULL;
-	struct context* main_body = NULL; */
+
 	fprintf(stderr,"\n");
 	global = ctx_pushctx(); // super-global
 	struct typelist* one_int = typelist_new();
 	typelist_append(one_int, BT_INT);
 	ctx_newname(tokenize("WriteInt"))->type = typedesc_make_function(BT_INT, one_int);
-
 	ctx_pushctx(); // root
-	ctx_newname(tokenize("global"))->type = typedesc_make_var(BT_BOOL);
+	ctx_newname(tokenize("root"))->type = typedesc_make_var(BT_BOOL);
+	ctx_pushctx();//main
 	struct typelist* two_int = typelist_new();
 	typelist_append(typelist_append(two_int, BT_INT), BT_INT);
 	ctx_newname(tokenize("main"))->type = typedesc_make_function(BT_INT, two_int); 
@@ -527,12 +542,29 @@ int ctx_fprintf_null_entry(void* data){
 	ctx_pushctx(); // contenu du main
 
 	
-	for (size_t i = 0; i < 15; ++i) {		
+
+	for (size_t i = 0; i < 5; ++i) {		
+		snprintf(dt->entries_names[i], MAX_IDENTIFIER_SIZE, "o%lu", i);
+		ASSERT_TRUE((dt->entries[i] = ctx_newname(dt->entries_names[i])) != NULL);
+		((struct entry*)dt->entries[i])->type = typedesc_make_var(BT_BOOL);	
+
+	}
+	ctx_newname(tokenize("tes1"))->type = typedesc_make_tab(BT_INT, 10);
+	ctx_newname(tokenize("tes2"))->type = typedesc_make_tab(BT_BOOL, 20);
+	ctx_pushctx();
+	ctx_newname(tokenize("main"))->type = typedesc_make_function(BT_INT, two_int); 
+	ctx_pushctx(); // main args
+	ctx_newname(tokenize("argc"))->type = typedesc_make_var(BT_INT);
+	ctx_newname(tokenize("argv"))->type = typedesc_make_var(BT_INT);
+
+	ctx_pushctx(); // contenu du main
+
+	
+	for (size_t i = 0; i < 5; ++i) {		
 		snprintf(dt->entries_names[i], MAX_IDENTIFIER_SIZE, "o%lu", i);
 		ASSERT_TRUE((dt->entries[i] = ctx_newname(dt->entries_names[i])) != NULL);
 		((struct entry*)dt->entries[i])->type = typedesc_make_var(BT_BOOL);	
 	}
-
 
 	FILE* fd = tmpfile();
 	
@@ -549,7 +581,7 @@ int ctx_fprintf_null_entry(void* data){
 
 int main()
 {
-	struct test_suite add_lookup, misc, octal, ts_cgo;
+	struct test_suite add_lookup, misc, octal, ts_cgo, ctx_print;
 
 	add_lookup = make_ts("Entry add and lookup", ent_setup, ent_teardown);
 	add_test_assert(&add_lookup, empty_add_entry_crash, "Cannot add entry before push");
@@ -576,7 +608,6 @@ int main()
 	add_test(&octal, count_bytes_lot, "Allocate bytes big context");
 	add_test(&octal, longest_path_simple, "Longest path (spec)");
 	add_test(&octal, ctx_longest_path_lot, "Longest path (long)");
-	add_test(&octal, ctx_fprintf_null_entry, "Mauvais affichage des contextes");
 
 	ts_cgo = make_ts("ctx_byte_idx", cgo_setup, cgo_teardown);
 	add_test(&ts_cgo, cgo_good_idx_simple, "bon idx une seule entry");
@@ -586,5 +617,11 @@ int main()
 	add_test_assert(&ts_cgo, cgo_error_if_no_ctx, "erreur si entry pas de context");
 	add_test(&ts_cgo, cgo_big_ctx, "fonctionne avec context etendu");
 	
-	return exec_ts(&misc) && exec_ts(&add_lookup) && exec_ts(&octal) && exec_ts(&ts_cgo) ? EXIT_SUCCESS : EXIT_FAILURE;
+	ctx_print = make_ts("ctx_fprintf", cgo_setup, cgo_teardown);
+	add_test_assert(&ctx_print, ctx_fprintf_null_entry_fd, "erreur si FD == NULL");
+	add_test_assert(&ctx_print, ctx_fprintf_null_entry_ctx, "erreur si CTX == NULL");
+	add_test(&ctx_print, ctx_fprintf_test_1, "test affichage");
+
+	
+	return exec_ts(&misc) && exec_ts(&add_lookup) && exec_ts(&octal) && exec_ts(&ts_cgo) && exec_ts(&ctx_print) ? EXIT_SUCCESS : EXIT_FAILURE;
 }

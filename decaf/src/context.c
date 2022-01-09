@@ -226,7 +226,16 @@ const char* tokenize(const char* str) {
 
 #define COMP 2
 
-void ctx_fprintf_aux(FILE* fd, const struct context* ctx, int espace)
+int taille_string(char id[])
+{
+	int res = 0;
+	while(id[res] != '\0')
+		res++;
+	
+	return res;
+}
+
+void ctx_fprintf_aux(FILE* fd, const struct context* ctx, int espace, int taille, int ignore)
 {
 	assert(ctx && "ctx_fprintf expecting NON null entry");
 	assert(fd && "ctx_fprintf expecting NON null entry");
@@ -235,6 +244,7 @@ void ctx_fprintf_aux(FILE* fd, const struct context* ctx, int espace)
 	size_t entrysize = ctx_count_entries(ctx);
 	struct context* pos;
 	
+	
 
 	// recherche de ctx
 	for (idx= 0; idx < co_used; ++idx) {
@@ -242,26 +252,43 @@ void ctx_fprintf_aux(FILE* fd, const struct context* ctx, int espace)
 		if (pos == ctx) // ctx trouvé
 			break;	
 	}
+
+	if(ignore != 1)
+		for(int i = 0; i < taille; i++)
+        	fprintf(fd, " ");
+	
+	
+	
     for(int i = 0; i < espace; i++){
-        fprintf(fd, "---");
+        fprintf(fd, "-");
 	}   
 
 	fprintf(fd, "%s: ", global_context[idx].entries[0].id);
 	td_fprintf(fd, &global_context[idx].entries[0].type);
 	fprintf(fd, "\n");
+	
+	if( ignore == 1)
+		taille -= taille_string(global_context[idx].entries[0].id);
 
-	for(size_t i = 1; i < entrysize; i++){
-		for(int i = 0; i < espace; i++)
-        	fprintf(fd, "   ");
-		fprintf(fd, "%s: ", global_context[idx].entries[i].id);
-		td_fprintf(fd, &global_context[idx].entries[i].type);
+	size_t ret;
+	for(ret = 1; ret < entrysize; ret++){
+		for(int i = 0; i < taille + espace; i++)
+        	fprintf(fd, " ");
+
+		fprintf(fd, "%s: ", global_context[idx].entries[ret].id);
+		td_fprintf(fd, &global_context[idx].entries[ret].type);
 		fprintf(fd, "\n");
 	}
+
+	if(entrysize == 1)
+		ret = 0;
+	
 	// recherche des fils
-	for (size_t i = idx; i < co_used; ++i) {
+	for(size_t i = idx; i < co_used; i++) {
 		struct context* potentiel_fils = &global_context[i];
 		if (potentiel_fils->parent == ctx) { // fils de ctx
-			ctx_fprintf_aux(fd, potentiel_fils,espace + COMP);
+			espace = taille_string(global_context[idx].entries[0].id);
+			ctx_fprintf_aux(fd, potentiel_fils,espace,taille+espace,ignore+1);
 			break;
 		}
 	}
@@ -269,7 +296,7 @@ void ctx_fprintf_aux(FILE* fd, const struct context* ctx, int espace)
 
 void ctx_fprintf(FILE* fd, const struct context* ctx)
 {
-   ctx_fprintf_aux(fd, ctx, 0);
+   ctx_fprintf_aux(fd, ctx, 0,0,0);
 }
 	
 
