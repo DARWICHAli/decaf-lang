@@ -27,7 +27,7 @@ int main(int argc, char* argv[])
 	}
 
 	// Contexte super-global, factoriser quelque part
-	ctx = ctx_pushctx();
+	ctx_pushctx();
 	struct typelist* one_int = typelist_new();
 	typelist_append(one_int, BT_INT);
 	ctx_newname(tokenize("WriteInt"))->type = typedesc_make_function(BT_INT, one_int);
@@ -37,7 +37,6 @@ int main(int argc, char* argv[])
 
 	size_t sz = 0;
 	quad_id_t* quads = get_all_quads(&sz);
-
 	if (parameters.ir_outfile) {
 		FILE* fir = fopen(parameters.ir_outfile, "w");
 		for (size_t i = 0; i < sz; ++i) {
@@ -51,7 +50,7 @@ int main(int argc, char* argv[])
 	struct asm_params asmp = { .generate_entrypoint = parameters.generate_entrypoint };
 
 	if(parameters.print_table){
-        ctx_fprintf(stdout, ctx->next);
+        ctx_fprintf(stdout, ctx);
     }
 
 	if (!parameters.no_gen)
