@@ -273,4 +273,7 @@ void ctx_push_super_global() {
 	struct typelist* one_str = typelist_new();
 	typelist_append(one_str, BT_STR);
 	ctx_newname(tokenize("WriteString"))->type = typedesc_make_function(BT_VOID, one_str);
+
+	struct typelist* empty_ri = typelist_new();
+	ctx_newname(tokenize("ReadInt"))->type = typedesc_make_function(BT_INT, empty_ri);
 }
