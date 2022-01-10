@@ -236,7 +236,7 @@ void print_et(FILE* fd, int taille, int espace, char c)
 	for(int i = 0; i < taille + espace; i++)
         fprintf(fd, "%c", c);
 }
-	
+
 struct context* ctx_rootctx() {
 	assert(co_used >= 2 && "No root context");
 	return &global_context[1]; // 0 = super-global
@@ -274,22 +274,22 @@ void ctx_push_super_global() {
 	typelist_append(one_str, BT_STR);
 	ctx_newname(tokenize("WriteString"))->type = typedesc_make_function(BT_VOID, one_str);
 }
-
+/*
 void ctx_fprintf_aux(FILE* fd, const struct context* ctx, int espace, int taille, int ignore)
 {
 	assert(ctx && "ctx_fprintf expecting NON null entry");
 	assert(fd && "ctx_fprintf expecting NON null entry");
-	
+
 	size_t idx;
 	size_t entrysize = ctx_count_entries(ctx);
 	struct context* pos;
 	struct entry* ent;
-	
+
 	// recherche de ctx
 	for(idx = 0; idx < co_used; idx++){
 		pos = &global_context[idx];
 		if (pos == ctx) // ctx trouvé
-			break;	
+			break;
 	}
 
 	if(ignore != 1)
@@ -300,7 +300,7 @@ void ctx_fprintf_aux(FILE* fd, const struct context* ctx, int espace, int taille
 	fprintf(fd, "%s: ", global_context[idx].entries[0].id);
 	td_fprintf(fd, &global_context[idx].entries[0].type);
 	fprintf(fd, "\n");
-	
+
 	if( ignore == 1)
 		taille = strlen(global_context[idx].entries[0].id);
 
@@ -321,7 +321,7 @@ void ctx_fprintf_aux(FILE* fd, const struct context* ctx, int espace, int taille
 
 	if(entrysize == 1)
 		ret = 0;
-	
+
 	// recherche des fils
 	for(size_t i = idx; i < co_used; i++) {
 		struct context* potentiel_fils = &global_context[i];
@@ -331,9 +331,43 @@ void ctx_fprintf_aux(FILE* fd, const struct context* ctx, int espace, int taille
 			break;
 		}
 	}
-}
+
+}*/
 
 void ctx_fprintf(FILE* fd, const struct context* ctx)
 {
-   ctx_fprintf_aux(fd, ctx, 0,0,0);
+	struct context *ad_contextes[CO_LEN];
+	int ind =0;
+	struct context* global =(struct context*) ctx;
+	while (global) {
+		ad_contextes[ind++] = global;
+		global = ctx_popctx();
+	}
+	ind -= 1;
+	int spaces = 4;
+
+	fprintf(fd,"%s ",ctx_nth(ad_contextes[ind--],0)->id);
+	td_fprintf(fd,&ctx_nth(ad_contextes[ind--],0)->type);
+	fprintf(fd, "\n" );
+	while(ind != -1)
+	{
+		for (size_t i = 0; i < ctx_count_entries(ad_contextes[ind]); i++) {
+
+			for (int i = 0; i < spaces; i++) {
+				fprintf(fd, " ");
+			}
+			if(!i)
+			{
+				fprintf(fd, "----");
+				spaces+=4;
+			}
+			fprintf(fd,"%s  ",ctx_nth(ad_contextes[ind],i)->id);
+			td_fprintf(fd,&ctx_nth(ad_contextes[ind],i)->type);
+			fprintf(fd, "\n" );
+		}
+
+		ind--;
+
+	}
+
 }
