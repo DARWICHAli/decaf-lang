@@ -13,7 +13,7 @@ void yyerror(const char *msg);
 
 struct Boolexp_t;
 
-void reification(struct entry* dst, struct Boolexp_t* bexp);
+void reification(struct entry* dst, struct Boolexp_t* bexp, struct quad_list* nexto);
 
 #define SERR(x, msg) do { if ((x)) { fprintf(stderr, "Erreur semantique: " msg); exit(EXIT_FAILURE);} } while(0)
 #define SERRL(x, fct) do { if ((x)) { fprintf(stderr, "Erreur semantique: "); fct; exit(EXIT_FAILURE);} } while(0)
@@ -64,7 +64,7 @@ struct Boolexp_t {
 %type <TypeList> optional_parameters
 %type <TypeList> parameters
 %type <Integer> int_cst
-%type <Statement> instruction instructions gom iblock control optional_instructions loop
+%type <Statement> instruction instructions gom iblock control optional_instructions loop affectation
 %type <Boolexp> boolexp
 %type <Nextquad> nqm
 
@@ -207,7 +207,7 @@ instructions: instruction ';' {$$ = qlist_empty();}
 nqm: %empty {$$ = nextquad();}
 
 // instruction
-instruction: affectation {$$ = qlist_empty();}
+instruction: affectation {$$ = $1;}
 	   | proc { $$ = qlist_empty();}
 	   | return { $$ = qlist_empty();}
 
@@ -307,16 +307,16 @@ return: RETURN rvalue { gencode(quad_return($2)); }
  */
 
 // affectation
-affectation: lvalue '=' rvalue { gencode(quad_aff($1, $3)); }
-	   | existing_entry '[' rvalue ']' '=' rvalue { gencode(quad_aft($1, $3, $6)); }
-	   | lvalue '=' boolexp { reification($1, &$3); }
-	   | existing_entry '[' rvalue ']' '=' boolexp {
+affectation: lvalue '=' rvalue { $$ = qlist_empty();gencode(quad_aff($1, $3)); }
+	   | existing_entry '[' rvalue ']' '=' rvalue { $$ = qlist_empty();gencode(quad_aft($1, $3, $6)); }
+	   | lvalue '=' boolexp { $$ = qlist_empty(); reification($1, &$3, $$); }
+	   | existing_entry '[' rvalue ']' '=' boolexp {$$ = qlist_empty();
 	  		struct entry* tmp = ctx_make_temp(BT_INT);
-	  		reification(tmp, &$6); 
+	  		reification(tmp, &$6, $$); 
 			gencode(quad_aft($1, $3, tmp));
 			}
 	   | lvalue EQI rvalue {gencode(quad_arith($1, $1, $2, $3)); }
-	   | existing_entry '[' rvalue ']' EQI rvalue { 
+	   | existing_entry '[' rvalue ']' EQI rvalue { $$ = qlist_empty();
 	   		struct entry* tmp = ctx_make_temp(typedesc_tab_type(&$1->type));
 			gencode(quad_acc(tmp, $1, $3));
 			gencode(quad_aft($1, $3, tmp)); }
@@ -372,7 +372,7 @@ void quads_print() {
     fprintf(stderr, "Not implemented");
 }
 
-void reification(struct entry* dst, struct Boolexp_t* bexp) {
+void reification(struct entry* dst, struct Boolexp_t* bexp, struct quad_list* nexto) {
 	if (!typedesc_equals(&dst->type, &td_var_bool))
 		yyerror("lvalue not boolean");
 	
@@ -380,8 +380,11 @@ void reification(struct entry* dst, struct Boolexp_t* bexp) {
 	m = nextquad();
 	gencode(quad_cst(dst, 1));
 	qlist_complete(bexp->qltrue, m);
-	gencode(quad_goto(INCOMPLETE_QUAD_ID));
+
 	m = nextquad();
+	gencode(quad_goto(INCOMPLETE_QUAD_ID));
+	qlist_append(nexto, m);
+
 	gencode(quad_cst(dst, 0));
 	qlist_complete(bexp->qlfalse, m);
 }
