@@ -268,7 +268,7 @@ void ctx_fprintf_aux(FILE* fd, const struct context* ctx, int espace, int taille
 	fprintf(fd, "\n");
 	
 	if( ignore == 1)
-		taille -= taille_string(global_context[idx].entries[0].id);
+		taille -= strlen(global_context[idx].entries[0].id);
 
 	size_t ret;
 	for(ret = 1; ret < entrysize; ret++){
@@ -287,7 +287,7 @@ void ctx_fprintf_aux(FILE* fd, const struct context* ctx, int espace, int taille
 	for(size_t i = idx; i < co_used; i++) {
 		struct context* potentiel_fils = &global_context[i];
 		if (potentiel_fils->parent == ctx) { // fils de ctx
-			espace = taille_string(global_context[idx].entries[0].id);
+			espace = strlen(global_context[idx].entries[0].id);
 			ctx_fprintf_aux(fd, potentiel_fils,espace,taille+espace,ignore+1);
 			break;
 		}

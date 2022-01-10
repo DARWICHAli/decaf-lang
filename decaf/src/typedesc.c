@@ -134,6 +134,20 @@ enum MTYPE typedesc_meta_type(const struct typedesc* td)
 #define ID_LEN 64
 #define MAX_LEN_ARGLIST_STRING 4096
 
+const char* bt_str(enum BTYPE type)
+{
+	switch (type){
+	case BT_BOOL:
+		return "bool";
+	
+	case BT_INT:
+		return "int";
+
+	default:
+		assert(0 && "Unknown BTYPE");
+	}
+}
+
 void td_fprintf(FILE* fd, const struct typedesc* td)
 {
 	assert(td && "td_fprintf expecting NON null entry");
@@ -143,29 +157,28 @@ void td_fprintf(FILE* fd, const struct typedesc* td)
 	const struct typelist *tl;
 	size_t size;
 	char names[LEN_BT][ID_LEN] ={"bool", "int"};
-	char arglist[MAX_LEN_ARGLIST_STRING];
 	size_t size_arglist;
 	switch (typedesc_meta_type(td)) {
 	case MT_VAR:
 		type = typedesc_var_type(td);
-		fprintf(fd,"variable: %s ", names[type]);
+		fprintf(fd,"%s ", bt_str(type));
 		break;
 	case MT_TAB:
 		type = typedesc_tab_type(td);
 		size = typedesc_tab_size(td);
-		fprintf(fd,"tab: (%s)[%ld]  ", names[type], size);
+		fprintf(fd,"(%s)[%ld]  ", names[type], size);
 
 		break;
 	case MT_FUN:
 		type = typedesc_function_type(td);
 		tl = typedesc_function_args(td);
 		size_arglist = typelist_size(tl);
-		for(size_t i = 0; i < size_arglist -1 ; i++){
-			strcat(arglist, names[tl->btypes[i]]);
-			strcat(arglist, ", ");
+		fprintf(fd, "fonction: (");
+		for(size_t i = 0; i < size_arglist - 1 ; i++){
+			fprintf(fd,"%s, ", names[tl->btypes[i]]);
 		}
-		strcat(arglist, names[tl->btypes[size_arglist-1]]);
-		fprintf(fd,"function: (%s) -> %s", arglist, names[type]);
+		fprintf(fd,"%s", names[tl->btypes[size_arglist-1]]);
+		fprintf(fd,") -> %s", names[type]);
 		break;
 	// LCOV_EXCL_START
 	default:
