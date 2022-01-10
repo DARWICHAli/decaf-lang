@@ -186,7 +186,7 @@ proc_block: '{' { ctx_pushctx(); } optional_var_declarations optional_instructio
 block: '{' { ctx_pushctx(); } optional_var_declarations optional_instructions '}' { ctx_popctx();}
 ;
 // Bloc internes
-iblock: '{' {ctx_pushctx(); } instructions '}' {ctx_popctx();} {$$ = qlist_empty(); }
+iblock: '{' {ctx_pushctx(); } optional_instructions '}' {ctx_popctx();} {$$ = qlist_empty(); }
 // liste optionnelle d'instructions
 optional_instructions: %empty { $$ = qlist_empty(); }
 		     | instructions { $$ = $1; }
@@ -303,13 +303,33 @@ return: RETURN rvalue { gencode(quad_return($2)); }
  */
 
 // affectation
-affectation: lvalue '=' rvalue { gencode(quad_aff($1, $3)); }
-	   | existing_entry '[' rvalue ']' '=' rvalue { gencode(quad_aft($1, $3, $6)); }
-	   | lvalue EQI rvalue {gencode(quad_arith($1, $1, $2, $3)); }
-	   | existing_entry '[' rvalue ']' EQI rvalue { 
-	   		struct entry* tmp = ctx_make_temp(typedesc_tab_type(&$1->type));
-			gencode(quad_acc(tmp, $1, $3));
-			gencode(quad_aft($1, $3, tmp)); }
+
+affectation: lvalue '=' rvalue {
+   SERRL(!typedesc_equals(&$1->type, &$3->type), yyerror("types are not equal\n"));
+   gencode(quad_aff($1, $3));
+}
+	   | existing_entry '[' rvalue ']' '=' rvalue
+      {
+
+        if(!typedesc_is_var(&$6->type)||!typedesc_is_tab(&$1->type) )
+            exit(EXIT_FAILURE);
+        if(typedesc_tab_type(&$1->type) != typedesc_var_type(&$6->type))
+          exit(EXIT_FAILURE);
+
+
+          /* SERRL(!typedesc_equals(&$1->type, &$6->type), yyerror("types are not equal\n")); */
+          if(!typedesc_is_tab(&$1->type))
+               exit(EXIT_FAILURE);
+
+          gencode(quad_aft($1, $3, $6));
+      }
+	   | lvalue EQI rvalue {
+
+          gencode(quad_arith($1, $1, $2, $3)); }
+	   | existing_entry '[' rvalue ']' EQI rvalue {
+         struct entry* tmp = ctx_make_temp(typedesc_tab_type(&$1->type));
+         gencode(quad_acc(tmp, $1, $3));
+         gencode(quad_aft($1, $3, tmp)); }
 ;
 
 arithmetique_expression: rvalue '+' rvalue {
@@ -320,15 +340,15 @@ arithmetique_expression: rvalue '+' rvalue {
         	SERRL(!typedesc_equals(&$1->type, &td_var_int), fprintf(stderr, "type of rexpr is not int in arithmetic statement\n"));
         	SERRL(!typedesc_equals(&$3->type, &td_var_int), fprintf(stderr, "type of lexpr is not int in arithmetic statement\n"));
 			$$ = ctx_make_temp(BT_INT); gencode(quad_arith($$, $1, Q_SUB, $3)); }
-		| rvalue '*' rvalue { 
+		| rvalue '*' rvalue {
 			SERRL(!typedesc_equals(&$1->type, &td_var_int), fprintf(stderr, "type of rexpr is not int in arithmetic statement\n"));
         	SERRL(!typedesc_equals(&$3->type, &td_var_int), fprintf(stderr, "type of lexpr is not int in arithmetic statement\n"));
 			$$ = ctx_make_temp(BT_INT); gencode(quad_arith($$, $1, Q_MUL, $3)); }
-		| rvalue '/' rvalue { 
+		| rvalue '/' rvalue {
 			SERRL(!typedesc_equals(&$1->type, &td_var_int), fprintf(stderr, "type of rexpr is not int in arithmetic statement\n"));
         	SERRL(!typedesc_equals(&$3->type, &td_var_int), fprintf(stderr, "type of lexpr is not int in arithmetic statement\n"));
 			$$ = ctx_make_temp(BT_INT); gencode(quad_arith($$, $1, Q_DIV, $3)); }
-		| rvalue '%' rvalue { 
+		| rvalue '%' rvalue {
 			SERRL(!typedesc_equals(&$1->type, &td_var_int), fprintf(stderr, "type of rexpr is not int in arithmetic statement\n"));
         	SERRL(!typedesc_equals(&$3->type, &td_var_int), fprintf(stderr, "type of lexpr is not int in arithmetic statement\n"));
 			$$ = ctx_make_temp(BT_INT); gencode(quad_arith($$, $1, Q_MOD, $3)); }
