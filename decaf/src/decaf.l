@@ -28,7 +28,11 @@ boolean                 { yylval.BType = BT_BOOL; return TYPE; }
 class                   return CLASS;
 void                    return VOID;
 return                  return RETURN;
+if 			return IF;
+else 			return ELSE;
 WriteString 		return WRITESTRING;
+true 			return TRUE;
+false 			return FALSE;
 
 0x{EHEXDIGIT}+          { yylval.Integer = strtol(yytext, NULL, 16); return HEXADECIMAL_CST; }
 {EDIGIT}+               { yylval.Integer = strtol(yytext, NULL, 10); return DECIMAL_CST; }
@@ -48,7 +52,18 @@ WriteString 		return WRITESTRING;
 [=]                     return yytext[0];
 [\[\]]                  return yytext[0];
 
+"<=" 			{yylval.Relop = CMP_LE; return RELOP; }
+"=="			{yylval.Relop = CMP_EQ; return RELOP; }
+">="			{yylval.Relop = CMP_GE; return RELOP; }
+"!=" 			{yylval.Relop = CMP_NQ; return RELOP; }
+"<"			{yylval.Relop = CMP_LT; return RELOP; }
+">" 			{yylval.Relop = CMP_GT; return RELOP; }
+
  \"(\\.|[^\"])*\"	{ yylval.String = yytext; return CSTR; }
+
+"&&"			return DAMP;
+"||" 			return DPIPE;
+[!] 			return yytext[0];
 
 [[:space:]]             ;
 .                       {fprintf(stderr, "(lex) Caractère illégal: %c (%d)\n", yytext[0], yytext[0]);}

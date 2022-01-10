@@ -1,0 +1,28 @@
+//1
+class Hard
+{
+	void main()
+	{
+		if (1 == 0) {
+			WriteInt(0);
+		} else {
+			if (4 == 4) {
+				if (0 == 0) {
+					if (5 == 5) {
+						if (6 == 5) {
+							WriteInt(0);
+						} else {
+							WriteInt(1);
+						}
+					} else {
+						WriteInt(4);
+					}
+				} else {
+					WriteInt(5);
+				}
+			} else {
+				WriteInt(6);
+			}
+		}
+	}
+}
