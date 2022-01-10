@@ -1,0 +1,19 @@
+Avant de lancer le programme veuillez executer la commande ```make```. Le Makefile dans dossier decaf. 
+
+Pour lancer les tests veuillez executer la commande ```make test```
+
+Pour lancer le compilateur avec le fichier souhaité, veuillez lancer la commande suivante: 
+``` 
+./decaf [arg] < <file> 
+```
+
+On peut ajouter plusieurs arguments à cette commande: 
+
+* "-t", "-tos" -> Affiche la table des symboles
+* "-v", "-version"-> Version du programme et noms des auteurs
+* "-o", "-out"-> Nom du fichier de sortie
+* "-d", "-debug"-> Active le mode debug du compilateur
+* "-n", "-nogen"-> Ne fait que le parsing
+* "-e", "-entrypoint"-> Génère un point d'entrée dans l'assembleur final
+* "-h", "-help"-> Affiche le manuel 
+
