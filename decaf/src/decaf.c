@@ -13,15 +13,15 @@
 extern int yyparse();
 extern int yydebug;
 
-int check()
+void check()
 {
 	struct entry* main = ctx_lookup(tokenize("main"));
 	if(!ctx_lookup(tokenize("main")))
 		exit(EXIT_FAILURE);
 	if (!typedesc_is_function(&main->type) || typelist_size(typedesc_function_args(&main->type)) != 0)
 		exit(EXIT_FAILURE);
-	return 1;
 }
+
 
 
 int main(int argc, char* argv[])
