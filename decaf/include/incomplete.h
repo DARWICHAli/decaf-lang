@@ -44,7 +44,12 @@ struct quad_list {
 /**
  * @brief Crée une liste de quadruplets vide
  */
-struct quad_list qlist_new();
+struct quad_list* qlist_empty();
+
+struct quad_list* qlist_new(quad_id_t qid);
+
+
+struct quad_list* qlist_concatn(size_t n, struct quad_list* ql, ...);
 
 /**
  * @brief Ajoute un quadruplet à la fin de la liste
@@ -53,7 +58,7 @@ struct quad_list qlist_new();
  * @return pointeur sur la liste passée en paramètre.
  * @warning plante si impossible d'ajouter un quadruplet
  */
-struct quad_list* qlist_append(struct quad_list* qlst, quad_id_t qid);
+void qlist_append(struct quad_list* qlst, quad_id_t qid);
 
 /**
  * @brief Concatène deux quad_list et renvoie la nouvelle liste
@@ -62,7 +67,7 @@ struct quad_list* qlist_append(struct quad_list* qlst, quad_id_t qid);
  * @return Une nouvelle liste de quadruplet contenant les quadruplet de ql1 et ql2
  * @warning plante si impossible d'ajouter un quadruplet et si les tailles finales ne correspondent pas
  */
-struct quad_list qlist_concat(struct quad_list* ql1, struct quad_list* ql2);
+struct quad_list* qlist_concat(const struct quad_list* lhs, const struct quad_list* rhs);
 
 
 /**

@@ -15,7 +15,7 @@ int Mips_op_nums[INVALID] = {3, 3, 3, 3, 2, 3, 3, 3,
 	2, 2,
 	2, 2, 2,
 	1, 1,
-	1, 3, 3, 3,
+	1, 3, 3, 3, 3,
 	0 };
 
 enum Mips_adr Mips_op_fmt[INVALID][3] = { {REG, REG, REG}, {REG, REG, IMM}, {REG, REG, REG}, {REG, REG, REG}, {REG, REG, -1}, {REG, REG, REG}, {REG, REG, REG}, {REG, REG, REG}, 

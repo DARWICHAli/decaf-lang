@@ -5,7 +5,7 @@
 #include <string.h>
 #include <assert.h>
 
-#define VERSION "V1-arith"
+#define VERSION "V4-condi"
 
 #define NB_ARGS 8
 static const char* args_str[NB_ARGS][3] = { { "-t", "-tos", "Affiche la table des symboles" },

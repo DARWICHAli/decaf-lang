@@ -1,0 +1,13 @@
+class Hardcore {
+	void main() {
+		int x, y, z;
+		x = 1;
+		y = 2;
+		z = 3;
+		if (x == x && y == y || x < y && z > x || z <= z && !(x < y && x > y) && x != x) {
+			WriteInt(1);
+		} else {
+			WriteInt(0);
+		}
+	}
+}

@@ -9,6 +9,7 @@ void yyerror(const char *msg);
 
 #include "ir.h"
 #include "symbols.h"
+#include "incomplete.h"
 
 #define SERR(x, msg) do { if ((x)) { fprintf(stderr, "Erreur semantique: " msg); exit(EXIT_FAILURE);} } while(0)
 #define SERRL(x, fct) do { if ((x)) { fprintf(stderr, "Erreur semantique: "); fct; exit(EXIT_FAILURE);} } while(0)
@@ -25,20 +26,28 @@ void yyerror(const char *msg);
 %union {
     char Identifier[MAX_IDENTIFIER_SIZE];
     struct entry* Entry;
+    const struct entry* CEntry;
     enum BTYPE BType;
     enum Q_OP Binop;
     struct context* Context;
     struct typelist* TypeList;
     int Integer;
+    struct quad_list* Statement;
+    struct {
+    	struct quad_list* qltrue;
+	struct quad_list* qlfalse;
+    } Boolexp;
+    enum CMP_OP Relop;
+    quad_id_t Nextquad;
     const char* String;
-    const struct entry* CEntry;
 }
 
-%token CLASS VOID RETURN WRITESTRING
+%token CLASS VOID RETURN IF THEN ELSE WRITESTRING TRUE FALSE
 
 %token <Integer> DECIMAL_CST HEXADECIMAL_CST
 %token <BType> TYPE
 %token <Identifier> ID
+%token <Relop> RELOP
 %token <String> CSTR
 
 %type <Entry> new_entry existing_entry arithmetique_expression negation_exp call parameter integer litteral arg lvalue rvalue
@@ -46,10 +55,18 @@ void yyerror(const char *msg);
 %type <TypeList> optional_parameters
 %type <TypeList> parameters
 %type <Integer> int_cst
+%type <Statement> instruction instructions gom iblock control optional_instructions
+%type <Boolexp> boolexp
+%type <Nextquad> nqm
 
 %left '-' '+'
 %left '*' '/' '%'
 %left MUNAIRE
+
+%left DPIPE
+%left DAMP
+%left RELOP
+%nonassoc '!'
 
 %start program
 
@@ -163,20 +180,67 @@ blocks: block
 // Bloc de code
 block: '{' { ctx_pushctx(); } optional_var_declarations optional_instructions '}' { ctx_popctx();}
 ;
+// Bloc internes
+iblock: '{' {ctx_pushctx(); } instructions '}' {ctx_popctx();} {$$ = qlist_empty(); }
 // liste optionnelle d'instructions
-optional_instructions: %empty
-		     | instructions
-		     | blocks
+optional_instructions: %empty { $$ = qlist_empty(); }
+		     | instructions { $$ = $1; }
 ;
 // liste d'instructions
-instructions: instruction ';'
-	    | instruction ';' instructions
+instructions: instruction ';' {$$ = qlist_empty();}
+	    | instruction ';' nqm instructions {$$ = $4; qlist_complete($1, $3);}
+	    | iblock nqm optional_instructions { $$ = $3; qlist_complete($1, $2); }
+	    | control nqm optional_instructions {$$ = $3; qlist_complete($1, $2); }
 ;
 
+// marqueur nextquad
+nqm: %empty {$$ = nextquad();}
+
 // instruction
-instruction: affectation
-	   | proc
-	   | return // il faudrait faire un truc pour ne pas pouvoir return dans une procédure !
+instruction: affectation {$$ = qlist_empty();}
+	   | proc { $$ = qlist_empty();}
+	   | return { $$ = qlist_empty();}
+
+/*
+ * Structures de controle
+ */
+control: IF boolexp nqm iblock gom ELSE nqm iblock { // pas de backpatching des blocks ???
+       							  qlist_complete($2.qltrue, $3);
+       							  qlist_complete($2.qlfalse, $7);
+							  $$ = qlist_concat($4, $5);
+							  $$ = qlist_concat($$, $8);
+							}
+
+	| IF boolexp nqm iblock {
+					qlist_complete($2.qltrue, $3);
+					$$ = qlist_concat($2.qlfalse, $4);
+				}
+
+// marqueur goto
+gom: %empty {$$ = qlist_new(nextquad()); gencode(quad_goto(INCOMPLETE_QUAD_ID));}
+
+/*
+ * Expressions booléennes
+ */
+
+boolexp: rvalue RELOP rvalue { $$.qltrue = qlist_new(nextquad());
+       					       $$.qlfalse = qlist_new(nextquad() + 1);
+					       gencode(quad_ifgoto($1, $2, $3, INCOMPLETE_QUAD_ID));
+					       gencode(quad_goto(INCOMPLETE_QUAD_ID));
+					     }
+	| '(' boolexp ')' {$$ = $2;}
+	| boolexp DPIPE nqm boolexp { 	qlist_complete($1.qlfalse, $3);
+					$$.qltrue = qlist_concat($1.qltrue, $4.qltrue);
+					$$.qlfalse = $4.qlfalse;
+				    }
+	| boolexp DAMP nqm boolexp  { 	qlist_complete($1.qltrue, $3);
+					$$.qltrue = $4.qltrue;
+					$$.qlfalse = qlist_concat($1.qlfalse, $4.qlfalse);
+				    }
+
+	| '!' boolexp 		{$$.qltrue = $2.qlfalse; $$.qlfalse = $2.qltrue; }
+	| TRUE 			{$$.qltrue = qlist_new(nextquad()); gencode(quad_goto(INCOMPLETE_QUAD_ID)); }
+	| FALSE 		{$$.qlfalse = qlist_new(nextquad()); gencode(quad_goto(INCOMPLETE_QUAD_ID)); }
 
 /*
  * Appel de fonction / procédure
