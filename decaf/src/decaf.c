@@ -52,6 +52,9 @@ int main(int argc, char* argv[])
 	size_t sz = 0;
 	quad_id_t* quads = get_all_quads(&sz);
 
+	if (parameters.print_table)
+		ctx_fprintf(stdout, ctx_currentctx(), 1);
+
 	if (parameters.ir_outfile) {
 		FILE* fir = fopen(parameters.ir_outfile, "w");
 		for (size_t i = 0; i < sz; ++i) {

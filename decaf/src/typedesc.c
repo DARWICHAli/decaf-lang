@@ -1,6 +1,7 @@
 #include "typedesc.h"
 #include "typelist.h"
-#include <assert.h>
+#include <assert.h> //assert
+#include <string.h> // strcmp
 
 // Impossible d'instancier une constante avec un appel de fonction (typedesc_make_var)
 // donc j'initialise à la main la structure
@@ -105,6 +106,7 @@ const struct typelist* typedesc_function_args(const struct typedesc* td)
 {
 	assert(td && "Expected non-null typedesc");
 	assert(typedesc_is_function(td) && "typedesc is not a function");
+	
 	return td->dist.arg_list;
 }
 
@@ -126,6 +128,88 @@ enum MTYPE typedesc_meta_type(const struct typedesc* td)
 {
 	assert(td && "Expected non-null typedesc");
 	return td->mtype;
+}
+
+const char* bt_str(enum BTYPE type)
+{
+	switch (type) {
+	case BT_BOOL:
+		return "bool";
+
+	case BT_INT:
+		return "int";
+
+	case BT_STR:
+		return "string";
+
+	case BT_VOID:
+		return "(void)";
+		
+	default:
+		assert(0 && "Unknown BTYPE");
+	}
+}
+
+void print_var(FILE* fd, const struct typedesc* td)
+{
+	enum BTYPE type;
+	type = typedesc_var_type(td);
+	fprintf(fd, "%s ", bt_str(type));
+}
+
+void print_tab(FILE* fd, const struct typedesc* td)
+{
+	enum BTYPE type;
+	size_t size;
+	type = typedesc_tab_type(td);
+	size = typedesc_tab_size(td);
+	fprintf(fd, "(%s)[%ld]  ", bt_str(type), size);
+}
+
+void print_fct(FILE* fd, const struct typedesc* td)
+{
+	enum BTYPE type;
+	const struct typelist* tl;
+	size_t size_arglist;
+
+	type = typedesc_function_type(td);
+	tl = typedesc_function_args(td);
+	if(tl != NULL)
+		size_arglist = typelist_size(tl);
+	else 
+		size_arglist = 0;
+		
+	fprintf(fd, "fonction: (");
+	for (size_t i = 0; i < size_arglist; i++) {
+		if (i != size_arglist - 1) {
+			fprintf(fd, "%s, ", bt_str(tl->btypes[i]));
+		} else {
+			fprintf(fd, "%s", bt_str(tl->btypes[size_arglist - 1]));
+		}
+	}
+	fprintf(fd, ") -> %s", bt_str(type));
+}
+
+void td_fprintf(FILE* fd, const struct typedesc* td)
+{
+	assert(td && "td_fprintf expecting NON null entry");
+	assert(fd && "td_fprintf expecting NON null entry");
+
+	switch (typedesc_meta_type(td)) {
+	case MT_VAR:
+		print_var(fd, td);
+		break;
+	case MT_TAB:
+		print_tab(fd, td);
+		break;
+	case MT_FUN:
+		print_fct(fd, td);
+		break;
+	// LCOV_EXCL_START
+	default:
+		assert(0 && "Unknown meta-type");
+		// LCOV_EXCL_STOP
+	}
 }
 
 int typedesc_is_cstring(const struct typedesc* td)

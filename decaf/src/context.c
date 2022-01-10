@@ -233,6 +233,8 @@ const char* tokenize(const char* str) {
 	return buf;
 }
 
+
+	
 struct context* ctx_rootctx() {
 	assert(co_used >= 2 && "No root context");
 	return &global_context[1]; // 0 = super-global
@@ -270,4 +272,85 @@ void ctx_push_super_global() {
 	struct typelist* one_str = typelist_new();
 	typelist_append(one_str, BT_STR);
 	ctx_newname(tokenize("WriteString"))->type = typedesc_make_function(BT_VOID, one_str);
+}
+
+
+void print_et(FILE* fd, int taille, int espace, char c)
+{
+	for(int i = 0; i < taille + espace; i++)
+        fprintf(fd, "%c", c);
+} 
+
+
+void ctx_fprintf_aux(FILE* fd, const struct context* ctx,int td_print, int espace, int taille, int ignore)
+{
+	assert(ctx && "ctx_fprintf expecting NON null entry");
+	assert(fd && "ctx_fprintf expecting NON null entry");
+	
+	size_t idx;
+	size_t entrysize = ctx_count_entries(ctx);
+	struct context* pos;
+	
+	// recherche de ctx
+	for(idx = 0; idx < co_used; idx++){
+		pos = &global_context[idx];
+		if (pos == ctx) // ctx trouvé
+			break;	
+	}
+
+	if(ignore != 1)
+		print_et(fd,taille,0,' ');
+
+    print_et(fd, 0, espace, '-');
+
+	
+
+	fprintf(fd, "%s: ", ctx->entries[0].id);
+	if(td_print == 1)
+		td_fprintf(fd, &ctx->entries[0].type);
+	fprintf(fd, "\n");
+	
+	if( ignore == 1)
+		taille = strlen(ctx->entries[0].id);
+
+	size_t ret;
+	int toggle = 0;
+
+	if(strcmp(ctx->entries[0].id, "root") == 0)
+		toggle = 1;
+	const struct entry *ent;
+	for(ret = 1; ret < entrysize; ret++){
+		
+		
+		if(toggle == 1 && typedesc_is_function(&ent->type)){
+			ctx_fprintf_aux(fd, ctx->entries[ret].ctx, td_print, espace, taille+espace, ignore+1);	
+			continue;
+		}
+
+		ent = ctx_nth(ctx, ret);
+		print_et(fd,taille,espace,' ');
+		fprintf(fd, "%s: ", ent->id);
+		if(td_print == 1){
+			td_fprintf(fd, &ctx->entries[0].type);
+		}
+		fprintf(fd, "\n");	
+	}
+
+	if(entrysize == 1)
+		ret = 0;
+	
+	// recherche des fils
+	for(size_t i = idx; i < co_used; i++) {
+		struct context* potentiel_fils = &global_context[i];
+		if (potentiel_fils->parent == ctx) { // fils de ctx
+			espace = strlen(global_context[idx].entries[0].id);
+			ctx_fprintf_aux(fd, potentiel_fils,td_print, espace,taille+espace,ignore+1);
+			break;
+		}
+	}
+}
+
+void ctx_fprintf(FILE* fd, const struct context* ctx, int flag)
+{
+   ctx_fprintf_aux(fd, ctx, flag, 0, 0, 0);
 }
