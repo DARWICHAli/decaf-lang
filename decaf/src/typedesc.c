@@ -11,15 +11,14 @@ size_t bt_sizeof(const enum BTYPE btype)
 {
 	switch (btype) {
 	case BT_BOOL:
-		return 4;
-		break;
+	case BT_STR:
 	case BT_INT:
 		return 4;
 		break;
 	// LCOV_EXCL_START
 	default:
 		assert(0 && "Unknown BTYPE");
-	// LCOV_EXCL_STOP
+		// LCOV_EXCL_STOP
 	}
 }
 
@@ -37,7 +36,7 @@ size_t td_sizeof(const struct typedesc* td)
 	// LCOV_EXCL_START
 	default:
 		assert(0 && "Unknown meta-type");
-	// LCOV_EXCL_STOP
+		// LCOV_EXCL_STOP
 	}
 }
 
@@ -127,4 +126,10 @@ enum MTYPE typedesc_meta_type(const struct typedesc* td)
 {
 	assert(td && "Expected non-null typedesc");
 	return td->mtype;
+}
+
+int typedesc_is_cstring(const struct typedesc* td)
+{
+	assert(td && "Expected non-null typedesc");
+	return typedesc_is_var(td) && typedesc_var_type(td) == BT_STR;
 }

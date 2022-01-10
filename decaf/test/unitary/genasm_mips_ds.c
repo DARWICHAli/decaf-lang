@@ -106,7 +106,7 @@ int ds_one_var(void* data) {
 	fread(dt->buf, 1, 4096, dt->fo);
 	strip_com(dt->buf);
 	ASSERT_EQSTR(dt->buf, ".data\n\n"
-			"globale: .word 0 \n");
+			"globale: .word 0\n");
 
 	return 1;
 }
@@ -121,7 +121,7 @@ int ds_two_glob(void* data) {
 	fread(dt->buf, 1, 4096, dt->fo);
 	strip_com(dt->buf);
 	ASSERT_EQSTR(dt->buf, ".data\n\n"
-			"globale: .word 0 \n"
+			"globale: .word 0\n"
 			"g_tab: .space 256\n");
 
 	return 1;

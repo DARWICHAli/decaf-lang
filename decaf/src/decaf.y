@@ -30,15 +30,19 @@ void yyerror(const char *msg);
     struct context* Context;
     struct typelist* TypeList;
     int Integer;
+    const char* String;
+    const struct entry* CEntry;
 }
 
-%token CLASS VOID RETURN
+%token CLASS VOID RETURN WRITESTRING
 
 %token <Integer> DECIMAL_CST HEXADECIMAL_CST
 %token <BType> TYPE
 %token <Identifier> ID
+%token <String> CSTR
 
 %type <Entry> new_entry existing_entry arithmetique_expression negation_exp call parameter integer litteral arg lvalue rvalue
+%type <CEntry> cstr
 %type <TypeList> optional_parameters
 %type <TypeList> parameters
 %type <Integer> int_cst
@@ -51,7 +55,7 @@ void yyerror(const char *msg);
 
 %%
 
-program: CLASS ID '{' {ctx_pushctx();} global_declarations '}' {/*ctx_popctx();*/ /* Ne pas dépiler ce contexte !*/}
+program: CLASS ID {ctx_push_super_global(); } '{' {ctx_pushctx();} global_declarations '}' {/*ctx_popctx();*/ /* Ne pas dépiler ce contexte !*/}
 ;
 /*
  * Entrées et identifiants
@@ -106,6 +110,9 @@ litteral: integer { $$ = $1; }
 
 int_cst: DECIMAL_CST {$$ = $1; }
        | HEXADECIMAL_CST {$$ = $1; }
+
+cstr: CSTR { $$ = ctx_register_cstr($1); }
+
 
 /*
  * Méthodes et fonctions
@@ -184,6 +191,10 @@ call: existing_entry '(' args_list_opt ')' {
 
 // appel de procédure
 proc: existing_entry '(' args_list_opt ')' { gencode(quad_proc($1)); }
+    | WRITESTRING '(' cstr ')' {
+					gencode(quad_param($3));
+					gencode(quad_proc(ctx_lookup(tokenize("WriteString"))));
+				}
 
 // liste des arguments de fonction
 args_list_opt: %empty

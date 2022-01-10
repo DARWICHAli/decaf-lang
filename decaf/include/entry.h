@@ -41,6 +41,7 @@ struct entry {
 	char id[MAX_IDENTIFIER_SIZE]; ///< Identifiant de l'entrée
 	struct typedesc type; ///< Type de l'entrée
 	const struct context* ctx; ///< Contexte dans lequel apparaît l'entrée
+	const char* cstr; // Chaîne de caractère constante
 };
 
 

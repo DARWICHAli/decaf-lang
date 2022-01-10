@@ -1,0 +1,11 @@
+//42
+class Easy {
+	int glob;
+	void foo() {
+		WriteInt(glob);
+	}
+	void main() {
+		glob = 42;
+		foo();
+	}
+}
