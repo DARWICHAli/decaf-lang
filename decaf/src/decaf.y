@@ -103,6 +103,7 @@ var_declaration: TYPE new_entry ';' { $2->type = typedesc_make_var($1); }
 
 // Déclarations de tableaux
 tab_declaration: TYPE new_entry '[' int_cst ']' ';' { $2->type = typedesc_make_tab($1, $4); }
+    | TYPE new_entry '[' int_cst ']' ',' { $2->type = typedesc_make_tab($1, $4); } new_id_list_tab ';'
 ;
 // Liste de nouveelles entrées
 new_id_list: new_entry { $1->type = $<Entry>-2->type; }
@@ -316,16 +317,11 @@ affectation: lvalue '=' rvalue {
 }
 	   | existing_entry '[' rvalue ']' '=' rvalue
       {
-
-        if(!typedesc_is_var(&$6->type)||!typedesc_is_tab(&$1->type) )
+        if(!typedesc_is_var(&$6->type)|| !typedesc_is_tab(&$1->type) )
             exit(EXIT_FAILURE);
         if(typedesc_tab_type(&$1->type) != typedesc_var_type(&$6->type))
-          exit(EXIT_FAILURE);
+            exit(EXIT_FAILURE);
 
-
-          /* SERRL(!typedesc_equals(&$1->type, &$6->type), yyerror("types are not equal\n")); */
-          if(!typedesc_is_tab(&$1->type))
-               exit(EXIT_FAILURE);
 
           gencode(quad_aft($1, $3, $6));
       }
