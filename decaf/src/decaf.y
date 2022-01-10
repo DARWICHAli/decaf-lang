@@ -315,7 +315,7 @@ affectation: lvalue '=' rvalue { $$ = qlist_empty();gencode(quad_aff($1, $3)); }
 	  		reification(tmp, &$6, $$); 
 			gencode(quad_aft($1, $3, tmp));
 			}
-	   | lvalue EQI rvalue {gencode(quad_arith($1, $1, $2, $3)); }
+	   | lvalue EQI rvalue {gencode(quad_arith($1, $1, $2, $3)); $$ = qlist_empty(); }
 	   | existing_entry '[' rvalue ']' EQI rvalue { $$ = qlist_empty();
 	   		struct entry* tmp = ctx_make_temp(typedesc_tab_type(&$1->type));
 			gencode(quad_acc(tmp, $1, $3));
