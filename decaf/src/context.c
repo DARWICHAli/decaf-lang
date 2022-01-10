@@ -233,11 +233,7 @@ const char* tokenize(const char* str) {
 	return buf;
 }
 
-void print_et(FILE* fd, int taille, int espace, char c)
-{
-	for(int i = 0; i < taille + espace; i++)
-        fprintf(fd, "%c", c);
-}
+
 	
 struct context* ctx_rootctx() {
 	assert(co_used >= 2 && "No root context");
@@ -277,6 +273,13 @@ void ctx_push_super_global() {
 	ctx_newname(tokenize("WriteString"))->type = typedesc_make_function(BT_VOID, one_str);
 }
 
+
+void print_et(FILE* fd, int taille, int espace, char c)
+{
+	for(int i = 0; i < taille + espace; i++)
+        fprintf(fd, "%c", c);
+} 
+
 void ctx_fprintf_aux(FILE* fd, const struct context* ctx, int espace, int taille, int ignore)
 {
 	assert(ctx && "ctx_fprintf expecting NON null entry");
@@ -285,7 +288,6 @@ void ctx_fprintf_aux(FILE* fd, const struct context* ctx, int espace, int taille
 	size_t idx;
 	size_t entrysize = ctx_count_entries(ctx);
 	struct context* pos;
-	struct entry* ent;
 	
 	// recherche de ctx
 	for(idx = 0; idx < co_used; idx++){
@@ -310,15 +312,7 @@ void ctx_fprintf_aux(FILE* fd, const struct context* ctx, int espace, int taille
 	for(ret = 1; ret < entrysize; ret++){
 		print_et(fd,taille,espace,' ');
 		fprintf(fd, "%s: ", global_context[idx].entries[ret].id);
-		if(typedesc_is_function(&global_context[idx].entries[ret].type)){
-			ent = ctx_nth_function(&global_context[idx], ret);
-			ctx_fprintf_aux(fd, ent,espace,taille+espace,ignore+1);
-		}
-		else{
-			ent = ctx_nth(&global_context[idx], ret);
-			td_fprintf(fd, &ent->type);
-			fprintf(fd, "\n");
-		}
+		fprintf(fd, "\n");	
 	}
 
 	if(entrysize == 1)
