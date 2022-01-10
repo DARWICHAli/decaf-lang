@@ -129,14 +129,12 @@ enum MTYPE typedesc_meta_type(const struct typedesc* td)
 	return td->mtype;
 }
 
-
-
 const char* bt_str(enum BTYPE type)
 {
-	switch (type){
+	switch (type) {
 	case BT_BOOL:
 		return "bool";
-	
+
 	case BT_INT:
 		return "int";
 
@@ -149,7 +147,7 @@ void print_var(FILE* fd, const struct typedesc* td)
 {
 	enum BTYPE type;
 	type = typedesc_var_type(td);
-	fprintf(fd,"%s ", bt_str(type));
+	fprintf(fd, "%s ", bt_str(type));
 }
 
 void print_tab(FILE* fd, const struct typedesc* td)
@@ -158,13 +156,13 @@ void print_tab(FILE* fd, const struct typedesc* td)
 	size_t size;
 	type = typedesc_tab_type(td);
 	size = typedesc_tab_size(td);
-	fprintf(fd,"(%s)[%ld]  ", bt_str(type), size);
+	fprintf(fd, "(%s)[%ld]  ", bt_str(type), size);
 }
 
 void print_fct(FILE* fd, const struct typedesc* td)
 {
 	enum BTYPE type;
-	const struct typelist *tl;
+	const struct typelist* tl;
 	size_t size_arglist;
 
 	type = typedesc_function_type(td);
@@ -172,10 +170,14 @@ void print_fct(FILE* fd, const struct typedesc* td)
 	size_arglist = typelist_size(tl);
 
 	fprintf(fd, "fonction: (");
-	for(size_t i = 0; i < size_arglist - 1 ; i++)
-		fprintf(fd,"%s, ", bt_str(tl->btypes[i]));
-	fprintf(fd,"%s", bt_str(tl->btypes[size_arglist-1]));
-	fprintf(fd,") -> %s", bt_str(type));
+	for (size_t i = 0; i < size_arglist; i++) {
+		if (i != size_arglist - 1) {
+			fprintf(fd, "%s, ", bt_str(tl->btypes[i]));
+		} else {
+			fprintf(fd, "%s", bt_str(tl->btypes[size_arglist - 1]));
+		}
+	}
+	fprintf(fd, ") -> %s", bt_str(type));
 }
 
 void td_fprintf(FILE* fd, const struct typedesc* td)
@@ -191,12 +193,12 @@ void td_fprintf(FILE* fd, const struct typedesc* td)
 		print_tab(fd, td);
 		break;
 	case MT_FUN:
-		print_fct(fd,td);
+		print_fct(fd, td);
 		break;
 	// LCOV_EXCL_START
 	default:
 		assert(0 && "Unknown meta-type");
-	// LCOV_EXCL_STOP
+		// LCOV_EXCL_STOP
 	}
 }
 
