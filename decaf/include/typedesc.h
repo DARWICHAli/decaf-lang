@@ -42,7 +42,8 @@ enum MTYPE {
 enum BTYPE {
 	BT_BOOL, ///< Type booléen
 	BT_INT,  ///< Type entier signé
-	BT_VOID  ///< Type void, reservé aux fonctions
+	BT_VOID,  ///< Type void, reservé aux fonctions
+	BT_STR /// Chaînes de caractères
 };
 
 
@@ -212,6 +213,8 @@ enum BTYPE typedesc_tab_type(const struct typedesc* td);
  * @return Le nombre d'éléments du tableau
  */
 size_t typedesc_tab_size(const struct typedesc* td);
+
+int typedesc_is_cstring(const struct typedesc* td);
 
 /**
  * @brief Descripteur représentant une variable entière

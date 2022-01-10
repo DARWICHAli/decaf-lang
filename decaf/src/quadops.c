@@ -158,6 +158,8 @@ const char* cmp_str(enum CMP_OP cmp) {
 			return ">";
 		case CMP_LT:
 			return "<";
+		default:
+			return "UNKNOWN RELOP";
 	}
 }
 

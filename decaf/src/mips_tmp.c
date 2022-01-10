@@ -3,6 +3,7 @@
  */
 
 #include "mips.h"
+#include "context.h"
 
 #include <string.h>
 #include <assert.h>
@@ -16,12 +17,24 @@ int Mips_tmp_reserved[MIPS_REG_TMP_NB] = { 0 };
 
 struct Mips_loc entry_to_reg(const struct entry* ent)
 {
+	assert(ent && "can't load NULL entry");
 	for (int i = 0; i < MIPS_REG_TMP_NB; ++i) {
 		if (Mips_reg_storing[i] == ent)
 			return reg(Mips_reg_temp[i]);
 	}
 	struct Mips_loc ret = available_register(ent);
-	instr(LW, ret, entry_loc(ent));
+	if (ent->ctx == ctx_rootctx()) { // global var
+		if (typedesc_is_cstring(&ent->type)) { // we want @
+			instr(LA, ret, entry_loc(ent));
+		} else { // we want value
+			enum Mips_reg adr = reserve_tmp_register();
+			instr(LA, reg(adr), entry_loc(ent));
+			instr(LW, ret, imr(0, adr));
+		}
+
+	} else {
+		instr(LW, ret, entry_loc(ent));
+	}
 	return ret;
 }
 
@@ -107,7 +120,15 @@ int entry_in_tmp(const struct entry* ent)
 
 void save_reg_to_entry(enum Mips_reg r, const struct entry* ent)
 {
-	instr(SW, reg(r), entry_loc(ent));
+	if (ent->ctx == ctx_rootctx()) { // global var
+		if (!typedesc_is_cstring(&ent->type)) { // cstring are read only
+			enum Mips_reg adr = reserve_tmp_register();
+			instr(LA, reg(adr), entry_loc(ent));
+			instr(SW, reg(r), imr(0, adr));
+		}
+	} else {
+		instr(SW, reg(r), entry_loc(ent));
+	}
 }
 
 void save_reg_tmp()
