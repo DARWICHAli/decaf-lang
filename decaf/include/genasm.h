@@ -32,6 +32,7 @@ enum ASM_LANG {
  */
 struct asm_params {
 	int generate_entrypoint; ///< Est-ce qu'on doit générer un point d'entrée ?
+	int verbose;
 };
 
 

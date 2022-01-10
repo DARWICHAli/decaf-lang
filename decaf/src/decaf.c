@@ -42,7 +42,7 @@ int main(int argc, char* argv[])
 	if (r == EXIT_FAILURE)
 		exit(EXIT_FAILURE);
 
-	struct asm_params asmp = { .generate_entrypoint = parameters.generate_entrypoint };
+	struct asm_params asmp = { .generate_entrypoint = parameters.generate_entrypoint, .verbose = parameters.mips_verbose};
 
 	if (!parameters.no_gen)
 		genasm("MIPS", quads, sz, fo, &asmp);

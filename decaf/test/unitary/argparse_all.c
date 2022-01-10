@@ -34,8 +34,11 @@ int fork_pa(int argc, char* const argv[], int* ws) {
 			exit(EXIT_SUCCESS);
 			break;
 		default: // parent
-			if (wait(ws) == -1)
+			if (wait(ws) == -1) {
+				assert(0);
+				perror("wait error");
 				return -1;
+			}
 			return 1;
 	}
 }
@@ -191,38 +194,25 @@ int entrypoint_extended(void* data) {
 
 	return 1;
 }
+
 int bad_arg_fail(void* data) {
-	struct data* dt = data;
+	(void)data;
 	char* argv[] = { "decaf", "--xxx" };
 
 	size_t argc = 2;
-	int ws = 0;
-	fork_pa(argc, argv, &ws);
-	ASSERT_TRUE(WIFEXITED(ws));
-	ASSERT_EQ(WEXITSTATUS(ws), EXIT_FAILURE);
+	parse_args(argc, argv);
 
-	rdbuf(dt);
-	fprintf(stdout, "stderr output:\n %s\n", dt->buf);
-	ASSERT_TRUE(strstr(dt->buf, "error parsing command line argument:") != NULL);
-
-	return 1;
+	return 0;
 }
 
 int bad_name_fail(void* data) {
-	struct data* dt = data;
+	(void)data;
 	char* argv[] = { "decaf", "xxx" };
 
 	size_t argc = 2;
-	int ws = 0;
-	fork_pa(argc, argv, &ws);
-	ASSERT_TRUE(WIFEXITED(ws));
-	ASSERT_EQ(WEXITSTATUS(ws), EXIT_FAILURE);
+	parse_args(argc, argv);
 
-	rdbuf(dt);
-	fprintf(stdout, "stderr output:\n %s\n", dt->buf);
-	ASSERT_TRUE(strstr(dt->buf, "error parsing command line argument:") != NULL);
-
-	return 1;
+	return 0;
 }
 
 int outfile_short(void* data) {
@@ -253,18 +243,11 @@ int combination(void* data) {
 }
 
 int missing_positional(void* data) {
-	struct data* dt = data;
+	(void)(data);
 	char* argv[] = { "decaf", "-o" };
 
 	size_t argc = 2;
-	int ws = 0;
-	fork_pa(argc, argv, &ws);
-	ASSERT_TRUE(WIFEXITED(ws));
-	ASSERT_EQ(WEXITSTATUS(ws), EXIT_FAILURE);
-
-	rdbuf(dt);
-	fprintf(stdout, "stderr output:\n %s\n", dt->buf);
-	ASSERT_TRUE(strstr(dt->buf, "-o") != NULL);
+	parse_args(argc, argv);
 
 	return 1;
 }
@@ -281,10 +264,10 @@ int main() {
 	add_test(&ts, entrypoint_extended, "--entrypoint");
 	add_test(&ts, version_extended, "--version works and exit");
 	add_test(&ts, tos_extended, "--help works and exit");
-	add_test(&ts, bad_arg_fail, "bad argument fails and exit with error");
-	add_test(&ts, bad_name_fail, "bad name fails");
+	add_test_failure(&ts, bad_arg_fail, "bad argument fails and exit with error");
+	add_test_failure(&ts, bad_name_fail, "bad name fails");
 	add_test(&ts, outfile_short, "-o file.mips");
-	add_test(&ts, missing_positional, "-o without file fails");
+	add_test_failure(&ts, missing_positional, "-o without file fails");
 	add_test(&ts, combination, "-o file.mips -d -t");
 
 	return exec_ts(&ts) ? EXIT_SUCCESS : EXIT_FAILURE;

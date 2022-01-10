@@ -144,12 +144,12 @@ void tab_do(enum Mips_op op, const struct entry* left, const struct entry* tab, 
 	enum Mips_reg sz_reg = reserve_tmp_register();
 	struct Mips_loc idx_reg = entry_to_reg(idx);
 	instr(LI, reg(sz_reg), imm(bt_sizeof(typedesc_tab_type(&tab->type))));
-	instr(MUL, idx_reg, idx_reg, reg(sz_reg));
-	free_tmp_register(sz_reg);
+	instr(MUL, reg(sz_reg), idx_reg, reg(sz_reg));
 
 	enum Mips_reg adr_reg = reserve_tmp_register(); // idx_reg ne doit pas être désallooué
 	instr(LA, reg(adr_reg), entry_loc(tab));
-	instr(ADD, reg(adr_reg), reg(adr_reg), idx_reg);
+	instr(ADD, reg(adr_reg), reg(adr_reg), reg(sz_reg));
+	free_tmp_register(sz_reg);
 	instr(op, available_register(left), imr(0, adr_reg));
 	free_tmp_register(adr_reg);
 }

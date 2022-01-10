@@ -82,7 +82,7 @@ struct entry* ctx_newname(const char id[MAX_IDENTIFIER_SIZE]);
  *
  * Les identifiants sont générés automatiquements et sont uniques.
  */
-struct entry* ctx_make_temp();
+struct entry* ctx_make_temp(enum BTYPE btype);
 
 /**
  * @brief Recherche un identifiant depuis la table des symoles courante
