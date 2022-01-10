@@ -205,16 +205,6 @@ int bad_arg_fail(void* data) {
 	return 0;
 }
 
-int bad_name_fail(void* data) {
-	(void)data;
-	char* argv[] = { "decaf", "xxx" };
-
-	size_t argc = 2;
-	parse_args(argc, argv);
-
-	return 0;
-}
-
 int outfile_short(void* data) {
 	(void)data;
 	char* argv[] = { "decaf", "-o", "file.mips" };
@@ -229,9 +219,9 @@ int outfile_short(void* data) {
 
 int combination(void* data) {
 	(void)data;
-	char* argv[] = { "decaf", "-o", "file.mips", "-d", "-t" };
+	char* argv[] = { "decaf", "-o", "file.mips", "-d", "-t", "in.decaf" };
 
-	size_t argc = 5;
+	size_t argc = 6;
 	struct params p = parse_args(argc, argv);
 	fflush(stderr);
 	ASSERT_EQSTR(p.output_file, "file.mips");
@@ -265,7 +255,6 @@ int main() {
 	add_test(&ts, version_extended, "--version works and exit");
 	add_test(&ts, tos_extended, "--help works and exit");
 	add_test_failure(&ts, bad_arg_fail, "bad argument fails and exit with error");
-	add_test_failure(&ts, bad_name_fail, "bad name fails");
 	add_test(&ts, outfile_short, "-o file.mips");
 	add_test_failure(&ts, missing_positional, "-o without file fails");
 	add_test(&ts, combination, "-o file.mips -d -t");

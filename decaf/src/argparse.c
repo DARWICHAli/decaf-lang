@@ -5,7 +5,7 @@
 #include <string.h>
 #include <assert.h>
 
-#define VERSION "V5-loop"
+#define VERSION "V6-final"
 
 #define NB_ARGS 9
 static const char* args_str[NB_ARGS][3] = { { "-t", "-tos", "Affiche la table des symboles" },
@@ -31,6 +31,7 @@ struct params default_args()
 	ret.output_file = "out.mips";
 	ret.ir_outfile = NULL;
 	ret.mips_verbose = 0;
+	ret.infile = NULL;
 	return ret;
 }
 
@@ -83,7 +84,7 @@ int arg_help(struct params* p, char* const args[])
 	(void)p;
 	(void)args;
 
-	fprintf(stderr, "usage: decaf [arg] < <file>\n\n"
+	fprintf(stderr, "usage: decaf [arg] [<] <file>\n\n"
 			"args:\n");
 
 	for (int i = 0; i < NB_ARGS; ++i) {
@@ -145,12 +146,13 @@ int arg(struct params* p, const char* arg, char* const argv_left[], int left)
 
 int name(struct params* p, const char* arg, char* const argv_left[], int left)
 {
-	(void)arg;
-	(void)p;
-	(void)arg;
-	(void)argv_left;
-	(void)left;
-	return 0;
+	(void) argv_left;
+	if (left != 0) {
+		fprintf(stderr, "Program name must be last arg");
+		return 0;
+	}
+	p->infile = arg;
+	return 1;
 }
 
 struct params parse_args(int argc, char* const argv[])

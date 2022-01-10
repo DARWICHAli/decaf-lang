@@ -26,6 +26,14 @@ int main(int argc, char* argv[])
 		}
 	}
 
+	if (parameters.infile != NULL) { // to stdin
+		FILE* fi = freopen(parameters.infile, "r", stdin);
+		if (!fi) {
+			perror("Cannot open input file");
+			exit(EXIT_FAILURE);
+		}
+	}
+
 	yydebug = parameters.debug_mode;
 	int r = yyparse();
 
