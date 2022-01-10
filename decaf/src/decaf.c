@@ -13,6 +13,17 @@
 extern int yyparse();
 extern int yydebug;
 
+
+void check()
+{
+	struct entry* main = ctx_lookup(tokenize("main"));
+	if(!ctx_lookup(tokenize("main")))
+		exit(EXIT_FAILURE);
+	if (!typedesc_is_function(&main->type) || typelist_size(typedesc_function_args(&main->type)) != 0)
+		exit(EXIT_FAILURE);
+}
+
+
 int main(int argc, char* argv[])
 {
 	struct params parameters = parse_args(argc, argv);
@@ -36,7 +47,8 @@ int main(int argc, char* argv[])
 
 	yydebug = parameters.debug_mode;
 	int r = yyparse();
-
+	check();
+	
 	size_t sz = 0;
 	quad_id_t* quads = get_all_quads(&sz);
 
