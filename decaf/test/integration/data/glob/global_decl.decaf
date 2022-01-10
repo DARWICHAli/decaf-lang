@@ -1,0 +1,4 @@
+class Easy {
+	int x;
+	void main() { }
+}

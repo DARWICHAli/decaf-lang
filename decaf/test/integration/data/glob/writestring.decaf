@@ -1,0 +1,6 @@
+//Hello world!
+class Easy {
+	void main() {
+		WriteString("Hello world!");
+	}
+}

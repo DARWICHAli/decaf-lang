@@ -13,33 +13,43 @@
 #include <assert.h>
 #include <string.h>
 
-struct quad_list qlist_new()
+#define MAXQL 10000
+size_t ql_next = 0;
+struct quad_list global_ql[MAXQL];
+
+struct quad_list* qlist_empty()
 {
-	struct quad_list qlst = { .used = 0, .quads = { INCOMPLETE_QUAD_ID } };
-	return qlst;
+	assert(ql_next < MAXQL && "no ql left");
+	struct quad_list* ret = &global_ql[ql_next];
+	ret->used = 0;
+	++ql_next;
+	return ret;
 }
 
-struct quad_list* qlist_append(struct quad_list* qlst, quad_id_t qid)
+struct quad_list* qlist_new(quad_id_t qid) {
+	struct quad_list* ret = qlist_empty();
+	qlist_append(ret, qid);
+	return ret;
+}
+
+void qlist_append(struct quad_list* qlst, quad_id_t qid)
 {
 	assert(qlst->used < QUADLIST_MAX_SIZE && "QUADLIST_MAX_SIZE reached!");
-	assert(getquad(qid) && "The quad to complete must exists");
-	assert((getquad(qid)->op == Q_IFG || getquad(qid)->op == Q_GOT) && "can't complete non-jump instructions");
 	qlst->quads[qlst->used] = qid;
 	qlst->used++;
-	return qlst;
 }
 
-struct quad_list qlist_concat(struct quad_list* ql1, struct quad_list* ql2)
+struct quad_list* qlist_concat(const struct quad_list* lhs, const struct quad_list* rhs)
 {
-	struct quad_list new = qlist_new();
-	assert((ql1->used + ql2->used) < QUADLIST_MAX_SIZE && "Final list would be too big");
+	struct quad_list* new = qlist_empty();
+	assert((lhs->used + rhs->used) < QUADLIST_MAX_SIZE && "Final list would be too big");
 
 	// append ql1 and ql2 with qlist_append
-	for (size_t i = 0; i < ql1->used; i++)
-		qlist_append(&new, ql1->quads[i]);
+	for (size_t i = 0; i < lhs->used; i++)
+		qlist_append(new, lhs->quads[i]);
 
-	for (size_t i = 0; i < ql2->used; i++)
-		qlist_append(&new, ql2->quads[i]);
+	for (size_t i = 0; i < rhs->used; i++)
+		qlist_append(new, rhs->quads[i]);
 
 	return new;
 }

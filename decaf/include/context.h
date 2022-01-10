@@ -195,6 +195,23 @@ struct entry* ctx_search(const char* str, const struct context* ctx);
  */
 const char* tokenize(const char* str);
 
+#define TOTAL_STR_ALLOCATED 10000
+#define CSTR_FMT "cstr__%d"
+
+/**
+ * @brief Ajoute une chaîne de caractères statique au programme
+ *
+ * @param str Chaîne à ajouter
+ *
+ * @return Une entrée sur la chaîne
+ */
+struct entry* ctx_register_cstr(const char* str);
+
+struct context* ctx_rootctx();
+struct entry* ctx_addtoctx(struct context* ctx, const char id[MAX_IDENTIFIER_SIZE]);
+
+void ctx_push_super_global();
+
 /**
  * @brief Affiche la table ctx et tout ses fils. 
  * 

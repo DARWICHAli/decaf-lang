@@ -17,7 +17,10 @@ void MIPS_type(const struct typedesc* td, char buf[MAX_TYPE_SIZE]) {
 	assert(td && "typedesc must not be null");
 	assert((typedesc_is_var(td) || typedesc_is_tab(td)) && "Only var or tabs can be global");
 
-	if (typedesc_is_var(td)) {
+	if (typedesc_is_cstring(td)) {
+		int n = snprintf(buf, MAX_TYPE_SIZE, ".asciiz");
+		assert(n > 0 && n < MAX_TYPE_SIZE && "snprintf error");
+	} else if (typedesc_is_var(td)) {
 		for (int i = 0; i < MIPS_TYPES_NB; ++i) {
 			if (MIPS_types_size[i] == td_sizeof(td)) {
 				int n = snprintf(buf, MAX_TYPE_SIZE, "%s", MIPS_types[i]);
@@ -44,7 +47,11 @@ void MIPS_data_segment() {
 		switch (ent->type.mtype) {
 			case MT_VAR:
 				MIPS_type(&ent->type, buf);
-				fprintf(out, "%s: %s %s # TODO\n", ent->id, buf, "0");
+				if (typedesc_is_cstring(&ent->type)) {
+					fprintf(out, "%s: %s %s\n", ent->id, buf, ent->cstr);
+				} else {
+					fprintf(out, "%s: %s 0\n", ent->id, buf);
+				}
 				break;
 			case MT_TAB:
 				MIPS_type(&ent->type, buf);

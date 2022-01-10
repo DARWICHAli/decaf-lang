@@ -26,12 +26,6 @@ int main(int argc, char* argv[])
 		}
 	}
 
-	// Contexte super-global, factoriser quelque part
-	ctx_pushctx();
-	struct typelist* one_int = typelist_new();
-	typelist_append(one_int, BT_INT);
-	ctx_newname(tokenize("WriteInt"))->type = typedesc_make_function(BT_INT, one_int);
-
 	yydebug = parameters.debug_mode;
 	int r = yyparse();
 

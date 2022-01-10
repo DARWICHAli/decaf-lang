@@ -1,0 +1,23 @@
+//111
+class Easy {
+	void main() {
+		if ((1 != 1) || (0 > 0)) {
+			WriteInt(0);
+		} else {
+			WriteInt(1);
+		}
+
+		if ((0 != 0) || (1 == 1)) {
+			WriteInt(1);
+		} else {
+			WriteInt(0);
+		}
+
+		if ((0 == 0) || (1 != 1)) {
+			WriteInt(1);
+		} else {
+			WriteInt(0);
+		}
+	}
+}
+

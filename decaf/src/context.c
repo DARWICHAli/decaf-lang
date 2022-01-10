@@ -1,5 +1,7 @@
 #include "context.h"
 #include "typedesc.h"
+#include "typelist.h"
+
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -66,9 +68,8 @@ struct context* ctx_currentctx()
 	return sommet;
 }
 
-struct entry* ctx_newname(const char id[MAX_IDENTIFIER_SIZE])
-{
-	struct context* curr = ctx_currentctx();
+struct entry* ctx_addtoctx(struct context* ctx, const char id[MAX_IDENTIFIER_SIZE]) {
+	struct context* curr = ctx;
 	assert(curr && "No current context");
 
 	if (ctx_search(&id[0], curr)) {
@@ -96,6 +97,12 @@ struct entry* ctx_newname(const char id[MAX_IDENTIFIER_SIZE])
 	curr->used++;
 
 	return newe;
+}
+
+
+struct entry* ctx_newname(const char id[MAX_IDENTIFIER_SIZE])
+{
+	return ctx_addtoctx(ctx_currentctx(), id);
 }
 
 struct entry* ctx_make_temp()
@@ -286,3 +293,40 @@ void ctx_fprintf(FILE* fd, const struct context* ctx)
 }
 	
 
+struct context* ctx_rootctx() {
+	assert(co_used >= 2 && "No root context");
+	return &global_context[1]; // 0 = super-global
+}
+
+char global_cstr[TOTAL_STR_ALLOCATED] = { 0 };
+size_t char_used;
+
+struct entry* ctx_register_cstr(const char* str) {
+	static int cstr_nb = 0;
+	char buf[MAX_IDENTIFIER_SIZE];
+	assert(strlen(str) + char_used < TOTAL_STR_ALLOCATED && "c-str buffer is full");
+	char* dst = strncpy(&global_cstr[char_used], str, TOTAL_STR_ALLOCATED - char_used);
+
+	struct entry* ret;
+	do {
+		int n = snprintf(buf, MAX_IDENTIFIER_SIZE, CSTR_FMT, cstr_nb++);
+		assert(n > 0 && n < MAX_IDENTIFIER_SIZE && "snprintf overflow");
+		ret = ctx_addtoctx(ctx_rootctx(), buf);
+	} while (!ret);
+
+	ret->type = typedesc_make_var(BT_STR);
+	ret->cstr = dst;
+	return ret;
+}
+
+void ctx_push_super_global() {
+	assert(sommet == NULL && "super-global context already set");
+	ctx_pushctx();
+	struct typelist* one_int = typelist_new();
+	typelist_append(one_int, BT_INT);
+	ctx_newname(tokenize("WriteInt"))->type = typedesc_make_function(BT_VOID, one_int);
+
+	struct typelist* one_str = typelist_new();
+	typelist_append(one_str, BT_STR);
+	ctx_newname(tokenize("WriteString"))->type = typedesc_make_function(BT_VOID, one_str);
+}
