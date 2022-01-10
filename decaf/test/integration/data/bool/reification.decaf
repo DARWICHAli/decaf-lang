@@ -1,0 +1,8 @@
+//1
+class Easy {
+	void main() {
+		boolean b;
+		b = (1==1);
+		WriteInt(b);
+	}
+}
