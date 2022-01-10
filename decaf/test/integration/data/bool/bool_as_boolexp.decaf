@@ -1,0 +1,12 @@
+//42
+class Easy {
+	void main() {
+		boolean b;
+		b = (1==1);
+		if (b == true) {
+			WriteInt(42);
+		} else {
+			WriteInt(0);
+		}
+	}
+}
