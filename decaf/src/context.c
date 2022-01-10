@@ -266,6 +266,10 @@ void ctx_push_super_global() {
 	typelist_append(one_int, BT_INT);
 	ctx_newname(tokenize("WriteInt"))->type = typedesc_make_function(BT_VOID, one_int);
 
+	struct typelist* one_bool = typelist_new();
+	typelist_append(one_bool, BT_BOOL);
+	ctx_newname(tokenize("WriteBool"))->type = typedesc_make_function(BT_VOID, one_bool);
+
 	struct typelist* one_str = typelist_new();
 	typelist_append(one_str, BT_STR);
 	ctx_newname(tokenize("WriteString"))->type = typedesc_make_function(BT_VOID, one_str);
