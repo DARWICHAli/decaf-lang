@@ -213,6 +213,12 @@ struct entry* ctx_addtoctx(struct context* ctx, const char id[MAX_IDENTIFIER_SIZ
 void ctx_push_super_global();
 
 /**
+ * @brief Affiche la table ctx et tout ses fils. 
+ * 
+ */
+void ctx_fprintf(FILE* fd, const struct context* ctx, int flag);
+
+/**
  * @}
  * @}
  */
