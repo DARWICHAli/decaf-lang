@@ -246,6 +246,7 @@ struct entry* ctx_register_cstr(const char* str) {
 	char buf[MAX_IDENTIFIER_SIZE];
 	assert(strlen(str) + char_used < TOTAL_STR_ALLOCATED && "c-str buffer is full");
 	char* dst = strncpy(&global_cstr[char_used], str, TOTAL_STR_ALLOCATED - char_used);
+	char_used += strlen(buf) + 1;
 
 	struct entry* ret;
 	do {
