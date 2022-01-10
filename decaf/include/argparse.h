@@ -16,6 +16,7 @@ struct params {
 	int generate_entrypoint; ///< Génération d'un point d'entrée assembleur
 	const char* output_file; ///< Fichier de sortie
 	const char* ir_outfile; ///< Sortie de IR
+	const char* infile;
 	int mips_verbose;
 };
 
