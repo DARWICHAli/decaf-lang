@@ -37,13 +37,15 @@ continue                return CONTINUE;
 
 true                    { yylval.Boolean = true; return TRUE;}
 false                   { yylval.Boolean = false; return FALSE;}
-"&&"                    return LAND;
-"||"                    return LOR;
-"=="                    return EQUAL;
-"!="                    return NEQUAL;
-[<>]                    return yytext[0];
-">="                    return MORE_EQUAL;
-"<="                    return LESS_EQUAL;
+"&&"                    return AND;
+"||"                    return OR;
+"<=" 			        {yylval.Relop = CMP_LE; return RELOP; }
+"=="			        {yylval.Relop = CMP_EQ; return RELOP; }
+">="			        {yylval.Relop = CMP_GE; return RELOP; }
+"!=" 			        {yylval.Relop = CMP_NQ; return RELOP; }
+"<"			            {yylval.Relop = CMP_LT; return RELOP; }
+">" 			        {yylval.Relop = CMP_GT; return RELOP; }
+
 
 0x{EHEXDIGIT}+          { yylval.Integer = strtol(yytext, NULL, 16); return HEXADECIMAL_CST; }
 {EDIGIT}+               { yylval.Integer = strtol(yytext, NULL, 10); return DECIMAL_CST; }
