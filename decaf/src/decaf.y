@@ -238,12 +238,34 @@ gom: %empty {$$ = qlist_new(nextquad()); gencode(quad_goto(INCOMPLETE_QUAD_ID));
  */
 
 boolexp: rvalue RELOP rvalue 		{
-        SERRL(!typedesc_equals(&$1->type, &$3->type), yyerror("error types!\n"));
 
-		$$.qltrue = qlist_new(nextquad());
-		$$.qlfalse = qlist_new(nextquad() + 1);
-		gencode(quad_ifgoto($1, $2, $3, INCOMPLETE_QUAD_ID));
-		gencode(quad_goto(INCOMPLETE_QUAD_ID));
+        switch($2)
+        {
+            case CMP_GE:
+            case CMP_LE:
+            case CMP_GT :
+            case CMP_LT:
+            {
+                SERRL(!typedesc_equals(&$1->type, &$3->type), yyerror("error types!\n"));
+                SERRL(!typedesc_equals(&$1->type, &td_var_int), yyerror("error types!\n"));
+                $$.qltrue = qlist_new(nextquad());
+                $$.qlfalse = qlist_new(nextquad() + 1);
+                gencode(quad_ifgoto($1, $2, $3, INCOMPLETE_QUAD_ID));
+                gencode(quad_goto(INCOMPLETE_QUAD_ID));
+                break;
+            }
+            case CMP_NQ:
+            case CMP_EQ :
+            {
+                SERRL(!typedesc_equals(&$1->type, &$3->type), yyerror("error types!\n"));
+                $$.qltrue = qlist_new(nextquad());
+                $$.qlfalse = qlist_new(nextquad() + 1);
+                gencode(quad_ifgoto($1, $2, $3, INCOMPLETE_QUAD_ID));
+                gencode(quad_goto(INCOMPLETE_QUAD_ID));
+                break;
+            }
+        }
+
 	}
 	| '(' boolexp ')' {$$ = $2;}
 	| boolexp DPIPE nqm boolexp 	{
