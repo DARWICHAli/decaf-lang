@@ -138,6 +138,12 @@ const char* bt_str(enum BTYPE type)
 	case BT_INT:
 		return "int";
 
+	case BT_STR:
+		return "string";
+
+	case BT_VOID:
+		return "(void)";
+		
 	default:
 		assert(0 && "Unknown BTYPE");
 	}
