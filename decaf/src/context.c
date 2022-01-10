@@ -274,65 +274,8 @@ void ctx_push_super_global() {
 	typelist_append(one_str, BT_STR);
 	ctx_newname(tokenize("WriteString"))->type = typedesc_make_function(BT_VOID, one_str);
 }
-/*
-void ctx_fprintf_aux(FILE* fd, const struct context* ctx, int espace, int taille, int ignore)
-{
-	assert(ctx && "ctx_fprintf expecting NON null entry");
-	assert(fd && "ctx_fprintf expecting NON null entry");
 
-	size_t idx;
-	size_t entrysize = ctx_count_entries(ctx);
-	struct context* pos;
-	struct entry* ent;
 
-	// recherche de ctx
-	for(idx = 0; idx < co_used; idx++){
-		pos = &global_context[idx];
-		if (pos == ctx) // ctx trouvé
-			break;
-	}
-
-	if(ignore != 1)
-		print_et(fd,taille,0,' ');
-
-    print_et(fd, 0, espace, '-');
-
-	fprintf(fd, "%s: ", global_context[idx].entries[0].id);
-	td_fprintf(fd, &global_context[idx].entries[0].type);
-	fprintf(fd, "\n");
-
-	if( ignore == 1)
-		taille = strlen(global_context[idx].entries[0].id);
-
-	size_t ret;
-	for(ret = 1; ret < entrysize; ret++){
-		print_et(fd,taille,espace,' ');
-		fprintf(fd, "%s: ", global_context[idx].entries[ret].id);
-		if(typedesc_is_function(&global_context[idx].entries[ret].type)){
-			ent = ctx_nth_function(&global_context[idx], ret);
-			ctx_fprintf_aux(fd, ent,espace,taille+espace,ignore+1);
-		}
-		else{
-			ent = ctx_nth(&global_context[idx], ret);
-			td_fprintf(fd, &ent->type);
-			fprintf(fd, "\n");
-		}
-	}
-
-	if(entrysize == 1)
-		ret = 0;
-
-	// recherche des fils
-	for(size_t i = idx; i < co_used; i++) {
-		struct context* potentiel_fils = &global_context[i];
-		if (potentiel_fils->parent == ctx) { // fils de ctx
-			espace = strlen(global_context[idx].entries[0].id);
-			ctx_fprintf_aux(fd, potentiel_fils,espace,taille+espace,ignore+1);
-			break;
-		}
-	}
-
-}*/
 
 void ctx_fprintf(FILE* fd, const struct context* ctx)
 {
@@ -361,7 +304,7 @@ void ctx_fprintf(FILE* fd, const struct context* ctx)
 				fprintf(fd, "----");
 				spaces+=4;
 			}
-			fprintf(fd,"%s  ",ctx_nth(ad_contextes[ind],i)->id);
+			fprintf(fd,"%s:",ctx_nth(ad_contextes[ind],i)->id);
 			td_fprintf(fd,&ctx_nth(ad_contextes[ind],i)->type);
 			fprintf(fd, "\n" );
 		}
