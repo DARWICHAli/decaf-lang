@@ -320,6 +320,7 @@ affectation: lvalue '=' rvalue {
 }
 	   | existing_entry '[' rvalue ']' '=' rvalue
       {
+          SERRL(!typedesc_equals(&$3->type, &td_var_int), fprintf(stderr, "type doit être int\n"));
          $$ = qlist_empty();
         if(!typedesc_is_var(&$6->type)|| !typedesc_is_tab(&$1->type) )
             exit(EXIT_FAILURE);
