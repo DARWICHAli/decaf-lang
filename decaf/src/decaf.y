@@ -59,7 +59,7 @@ struct Boolexp_t {
 %token <Relop> RELOP
 %token <String> CSTR
 
-%type <Entry> new_entry existing_entry arithmetique_expression negation_exp call parameter integer litteral arg lvalue rvalue
+%type <Entry> new_entry existing_entry arithmetique_expression negation_exp call parameter integer litteral arg lvalue rvalue boolval
 %type <CEntry> cstr
 %type <TypeList> optional_parameters
 %type <TypeList> parameters
@@ -354,6 +354,10 @@ rvalue: arithmetique_expression { $$ = $1; }
 					$$ = ctx_make_temp(typedesc_tab_type(&$1->type));
 					gencode(quad_acc($$, $1, $3));
 				      }
+	| boolval 	{ $$ = $1; }
+
+boolval: TRUE { $$ = ctx_make_temp(BT_BOOL); gencode(quad_cst($$, 1)); }
+	| FALSE { $$ = ctx_make_temp(BT_BOOL); gencode(quad_cst($$, 0)); }
 
 lvalue: existing_entry {$$ = $1;}
 
