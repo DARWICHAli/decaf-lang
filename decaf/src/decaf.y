@@ -371,9 +371,13 @@ void quads_print() {
 void reification(struct entry* dst, struct Boolexp_t* bexp) {
 	if (!typedesc_equals(&dst->type, &td_var_bool))
 		yyerror("lvalue not boolean");
-	qlist_complete(bexp->qltrue, nextquad());
+	
+	quad_id_t m;
+	m = nextquad();
 	gencode(quad_cst(dst, 1));
-	gencode(quad_goto(nextquad() + 1));
-	qlist_complete(bexp->qlfalse, nextquad());
+	qlist_complete(bexp->qltrue, m);
+	gencode(quad_goto(INCOMPLETE_QUAD_ID));
+	m = nextquad();
 	gencode(quad_cst(dst, 0));
+	qlist_complete(bexp->qlfalse, m);
 }
