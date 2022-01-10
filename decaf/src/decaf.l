@@ -18,7 +18,7 @@ int fileno(FILE *stream);
     /* Expressions rationnelles nommées */
 EDIGIT [0-9]
 EALPHA [a-zA-Z_]
-EHEXDIGIT {EDIGIT}[a-fA-F]
+EHEXDIGIT ({EDIGIT}|[a-fA-F])
 EALPHANUM ({EALPHA}|{EDIGIT})
 %%
 \/\/.*                  ; /* \/\/[^\n] */
@@ -35,8 +35,30 @@ WriteString 		return WRITESTRING;
 true 			return TRUE;
 false 			return FALSE;
 
-0x{EHEXDIGIT}+          { yylval.Integer = strtol(yytext, NULL, 16); return HEXADECIMAL_CST; }
-{EDIGIT}+               { yylval.Integer = strtol(yytext, NULL, 10); return DECIMAL_CST; }
+0x{EHEXDIGIT}+          {
+    long val = strtol(yytext, NULL, 16);
+    if (val >= 2147483647 || val <= -2147483648) {
+        fprintf(stderr, "Integer overflow\n");
+        exit(1);
+    }
+    if (yylval.Integer == 0 && errno != 0) {
+        fprintf(stderr, "Error converting integer\n");
+        exit(1);
+    }
+    yylval.Integer = val;
+    return HEXADECIMAL_CST; }
+{EDIGIT}+               {
+    long val = strtol(yytext, NULL, 10);
+    if (val >= 2147483647 || val <= -2147483648) {
+        fprintf(stderr, "Integer overflow\n");
+        exit(1);
+    }
+    if (yylval.Integer == 0 && errno != 0) {
+        fprintf(stderr, "Error converting integer\n");
+        exit(1);
+    }
+    yylval.Integer = val;
+    return DECIMAL_CST; }
 
 {EALPHA}{EALPHANUM}*    {
     if (yyleng >= MAX_IDENTIFIER_SIZE) {
@@ -66,7 +88,19 @@ false 			return FALSE;
 "<"			{yylval.Relop = CMP_LT; return RELOP; }
 ">" 			{yylval.Relop = CMP_GT; return RELOP; }
 
- \"(\\.|[^\"])*\"	{ yylval.String = yytext; return CSTR; }
+\"([\t\n\\\|]|[^\"])*\"	    {
+    const char * str = yytext;
+    for (size_t i = 0; i < strlen(str) - 1; i++) {
+        if ( (str[i] < 32) || (str[i] > 126) ) { // (str[i] != 9) || (str[i] != 10) ||
+            fprintf(stderr, "Character is not accepted\n");
+            exit(1);
+        }
+        if (str[i] == 91 && ((str[i + 1] != 39) || (str[i + 1] != 34)) ) {
+            fprintf(stderr, "Character is not accepted\n");
+            exit(1);
+        }
+    }
+    yylval.String = yytext; return CSTR; }
 
 "&&"			return DAMP;
 "||" 			return DPIPE;

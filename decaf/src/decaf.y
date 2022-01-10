@@ -52,7 +52,7 @@ void yyerror(const char *msg);
 %token <Relop> RELOP
 %token <String> CSTR
 
-%type <Entry> new_entry existing_entry arithmetique_expression negation_exp call parameter integer litteral arg lvalue rvalue
+%type <Entry> new_entry existing_entry arithmetique_expression call parameter integer litteral arg lvalue rvalue
 %type <CEntry> cstr
 %type <TypeList> optional_parameters
 %type <TypeList> parameters
@@ -182,10 +182,6 @@ parameter: TYPE new_entry { $2->type = typedesc_make_var($1); $$ = $2; } // fact
 proc_block: '{' { ctx_pushctx(); } optional_var_declarations optional_instructions '}' { gencode(quad_endproc()); ctx_popctx();}
 ;
 
-// blocks
-blocks: block
-      | block blocks
-;
 // Bloc de code
 block: '{' { ctx_pushctx(); } optional_var_declarations optional_instructions '}' { ctx_popctx();}
 ;
@@ -316,18 +312,31 @@ affectation: lvalue '=' rvalue { gencode(quad_aff($1, $3)); }
 			gencode(quad_aft($1, $3, tmp)); }
 ;
 
-arithmetique_expression: rvalue '+' rvalue { $$ = ctx_make_temp(BT_INT); gencode(quad_arith($$, $1, Q_ADD, $3)); }
-		| rvalue '-' rvalue { $$ = ctx_make_temp(BT_INT); gencode(quad_arith($$, $1, Q_SUB, $3)); }
-		| rvalue '*' rvalue { $$ = ctx_make_temp(BT_INT); gencode(quad_arith($$, $1, Q_MUL, $3)); }
-		| rvalue '/' rvalue { $$ = ctx_make_temp(BT_INT); gencode(quad_arith($$, $1, Q_DIV, $3)); }
-		| rvalue '%' rvalue { $$ = ctx_make_temp(BT_INT); gencode(quad_arith($$, $1, Q_MOD, $3)); }
-		| negation_exp { $$ = $1; } %prec MUNAIRE
-;
-// moins unaire
-negation_exp: '-' rvalue {
-	    				$$ = ctx_make_temp(BT_INT);
-					gencode(quad_neg($$, $2));
-				   }
+arithmetique_expression: rvalue '+' rvalue {
+			SERRL(!typedesc_equals(&$1->type, &td_var_int), fprintf(stderr, "type of rexpr is not int in arithmetic statement\n"));
+        	SERRL(!typedesc_equals(&$3->type, &td_var_int), fprintf(stderr, "type of lexpr is not int in arithmetic statement\n"));
+			 $$ = ctx_make_temp(BT_INT); gencode(quad_arith($$, $1, Q_ADD, $3)); }
+		| rvalue '-' rvalue {
+        	SERRL(!typedesc_equals(&$1->type, &td_var_int), fprintf(stderr, "type of rexpr is not int in arithmetic statement\n"));
+        	SERRL(!typedesc_equals(&$3->type, &td_var_int), fprintf(stderr, "type of lexpr is not int in arithmetic statement\n"));
+			$$ = ctx_make_temp(BT_INT); gencode(quad_arith($$, $1, Q_SUB, $3)); }
+		| rvalue '*' rvalue { 
+			SERRL(!typedesc_equals(&$1->type, &td_var_int), fprintf(stderr, "type of rexpr is not int in arithmetic statement\n"));
+        	SERRL(!typedesc_equals(&$3->type, &td_var_int), fprintf(stderr, "type of lexpr is not int in arithmetic statement\n"));
+			$$ = ctx_make_temp(BT_INT); gencode(quad_arith($$, $1, Q_MUL, $3)); }
+		| rvalue '/' rvalue { 
+			SERRL(!typedesc_equals(&$1->type, &td_var_int), fprintf(stderr, "type of rexpr is not int in arithmetic statement\n"));
+        	SERRL(!typedesc_equals(&$3->type, &td_var_int), fprintf(stderr, "type of lexpr is not int in arithmetic statement\n"));
+			$$ = ctx_make_temp(BT_INT); gencode(quad_arith($$, $1, Q_DIV, $3)); }
+		| rvalue '%' rvalue { 
+			SERRL(!typedesc_equals(&$1->type, &td_var_int), fprintf(stderr, "type of rexpr is not int in arithmetic statement\n"));
+        	SERRL(!typedesc_equals(&$3->type, &td_var_int), fprintf(stderr, "type of lexpr is not int in arithmetic statement\n"));
+			$$ = ctx_make_temp(BT_INT); gencode(quad_arith($$, $1, Q_MOD, $3)); }
+		| '-' rvalue {
+			SERRL(!typedesc_equals(&$2->type, &td_var_int), fprintf(stderr, "type of rexpr is not int in arithmetic statement\n"));
+			$$ = ctx_make_temp(BT_INT);
+			gencode(quad_neg($$, $2));} %prec MUNAIRE
+
 ;
 
 /*
