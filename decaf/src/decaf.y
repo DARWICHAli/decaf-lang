@@ -333,7 +333,11 @@ affectation: lvalue '=' rvalue {
             reification(tmp, &$6, $$);
             gencode(quad_aft($1, $3, tmp));
             }
-       | lvalue EQI rvalue {gencode(quad_arith($1, $1, $2, $3)); $$ = qlist_empty(); }
+       | lvalue EQI rvalue {
+           SERRL(!typedesc_equals(&$1->type, &td_var_int), fprintf(stderr, "type of rexpr is not int in arithmetic statement\n"));
+           SERRL(!typedesc_equals(&$3->type, &td_var_int), fprintf(stderr, "type of lexpr is not int in arithmetic statement\n"));
+
+           gencode(quad_arith($1, $1, $2, $3)); $$ = qlist_empty(); }
        | existing_entry '[' rvalue ']' EQI rvalue { $$ = qlist_empty();
             struct entry* tmp = ctx_make_temp(typedesc_tab_type(&$1->type));
             gencode(quad_acc(tmp, $1, $3));
