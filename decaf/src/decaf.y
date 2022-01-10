@@ -40,9 +40,11 @@ void yyerror(const char *msg);
     enum CMP_OP Relop;
     quad_id_t Nextquad;
     const char* String;
+    enum Q_OP Aop;
 }
 
 %token CLASS VOID RETURN IF THEN ELSE WRITESTRING TRUE FALSE FOR
+%token <Aop> EQI
 
 %token <Integer> DECIMAL_CST HEXADECIMAL_CST
 %token <BType> TYPE
@@ -300,6 +302,11 @@ return: RETURN rvalue { gencode(quad_return($2)); }
 // affectation
 affectation: lvalue '=' rvalue { gencode(quad_aff($1, $3)); }
 	   | existing_entry '[' rvalue ']' '=' rvalue { gencode(quad_aft($1, $3, $6)); }
+	   | lvalue EQI rvalue {gencode(quad_arith($1, $1, $2, $3)); }
+	   | existing_entry '[' rvalue ']' EQI rvalue { 
+	   		struct entry* tmp = ctx_make_temp(typedesc_tab_type(&$1->type));
+			gencode(quad_acc(tmp, $1, $3));
+			gencode(quad_aft($1, $3, tmp)); }
 ;
 
 arithmetique_expression: rvalue '+' rvalue { $$ = ctx_make_temp(BT_INT); gencode(quad_arith($$, $1, Q_ADD, $3)); }

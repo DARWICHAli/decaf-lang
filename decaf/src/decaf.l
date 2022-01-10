@@ -48,6 +48,12 @@ false 			return FALSE;
 }
 
 
+"+=" 			{yylval.Aop = Q_ADD; return EQI; }
+"-=" 			{yylval.Aop = Q_SUB; return EQI; }
+"*=" 			{yylval.Aop = Q_MUL; return EQI; }
+"/=" 			{yylval.Aop = Q_DIV; return EQI; }
+"%=" 			{yylval.Aop = Q_MOD; return EQI; }
+
 [+\-*/%]                return yytext[0];
 [(){},;]                return yytext[0];
 [=]                     return yytext[0];
