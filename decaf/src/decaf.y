@@ -79,7 +79,7 @@ program: CLASS ID {ctx_push_super_global(); } '{' {ctx_pushctx();} global_declar
  */
 
 // Déclarations dans le contexte global
-global_declarations: %empty
+global_declarations: %empty {yyerror("empty class!");}
 		     | var_declaration global_declarations
 		     | tab_declaration global_declarations
 		     | method_declarations
@@ -94,11 +94,18 @@ var_declaration: TYPE new_entry ';' { $2->type = typedesc_make_var($1); }
 
 // Déclarations de tableaux
 tab_declaration: TYPE new_entry '[' int_cst ']' ';' { $2->type = typedesc_make_tab($1, $4); }
+        | TYPE new_entry '[' int_cst ']' ',' {$2->type = typedesc_make_tab($1, $4); }  new_id_list_tab ';'
+;
 
 // Liste de nouveelles entrées
 new_id_list: new_entry { $1->type = $<Entry>-2->type; }
 	    | new_entry ',' { $1->type = $<Entry>-2->type; } new_id_list
 ;
+// Liste de nouvelles entrées tab
+new_id_list_tab: new_entry '[' int_cst ']' { $1->type = $<Entry>-5->type; }
+	    | new_entry '[' int_cst ']' ',' { $1->type = $<Entry>-5->type; } new_id_list_tab
+;
+
 // Nouvel identifiant
 new_entry: ID {
 			struct entry* ent = ctx_newname($1);
@@ -248,7 +255,7 @@ boolexp: rvalue RELOP rvalue { $$.qltrue = qlist_new(nextquad());
  */
 
 // borne de fin inclue et dynamique
-loop: FOR {ctx_pushctx();} 
+loop: FOR {ctx_pushctx();}
     new_entry '=' rvalue
     ',' rvalue { gencode(quad_aff($3, $5)); $3->type = typedesc_make_var(BT_INT); }
     nqm { gencode(quad_ifgoto($3, CMP_GT, $7, INCOMPLETE_QUAD_ID)); }
