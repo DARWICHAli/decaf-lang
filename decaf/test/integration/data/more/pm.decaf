@@ -1,0 +1,10 @@
+//42
+class Easy {
+	void main() {
+		int x;
+		x = 0;
+		x += 42+7;
+		x -= 7;
+		WriteInt(x);
+	}
+}
