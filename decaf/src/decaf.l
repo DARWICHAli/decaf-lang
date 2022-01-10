@@ -30,6 +30,7 @@ void                    return VOID;
 return                  return RETURN;
 if 			return IF;
 else 			return ELSE;
+for 			return FOR;
 WriteString 		return WRITESTRING;
 true 			return TRUE;
 false 			return FALSE;

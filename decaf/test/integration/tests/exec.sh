@@ -41,7 +41,7 @@ for d in $decaf_dirs; do
 
 		expected=$(cat $f | head -n 1 | grep -Po "//\K.*")
 
-		if OUTPUT=$($binary -o $outfile < $f 2>&1)
+		if OUTPUT=$($binary -o $outfile -m --ir /tmp/$(basename $f).ir < $f 2>&1)
 		then
 			printf "${GRE}Ok!${NOR}\n"
 

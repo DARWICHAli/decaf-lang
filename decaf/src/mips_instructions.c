@@ -5,6 +5,7 @@
 #include "mips.h"
 
 #include "incomplete.h"
+#include "genasm.h"
 
 #include <assert.h>
 #include <stdarg.h>
@@ -32,23 +33,45 @@ const char* Mips_op_str[INVALID] = { "add", "addi", "div", "mul", "negu", "rem",
 	"b", "beq", "bne", "ble", "blt",
 	"syscall" };
 
+void instrinfos(enum Mips_op op, va_list args) {
+	int toosay = 0;
+	for (int i = 0; i < Mips_op_nums[op]; ++i) {
+		struct Mips_loc loc = va_arg(args, struct Mips_loc);
+		if (loc.adr == REG || loc.adr == IMR) {
+			for (int j = 0; j < MIPS_REG_TMP_NB; ++j) {
+				if (Mips_reg_temp[j] == loc.reg && Mips_reg_storing[j] != NULL) {
+					fprintf(out, "%s%s(%s) ", toosay ? "" : " # ", Mips_reg_str[loc.reg], Mips_reg_storing[j]->id);
+					toosay = 1;
+					break;
+				}
+			}
+		}
+	}
+}
+
+
 void instr(enum Mips_op op, ...) {
 	assert(op >= 0 && op < INVALID && "Unknown MIPS operator");
 	
 	fprintf(out, "%s", Mips_op_str[op]);
 
-	va_list vl;
+	va_list vl, fw;
 	va_start(vl, op);
+	va_copy(fw, vl);
 	struct Mips_loc loc;
 	for (int i = 0; i < Mips_op_nums[op]; ++i) {
 		loc = va_arg(vl, struct Mips_loc);
 		assert(loc.adr == Mips_op_fmt[op][i] && "MIPS: bad operand");
-		fprintf(out, ", ");
+		fprintf(out, (i > 0) ? ", " : " ");
 		print_loc(loc);
 	}
-	va_end(vl);
 
+	if (global_params->verbose) {
+		instrinfos(op, fw);
+	}
 	fprintf(out, "\n");
+	va_end(fw);
+	va_end(vl);
 }
 
 void instrc(enum Mips_op op, ...) {
@@ -62,7 +85,7 @@ void instrc(enum Mips_op op, ...) {
 	for (int i = 0; i < Mips_op_nums[op]; ++i) {
 		loc = va_arg(vl, struct Mips_loc);
 		assert(loc.adr == Mips_op_fmt[op][i] && "MIPS: bad operand");
-		fprintf(out, " ");
+		fprintf(out, (i > 0) ? ", " : " ");
 		print_loc(loc);
 	}
 
