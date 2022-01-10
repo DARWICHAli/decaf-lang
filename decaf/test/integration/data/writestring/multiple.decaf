@@ -1,0 +1,8 @@
+//Hello World
+class Prg {
+	void main() {
+		WriteString("Hel");
+		WriteString("lo");
+		WriteString(" World");
+	}
+}
