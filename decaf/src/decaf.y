@@ -103,11 +103,19 @@ var_declaration: TYPE new_entry ';' { $2->type = typedesc_make_var($1); }
 
 // Déclarations de tableaux
 tab_declaration: TYPE new_entry '[' int_cst ']' ';' { $2->type = typedesc_make_tab($1, $4); }
+    | TYPE new_entry '[' int_cst ']' ',' { $2->type = typedesc_make_tab($1, $4); } new_id_list_tab ';'
 ;
 // Liste de nouveelles entrées
 new_id_list: new_entry { $1->type = $<Entry>-2->type; }
 	    | new_entry ',' { $1->type = $<Entry>-2->type; } new_id_list
 ;
+// Liste de nouvelles entrées tab
+new_id_list_tab: new_entry '[' int_cst ']' { $1->type = $<Entry>-5->type; }
+	    | new_entry '[' int_cst ']' ',' { $1->type = $<Entry>-5->type; } new_id_list_tab
+;
+
+
+
 // Nouvel identifiant
 new_entry: ID {
 		struct entry* ent = ctx_newname($1);
@@ -186,7 +194,7 @@ proc_block: '{' { ctx_pushctx(); } optional_var_declarations optional_instructio
 block: '{' { ctx_pushctx(); } optional_var_declarations optional_instructions '}' { ctx_popctx();}
 ;
 // Bloc internes
-iblock: '{' {ctx_pushctx(); } instructions '}' {ctx_popctx();} {$$ = qlist_empty(); }
+iblock: '{' {ctx_pushctx(); } optional_instructions '}' {ctx_popctx();} {$$ = qlist_empty(); }
 ;
 // liste optionnelle d'instructions
 optional_instructions: %empty { $$ = qlist_empty(); }
