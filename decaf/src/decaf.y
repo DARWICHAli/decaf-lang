@@ -238,6 +238,8 @@ gom: %empty {$$ = qlist_new(nextquad()); gencode(quad_goto(INCOMPLETE_QUAD_ID));
  */
 
 boolexp: rvalue RELOP rvalue 		{
+        SERRL(!typedesc_equals(&$1->type, &$3->type), yyerror("error types!\n"));
+
 		$$.qltrue = qlist_new(nextquad());
 		$$.qlfalse = qlist_new(nextquad() + 1);
 		gencode(quad_ifgoto($1, $2, $3, INCOMPLETE_QUAD_ID));
