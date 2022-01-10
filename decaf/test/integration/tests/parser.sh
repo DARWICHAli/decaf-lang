@@ -33,7 +33,7 @@ for d in $decaf_dirs; do
 	for f in $decaf_files; do
 		printf "Parsing file $i of $count: $f... "
 
-		if OUTPUT=$($binary --nogen -o /tmp/$(basename $f).mips < $f 2>&1)
+		if OUTPUT=$($binary --nogen --ir /tmp/$(basename $f).ir $f 2>&1)
 		then
 			printf "${GRE}Ok!${NOR}\n"
 			ok=$((ok+1))

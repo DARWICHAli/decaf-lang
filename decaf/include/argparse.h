@@ -16,6 +16,8 @@ struct params {
 	int generate_entrypoint; ///< Génération d'un point d'entrée assembleur
 	const char* output_file; ///< Fichier de sortie
 	const char* ir_outfile; ///< Sortie de IR
+	const char* infile;
+	int mips_verbose;
 };
 
 /**
@@ -27,6 +29,8 @@ struct params {
  * @return Vrai si tout s'est bien passé, 0 sinon
  */
 int arg_tos(struct params* p, char* const args[]);
+
+int arg_mv(struct params* p, char* const args[]);
 
 /**
  * @brief Argument Sauvegarde le code intermédiaire

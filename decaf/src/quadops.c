@@ -203,10 +203,10 @@ void quad_fprint(FILE* fo, const struct quad* q) {
 			fprintf(fo, "%s[%s] = %s\n", q->res->id, q->lhs->id, q->rhs->id);
 			break;
 		case Q_GOT:
-			fprintf(fo, "GOTO %lu\n", q->dst);
+			fprintf(fo, "GOTO %lu\n", q->dst+1);
 			break;
 		case Q_IFG:
-			fprintf(fo, "IF %s %s %s GOTO %lu\n", q->lhs->id, q->rhs->id, cmp_str(q->cmp), q->dst);
+			fprintf(fo, "IF %s %s %s GOTO %lu\n", q->lhs->id, cmp_str(q->cmp), q->rhs->id, q->dst+1);
 			break;
 	}
 }

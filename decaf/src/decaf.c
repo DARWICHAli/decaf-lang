@@ -26,6 +26,14 @@ int main(int argc, char* argv[])
 		}
 	}
 
+	if (parameters.infile != NULL) { // to stdin
+		FILE* fi = freopen(parameters.infile, "r", stdin);
+		if (!fi) {
+			perror("Cannot open input file");
+			exit(EXIT_FAILURE);
+		}
+	}
+
 	yydebug = parameters.debug_mode;
 	int r = yyparse();
 
@@ -45,7 +53,7 @@ int main(int argc, char* argv[])
 	if (r == EXIT_FAILURE)
 		exit(EXIT_FAILURE);
 
-	struct asm_params asmp = { .generate_entrypoint = parameters.generate_entrypoint };
+	struct asm_params asmp = { .generate_entrypoint = parameters.generate_entrypoint, .verbose = parameters.mips_verbose};
 
 	if (!parameters.no_gen)
 		genasm("MIPS", quads, sz, fo, &asmp);

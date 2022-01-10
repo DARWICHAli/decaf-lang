@@ -15,12 +15,22 @@ const struct entry* Mips_reg_storing[MIPS_REG_TMP_NB] = { NULL };
 int Mips_tmp_last_used[MIPS_REG_TMP_NB] = { 0 };
 int Mips_tmp_reserved[MIPS_REG_TMP_NB] = { 0 };
 
+void cache_hit(int idx) {
+	for (int i = 0; i < MIPS_REG_TMP_NB; ++i) {
+		if (!Mips_tmp_reserved[i])
+			++Mips_tmp_last_used[i];
+	}
+	Mips_tmp_last_used[idx] = 0;
+}
+
 struct Mips_loc entry_to_reg(const struct entry* ent)
 {
 	assert(ent && "can't load NULL entry");
 	for (int i = 0; i < MIPS_REG_TMP_NB; ++i) {
-		if (Mips_reg_storing[i] == ent)
+		if (Mips_reg_storing[i] == ent) {
+			cache_hit(i);
 			return reg(Mips_reg_temp[i]);
+		}
 	}
 	struct Mips_loc ret = available_register(ent);
 	if (ent->ctx == ctx_rootctx()) { // global var
@@ -33,7 +43,7 @@ struct Mips_loc entry_to_reg(const struct entry* ent)
 		}
 
 	} else {
-		instr(LW, ret, entry_loc(ent));
+		instrc(LW, ret, entry_loc(ent), ent->id);
 	}
 	return ret;
 }
@@ -43,8 +53,10 @@ struct Mips_loc available_register(const struct entry* ent)
 	assert(ent);
 	// Pas de doublons
 	for (int i = 0; i < MIPS_REG_TMP_NB; ++i)
-		if (Mips_reg_storing[i] == ent)
+		if (Mips_reg_storing[i] == ent) {
+			cache_hit(i);
 			return alloc_tmp_register(ent, Mips_reg_temp[i]);
+		}
 
 	int max = -1, idx = -1;
 	for (int i = 0; i < MIPS_REG_TMP_NB; ++i) {
@@ -75,6 +87,7 @@ enum Mips_reg reserve_tmp_register()
 		}
 	}
 	assert(idx >= 0 && "all registers reserved");
+	alloc_tmp_register(NULL, Mips_reg_temp[idx]);
 	Mips_tmp_reserved[idx] = 1;
 	return Mips_reg_temp[idx];
 }
@@ -93,7 +106,6 @@ void free_tmp_register(enum Mips_reg reg)
 
 struct Mips_loc alloc_tmp_register(const struct entry* ent, enum Mips_reg t)
 {
-	assert(ent);
 	for (int i = 0; i < MIPS_REG_TMP_NB; ++i) {
 		if (Mips_reg_temp[i] == t) {
 			if (Mips_reg_storing[i] != NULL) // sauvegarde
@@ -127,7 +139,7 @@ void save_reg_to_entry(enum Mips_reg r, const struct entry* ent)
 			instr(SW, reg(r), imr(0, adr));
 		}
 	} else {
-		instr(SW, reg(r), entry_loc(ent));
+		instrc(SW, reg(r), entry_loc(ent), ent->id);
 	}
 }
 
