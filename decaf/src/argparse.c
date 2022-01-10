@@ -5,9 +5,9 @@
 #include <string.h>
 #include <assert.h>
 
-#define VERSION "V4-condi"
+#define VERSION "V6-final"
 
-#define NB_ARGS 8
+#define NB_ARGS 9
 static const char* args_str[NB_ARGS][3] = { { "-t", "-tos", "Affiche la table des symboles" },
 					    { "-v", "-version", "Version du programme et noms des auteurs" },
 					    { "-o", "-out", "Nom du fichier de sortie" },
@@ -15,10 +15,11 @@ static const char* args_str[NB_ARGS][3] = { { "-t", "-tos", "Affiche la table de
 					    { "-d", "-debug", "Active le mode debug du compilateur" },
 					    { "-n", "-nogen", "Ne fait que le parsing" },
 					    { "-e", "-entrypoint", "Génère un point d'entrée dans l'assembleur final" },
+					    { "-m", "-mips-verbose", "Ajoute des commentaires au MIPS" },
 					    { "-h", "-help", "Affiche ce message" } };
-static int args_need[NB_ARGS] = { 0, 0, 1, 1, 0, 0, 0, 0};
+static int args_need[NB_ARGS] = { 0, 0, 1, 1, 0, 0, 0, 0, 0};
 static int (*args_fct[NB_ARGS])(struct params* p, char* const args[]) = { arg_tos,   arg_version,    arg_out, arg_ir, arg_debug,
-									  arg_nogen, arg_entrypoint, arg_help };
+									  arg_nogen, arg_entrypoint, arg_mv, arg_help };
 
 struct params default_args()
 {
@@ -29,7 +30,16 @@ struct params default_args()
 	ret.generate_entrypoint = 0;
 	ret.output_file = "out.mips";
 	ret.ir_outfile = NULL;
+	ret.mips_verbose = 0;
+	ret.infile = NULL;
 	return ret;
+}
+
+int arg_mv(struct params* p, char* const args[])
+{
+	(void)args;
+	p->mips_verbose = 1;
+	return 1;
 }
 
 int arg_nogen(struct params* p, char* const args[])
@@ -74,7 +84,7 @@ int arg_help(struct params* p, char* const args[])
 	(void)p;
 	(void)args;
 
-	fprintf(stderr, "usage: decaf [arg] < <file>\n\n"
+	fprintf(stderr, "usage: decaf [arg] [<] <file>\n\n"
 			"args:\n");
 
 	for (int i = 0; i < NB_ARGS; ++i) {
@@ -136,12 +146,13 @@ int arg(struct params* p, const char* arg, char* const argv_left[], int left)
 
 int name(struct params* p, const char* arg, char* const argv_left[], int left)
 {
-	(void)arg;
-	(void)p;
-	(void)arg;
-	(void)argv_left;
-	(void)left;
-	return 0;
+	(void) argv_left;
+	if (left != 0) {
+		fprintf(stderr, "Program name must be last arg");
+		return 0;
+	}
+	p->infile = arg;
+	return 1;
 }
 
 struct params parse_args(int argc, char* const argv[])

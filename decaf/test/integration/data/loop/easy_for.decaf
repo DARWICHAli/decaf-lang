@@ -1,0 +1,11 @@
+//32768
+class Easy {
+	int tab[16];
+	void main() {
+		tab[0] = 1;
+		for i = 1, 15 {
+			tab[i] = 2*tab[i-1];
+		}
+		WriteInt(tab[15]);
+	}
+}

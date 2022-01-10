@@ -28,8 +28,11 @@ void mips_translate(quad_id_t qid) {
 	const struct quad* q = getquad(qid);
 	check_quad(q);
 
-	if (is_quad_dst(qid))
+	if (is_quad_dst(qid)) {
+		save_reg_tmp();
 		mips_label_quad(qid);
+		clear_reg_tmp();
+	}
 
 	switch (q->op) {
 		case Q_ADD:
