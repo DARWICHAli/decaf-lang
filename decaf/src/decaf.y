@@ -3,13 +3,17 @@
 #include <string.h>
 #include <stdlib.h>
 
+#include "ir.h"
+#include "symbols.h"
+#include "incomplete.h"
+
 extern int yylineno;
 extern int yylex();
 void yyerror(const char *msg);
 
-#include "ir.h"
-#include "symbols.h"
-#include "incomplete.h"
+struct Boolexp_t;
+
+void reification(struct entry* dst, struct Boolexp_t* bexp, struct quad_list* nexto);
 
 #define SERR(x, msg) do { if ((x)) { fprintf(stderr, "Erreur semantique: " msg); exit(EXIT_FAILURE);} } while(0)
 #define SERRL(x, fct) do { if ((x)) { fprintf(stderr, "Erreur semantique: "); fct; exit(EXIT_FAILURE);} } while(0)
@@ -20,6 +24,12 @@ void yyerror(const char *msg);
 %code requires {
 #include "ir.h"
 #include "symbols.h"
+
+struct Boolexp_t {
+    	struct quad_list* qltrue;
+	struct quad_list* qlfalse;
+};
+
 }
 
 
@@ -33,10 +43,7 @@ void yyerror(const char *msg);
     struct typelist* TypeList;
     int Integer;
     struct quad_list* Statement;
-    struct {
-    	struct quad_list* qltrue;
-	struct quad_list* qlfalse;
-    } Boolexp;
+    struct Boolexp_t Boolexp;
     enum CMP_OP Relop;
     quad_id_t Nextquad;
     const char* String;
@@ -52,12 +59,12 @@ void yyerror(const char *msg);
 %token <Relop> RELOP
 %token <String> CSTR
 
-%type <Entry> new_entry existing_entry arithmetique_expression call parameter integer litteral arg lvalue rvalue
+%type <Entry> new_entry existing_entry arithmetique_expression negation_exp call parameter integer litteral arg lvalue rvalue boolval
 %type <CEntry> cstr
 %type <TypeList> optional_parameters
 %type <TypeList> parameters
 %type <Integer> int_cst
-%type <Statement> instruction instructions gom iblock control optional_instructions loop
+%type <Statement> instruction instructions gom iblock control optional_instructions loop affectation
 %type <Boolexp> boolexp
 %type <Nextquad> nqm
 
@@ -196,7 +203,7 @@ instructions: instruction ';' {$$ = qlist_empty();}
 nqm: %empty {$$ = nextquad();}
 
 // instruction
-instruction: affectation {$$ = qlist_empty();}
+instruction: affectation {$$ = $1;}
 	   | proc { $$ = qlist_empty();}
 	   | return { $$ = qlist_empty();}
 
@@ -296,13 +303,21 @@ return: RETURN rvalue { gencode(quad_return($2)); }
  */
 
 // affectation
-affectation: lvalue '=' rvalue { gencode(quad_aff($1, $3)); }
-	   | existing_entry '[' rvalue ']' '=' rvalue { gencode(quad_aft($1, $3, $6)); }
-	   | lvalue EQI rvalue {gencode(quad_arith($1, $1, $2, $3)); }
-	   | existing_entry '[' rvalue ']' EQI rvalue { 
+affectation: lvalue '=' rvalue { $$ = qlist_empty();gencode(quad_aff($1, $3)); }
+	   | existing_entry '[' rvalue ']' '=' rvalue { $$ = qlist_empty();gencode(quad_aft($1, $3, $6)); }
+	   | lvalue '=' boolexp { $$ = qlist_empty(); reification($1, &$3, $$); }
+	   | existing_entry '[' rvalue ']' '=' boolexp {$$ = qlist_empty();
+	  		struct entry* tmp = ctx_make_temp(BT_INT);
+	  		reification(tmp, &$6, $$); 
+			gencode(quad_aft($1, $3, tmp));
+			}
+	   | lvalue EQI rvalue {gencode(quad_arith($1, $1, $2, $3)); $$ = qlist_empty(); }
+	   | existing_entry '[' rvalue ']' EQI rvalue { $$ = qlist_empty();
 	   		struct entry* tmp = ctx_make_temp(typedesc_tab_type(&$1->type));
 			gencode(quad_acc(tmp, $1, $3));
 			gencode(quad_aft($1, $3, tmp)); }
+
+
 ;
 
 arithmetique_expression: rvalue '+' rvalue {
@@ -348,7 +363,10 @@ rvalue: arithmetique_expression { $$ = $1; }
 					$$ = ctx_make_temp(typedesc_tab_type(&$1->type));
 					gencode(quad_acc($$, $1, $3));
 				      }
+	| boolval 	{ $$ = $1; }
 
+boolval: TRUE { $$ = ctx_make_temp(BT_BOOL); gencode(quad_cst($$, 1)); }
+	| FALSE { $$ = ctx_make_temp(BT_BOOL); gencode(quad_cst($$, 0)); }
 
 lvalue: existing_entry {$$ = $1;}
 
@@ -361,4 +379,21 @@ void yyerror(const char *msg)
 
 void quads_print() {
     fprintf(stderr, "Not implemented");
+}
+
+void reification(struct entry* dst, struct Boolexp_t* bexp, struct quad_list* nexto) {
+	if (!typedesc_equals(&dst->type, &td_var_bool))
+		yyerror("lvalue not boolean");
+	
+	quad_id_t m;
+	m = nextquad();
+	gencode(quad_cst(dst, 1));
+	qlist_complete(bexp->qltrue, m);
+
+	m = nextquad();
+	gencode(quad_goto(INCOMPLETE_QUAD_ID));
+	qlist_append(nexto, m);
+
+	gencode(quad_cst(dst, 0));
+	qlist_complete(bexp->qlfalse, m);
 }
