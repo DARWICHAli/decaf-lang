@@ -551,8 +551,7 @@ int ctx_fprintf_test_1(void* data){
 	}
 	ctx_newname(tokenize("tes1"))->type = typedesc_make_tab(BT_INT, 10);
 	ctx_newname(tokenize("tes2"))->type = typedesc_make_tab(BT_BOOL, 20);
-	ctx_popctx();
-	ctx_popctx();
+	
 	ctx_pushctx();
 	ctx_newname(tokenize("main"))->type = typedesc_make_function(BT_INT, two_int); 
 	ctx_pushctx(); // main args

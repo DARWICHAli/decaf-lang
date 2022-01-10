@@ -148,37 +148,53 @@ const char* bt_str(enum BTYPE type)
 	}
 }
 
+void print_var(FILE* fd, const struct typedesc* td)
+{
+	enum BTYPE type;
+	type = typedesc_var_type(td);
+	fprintf(fd,"%s ", bt_str(type));
+}
+
+void print_tab(FILE* fd, const struct typedesc* td)
+{
+	enum BTYPE type;
+	size_t size;
+	type = typedesc_tab_type(td);
+	size = typedesc_tab_size(td);
+	fprintf(fd,"(%s)[%ld]  ", bt_str(type), size);
+}
+
+void print_fct(FILE* fd, const struct typedesc* td)
+{
+	enum BTYPE type;
+	const struct typelist *tl;
+	size_t size_arglist;
+
+	type = typedesc_function_type(td);
+	tl = typedesc_function_args(td);
+	size_arglist = typelist_size(tl);
+
+	fprintf(fd, "fonction: (");
+	for(size_t i = 0; i < size_arglist - 1 ; i++)
+		fprintf(fd,"%s, ", bt_str(tl->btypes[i]));
+	fprintf(fd,"%s", bt_str(tl->btypes[size_arglist-1]));
+	fprintf(fd,") -> %s", bt_str(type));
+}
+
 void td_fprintf(FILE* fd, const struct typedesc* td)
 {
 	assert(td && "td_fprintf expecting NON null entry");
 	assert(fd && "td_fprintf expecting NON null entry");
 
-	enum BTYPE type;
-	const struct typelist *tl;
-	size_t size;
-	char names[LEN_BT][ID_LEN] ={"bool", "int"};
-	size_t size_arglist;
 	switch (typedesc_meta_type(td)) {
 	case MT_VAR:
-		type = typedesc_var_type(td);
-		fprintf(fd,"%s ", bt_str(type));
+		print_var(fd, td);
 		break;
 	case MT_TAB:
-		type = typedesc_tab_type(td);
-		size = typedesc_tab_size(td);
-		fprintf(fd,"(%s)[%ld]  ", names[type], size);
-
+		print_tab(fd, td);
 		break;
 	case MT_FUN:
-		type = typedesc_function_type(td);
-		tl = typedesc_function_args(td);
-		size_arglist = typelist_size(tl);
-		fprintf(fd, "fonction: (");
-		for(size_t i = 0; i < size_arglist - 1 ; i++){
-			fprintf(fd,"%s, ", names[tl->btypes[i]]);
-		}
-		fprintf(fd,"%s", names[tl->btypes[size_arglist-1]]);
-		fprintf(fd,") -> %s", names[type]);
+		print_fct(fd,td);
 		break;
 	// LCOV_EXCL_START
 	default:

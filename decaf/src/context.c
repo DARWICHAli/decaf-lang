@@ -224,15 +224,10 @@ const char* tokenize(const char* str) {
 	return buf;
 }
 
-#define COMP 2
-
-int taille_string(char id[])
+void print_et(FILE* fd, int taille, int espace, char c)
 {
-	int res = 0;
-	while(id[res] != '\0')
-		res++;
-	
-	return res;
+	for(int i = 0; i < taille + espace; i++)
+        fprintf(fd, "%c", c);
 }
 
 void ctx_fprintf_aux(FILE* fd, const struct context* ctx, int espace, int taille, int ignore)
@@ -244,8 +239,6 @@ void ctx_fprintf_aux(FILE* fd, const struct context* ctx, int espace, int taille
 	size_t entrysize = ctx_count_entries(ctx);
 	struct context* pos;
 	
-	
-
 	// recherche de ctx
 	for (idx= 0; idx < co_used; ++idx) {
 		pos = &global_context[idx];
@@ -254,27 +247,20 @@ void ctx_fprintf_aux(FILE* fd, const struct context* ctx, int espace, int taille
 	}
 
 	if(ignore != 1)
-		for(int i = 0; i < taille; i++)
-        	fprintf(fd, " ");
-	
-	
-	
-    for(int i = 0; i < espace; i++){
-        fprintf(fd, "-");
-	}   
+		print_et(fd,taille,0,' ');
+
+    print_et(fd, 0, espace, '-');
 
 	fprintf(fd, "%s: ", global_context[idx].entries[0].id);
 	td_fprintf(fd, &global_context[idx].entries[0].type);
 	fprintf(fd, "\n");
 	
 	if( ignore == 1)
-		taille -= strlen(global_context[idx].entries[0].id);
+		taille = strlen(global_context[idx].entries[0].id);
 
 	size_t ret;
 	for(ret = 1; ret < entrysize; ret++){
-		for(int i = 0; i < taille + espace; i++)
-        	fprintf(fd, " ");
-
+		print_et(fd,taille,espace,' ');
 		fprintf(fd, "%s: ", global_context[idx].entries[ret].id);
 		td_fprintf(fd, &global_context[idx].entries[ret].type);
 		fprintf(fd, "\n");
