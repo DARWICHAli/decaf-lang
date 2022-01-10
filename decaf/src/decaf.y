@@ -307,6 +307,8 @@ loop: FOR {ctx_pushctx();}
 
 // appel de fonction
 call: existing_entry '(' args_list_opt ')' {
+        if(!typedesc_is_function(&$1->type))
+            exit(EXIT_FAILURE);
 		$$ = ctx_make_temp(typedesc_function_type(&$1->type));
 		gencode(quad_call($$, $1)); // no type test !!!
 	}
