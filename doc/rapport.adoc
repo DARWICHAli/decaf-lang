@@ -1,0 +1,172 @@
+= Rapport du projet
+Léo Chéneau <leo.cheneayu@etu.unistra.fr>; Tarek kunze <tarek.kunze@etu.unistra.fr>;Ali Darwich <ali.Darwich@etu.unistra.fr>; Neiko Damoi <neiko.damoi@etu.unistra.fr>;
+v1.0, 2022-01-09 +
+:toc: macro
+:doctype: Article
+:homepage: https://git.unistra.fr/decaf/decaf-lang
+
+
+toc::[]
+
+
+== Introduction
+
+L'objectif de ce projet était de construire un compilateur de bout en bout pour le langage source _Decaf_, vers le langage assembleur _MIPS_ tout en utilisant les outils de génération de lexeur et parseur _flex_ et _bison_.
+
+== Objectif et besoins
+
+L'objectif principal est de créer un compilateur pour le langage DECAF. Le compilateur doit être capable d'analyser syntaxiquement du code source decaf et générer du code intermédiaire.
+Le code intermédiaire généré prendra la forme de quadruplets possédant des instructions et une opérande (sauf cas spéciaux). 
+Ce code intermédiaire servira à générer du code assembleur mips. Mips étant le seulf langage cible dans ce projet. 
+Pour ceci, nous avons dû implémenter une serie de structure de données et fonctions dont l'analyseur syntaxique a besoin pour générer le code intermédiaire dans les règles de la grammaire.
+
+
+== Capacités du compilateur
+
+* [x] Éxpression Arithmétique
+* [x] Éxpression Relationnel
+* [x] Éxpression Conditionnel
+* [x] Récursivité
+* [x] Structures de contrôle
+* [x] Tableau
+* [ ] Instructions break et continue
+* [x] Optimisation
+
+== Noms des fonctions de TD/CM
+
+Nous avons décider de coller le plus possible aux noms des fonctions et structures utilisée durant les TD's. Quelques ajustements ont été fait pour garantir une certaine modularité et faciliter l'extension de la base de code.
+
+== Usage 
+Pour lancer le compilateur avec le fichier souhaité, veuillez lancer la commande suivante: 
+``` 
+./decaf [arg] < <file> 
+```
+
+On peut ajouter plusieurs arguments à cette commande: 
+
+* "-t", "-tos"          -> Affiche la table des symboles
+* "-v", "-version"      -> Version du programme et noms des auteurs
+* "-o", "-out"          -> Nom du fichier de sortie
+* "-i", "-ir" 		-> Écrit le code intermédiaire dans un fichier
+* "-m", "-mips-verbose" -> Ajoute des commentaires plus explicites à l'assembleur
+* "-d", "-debug"        -> Active le mode debug du compilateur
+* "-n", "-nogen"        -> Ne fait que le parsing
+* "-e", "-entrypoint"   -> Génère un point d'entrée dans l'assembleur final
+* "-h", "-help"         -> Affiche le manuel 
+
+
+== Noms des fonctions de TD/CM
+
+Les noms ont été légèrement modifiés pour faciliter le développement.
+
+
+== Table des symboles
+Le but de la table des symboles est de garder en mémoire différentes informations concernant les identificateurs déclarées au fil du programme. Elle permet au reste du compilateur d’obtenir des informations sur chaque identificateur défini, permettant ainsi de faciliter la prise de décision. Dans notre cas, elle servira principalement dans la phase d’analyse syntaxique pour effectuer de la vérification de type et assister la génération de code intermédiaire.
+
+
+=== Précisions
+
+La table des symboles est une pile de table de symboles que nous appelons des contextes. La table est la structure contenant les identificateurs et leur informations associées. Chaque contexte possède une table, sous la forme d’une liste chaîné. La structure des entrées dans les tables est indépendante de la structure de la table. Un changement de fonctionnement de la table n'affecte pas la structure interne de ses entrées, et vice-versa. Chaque contexte réfère à un bloc d’instruction de code. Dès que nous entrons dans un nouveau bloc (structure de contrôle, fonctions …​etc) un nouveau contexte est empilé sur la table des symboles.
+
+En langage C, le **contexte** est une structure de données `struct context` à plusieurs champs :
+
+* *_entries_* : _<<entry,struct entries>>*_ : Liste d'entrées internes.
+
+* *_used_* : _<<size_t >>_ : Nombre d'entrées utilisées en interne.
+
+* *_parent_* : _<<context, const struct context>>*_ : Contexte parent.
+
+* *_next_* : _<<context, const struct context>>*_ : Contexte de même niveau stockant plus d'entrées.
+
+
+Avec les fonctions associés, il sera possible de traiter la table de symboles comme vu en cours.
+
+== Generation de code intermediaire
+
+Pour faciliter la generationc vers le langage cible, gagner en flexibilité, mais aussi permettre des optimisations, nous avons choisi de d’abord traduire dans un langage intermédiaire très simple basé sur le langage LLVM-IR.
+
+=== Quadruplets
+
+Les opérateurs seront définis comme des valeurs d’un enum.  +
+En langage C, un **quadruplet** est une structure de données `struct quad` à plusieurs champs :
+
+* *_ctx_* : _<<context, const struct context>>*_ : Contexte dans lequel a été produit le quadruplet.
+
+* *_op_* : _<<operator,enum Q_OP>>_ : Un enum stockant l'opérateur dont l'alias est conforme à celui défini dans <<Opérateurs>>.
+
+* *_lhs_* : _const <<entry,struct entry>>*_ : Une entrée dans la table des symboles correspondant à l'opérande de **gauche** de l'opérateur. **C'est aussi la valeur de param, call, proc et return**.
+
+* *_rhs_* : _const <<entry,struct entry>>*_ : Une entrée dans la table des symboles correspondant à l'opérande de **droite** de l'opérateur.
+
+* *_res_* : _const <<entry,struct entry>>*_ : Une entrée dans la table des symboles ayant pour vocation de stocker le **résultat** d'une expression arithmétique ou d'une fonction ou d'une affectation/négation ou d'une affectation constante.
+
+* *_dst_* : _quad_id_t_ : **Quadruplet de destination** d'un eventuel goto.
+
+* *_cmp_* : _<<cmp_op, enum CMP_OP>>_ : **Opérateur de comparaison** pour _if goto_.
+
+* *_val_* : _int_ : Valeur de l'affectation constante.
+
+En fonction de l'opérateur, la fonction de création de quadruplet associé sera executé. +
+
+*Exemple: Fonction pour un quadruplet arithmétique:*
+
+```c
+quad_arith(const struct entry* res, const struct entry* lhs, enum Q_OP qop, const struct entry* rhs)
+```
+
+=== Generation de code
+
+Tout le code intermédiaire est généré à la volée et est ajouté quadruplet par quadruplet à un tableau de quadruplets.
+
+Lors de la traduction dirigée par la syntaxe nous avons créé des listes de quadruplets incomplets que nous allons "patcher" plus tard.
+
+Une liste de quadruplets est modélisée par le type ```struct quad_list```:
+
+* *_quads_* : _quad_id_t*_ : **Liste de quadruplets** .
+* *_used_* : _size_t_ : **Nombre de places utilisées**
+
+
+== Génération du code assembleur
+Une fois le code intermédiaire généré et éventuellement optimisé, ce dernier doit être converti en code machine afin d’être exécuté.
+
+Cette spécification se veut flexible et laisse la porte ouverte à plusieurs langages assembleur. Cependant, seul la conversion vers du MIPS sera implémentée.
+
+L'API C pour générérer le code MIPS a été pensé pour être flexible et corriger les erreurs du programmeur. Cette dernière permet d'écrire des choses comme cela :
+
+```c
+instr(JAL, entry_loc(fct));
+instr(MOVE, available_register(res), reg(V0));
+// ou
+enum Mips_reg sz_reg = reserve_tmp_register();
+struct Mips_loc idx_reg = entry_to_reg(idx);
+instr(LI, reg(sz_reg), imm(bt_sizeof(typedesc_tab_type(&tab->type))));
+instr(MUL, reg(sz_reg), idx_reg, reg(sz_reg));
+```
+
+En vérifiant tous les types, si les paramètres sont bien conformes à ceux de l'instruction, etc.
+
+Le code MIPS minimise aussi les store/load en retenant les entrées dans les registres. Bien entendu, ce cache prend en compte les sauts bien sûr :)
+
+
+== Optimisation
+
+Notre compilateur proposera éventuellement des optimisations sur le code intermédiaire.
+
+Structure représentant les optimisations et paramètres d'optimisations possibles.
+
+Cette structure contient les champs suivants :
+
+* _max_passes_ : _int_ : Nombre maximum de passes (*0 = infini*)
+
+* _<NOM OPTIM1>_ : _bool_ : Nom d'une optimisation à effectuer.
+
+...
+
+* _<NOM OPTIMN>_ : _bool_ : Nom d'une optimisation à effectuer.
+
+
+== Conclusion et améliorations possibles
+
+
+
+== Remarques sur l’implémentation
