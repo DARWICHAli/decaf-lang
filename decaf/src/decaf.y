@@ -229,14 +229,14 @@ gom: %empty {$$ = qlist_new(nextquad()); gencode(quad_goto(INCOMPLETE_QUAD_ID));
  * Expressions booléennes
  */
 
-boolexp: rvalue RELOP rvalue 		{ 
+boolexp: rvalue RELOP rvalue 		{
 		$$.qltrue = qlist_new(nextquad());
 		$$.qlfalse = qlist_new(nextquad() + 1);
 		gencode(quad_ifgoto($1, $2, $3, INCOMPLETE_QUAD_ID));
 		gencode(quad_goto(INCOMPLETE_QUAD_ID));
 	}
 	| '(' boolexp ')' {$$ = $2;}
-	| boolexp DPIPE nqm boolexp 	{ 	
+	| boolexp DPIPE nqm boolexp 	{
 		qlist_complete($1.qlfalse, $3);
 		$$.qltrue = qlist_concat($1.qltrue, $4.qltrue);
 		$$.qlfalse = $4.qlfalse;
@@ -255,7 +255,7 @@ boolexp: rvalue RELOP rvalue 		{
  */
 
 // borne de fin inclue et dynamique
-loop: FOR {ctx_pushctx();} 
+loop: FOR {ctx_pushctx();}
     new_entry '=' rvalue
     ',' rvalue { gencode(quad_aff($3, $5)); $3->type = typedesc_make_var(BT_INT); }
     nqm { gencode(quad_ifgoto($3, CMP_GT, $7, INCOMPLETE_QUAD_ID)); }
@@ -305,20 +305,34 @@ return: RETURN rvalue { gencode(quad_return($2)); }
  */
 
 // affectation
-affectation: lvalue '=' rvalue { $$ = qlist_empty();gencode(quad_aff($1, $3)); }
-	   | existing_entry '[' rvalue ']' '=' rvalue { $$ = qlist_empty();gencode(quad_aft($1, $3, $6)); }
-	   | lvalue '=' boolexp { $$ = qlist_empty(); reification($1, &$3, $$); }
-	   | existing_entry '[' rvalue ']' '=' boolexp {$$ = qlist_empty();
-	  		struct entry* tmp = ctx_make_temp(BT_INT);
-	  		reification(tmp, &$6, $$); 
-			gencode(quad_aft($1, $3, tmp));
-			}
-	   | lvalue EQI rvalue {gencode(quad_arith($1, $1, $2, $3)); $$ = qlist_empty(); }
-	   | existing_entry '[' rvalue ']' EQI rvalue { $$ = qlist_empty();
-	   		struct entry* tmp = ctx_make_temp(typedesc_tab_type(&$1->type));
-			gencode(quad_acc(tmp, $1, $3));
-			gencode(quad_aft($1, $3, tmp)); }
+affectation: lvalue '=' rvalue {
+    $$ = qlist_empty();
+   SERRL(!typedesc_equals(&$1->type, &$3->type), yyerror("types are not equal\n"));
+   gencode(quad_aff($1, $3));
+}
+	   | existing_entry '[' rvalue ']' '=' rvalue
+      {
+         $$ = qlist_empty();
+        if(!typedesc_is_var(&$6->type)|| !typedesc_is_tab(&$1->type) )
+            exit(EXIT_FAILURE);
+        if(typedesc_tab_type(&$1->type) != typedesc_var_type(&$6->type))
+            exit(EXIT_FAILURE);
+          gencode(quad_aft($1, $3, $6));
+      }
+       | lvalue '=' boolexp { $$ = qlist_empty(); reification($1, &$3, $$); }
+       | existing_entry '[' rvalue ']' '=' boolexp {$$ = qlist_empty();
+            struct entry* tmp = ctx_make_temp(BT_INT);
+            reification(tmp, &$6, $$);
+            gencode(quad_aft($1, $3, tmp));
+            }
+       | lvalue EQI rvalue {gencode(quad_arith($1, $1, $2, $3)); $$ = qlist_empty(); }
+       | existing_entry '[' rvalue ']' EQI rvalue { $$ = qlist_empty();
+            struct entry* tmp = ctx_make_temp(typedesc_tab_type(&$1->type));
+            gencode(quad_acc(tmp, $1, $3));
+            gencode(quad_aft($1, $3, tmp)); }
 ;
+
+
 
 arithmetique_expression: rvalue '+' rvalue {
 			SERRL(!typedesc_equals(&$1->type, &td_var_int), fprintf(stderr, "type of rexpr is not int in arithmetic statement\n"));
@@ -328,15 +342,15 @@ arithmetique_expression: rvalue '+' rvalue {
         	SERRL(!typedesc_equals(&$1->type, &td_var_int), fprintf(stderr, "type of rexpr is not int in arithmetic statement\n"));
         	SERRL(!typedesc_equals(&$3->type, &td_var_int), fprintf(stderr, "type of lexpr is not int in arithmetic statement\n"));
 			$$ = ctx_make_temp(BT_INT); gencode(quad_arith($$, $1, Q_SUB, $3)); }
-		| rvalue '*' rvalue { 
+		| rvalue '*' rvalue {
 			SERRL(!typedesc_equals(&$1->type, &td_var_int), fprintf(stderr, "type of rexpr is not int in arithmetic statement\n"));
         	SERRL(!typedesc_equals(&$3->type, &td_var_int), fprintf(stderr, "type of lexpr is not int in arithmetic statement\n"));
 			$$ = ctx_make_temp(BT_INT); gencode(quad_arith($$, $1, Q_MUL, $3)); }
-		| rvalue '/' rvalue { 
+		| rvalue '/' rvalue {
 			SERRL(!typedesc_equals(&$1->type, &td_var_int), fprintf(stderr, "type of rexpr is not int in arithmetic statement\n"));
         	SERRL(!typedesc_equals(&$3->type, &td_var_int), fprintf(stderr, "type of lexpr is not int in arithmetic statement\n"));
 			$$ = ctx_make_temp(BT_INT); gencode(quad_arith($$, $1, Q_DIV, $3)); }
-		| rvalue '%' rvalue { 
+		| rvalue '%' rvalue {
 			SERRL(!typedesc_equals(&$1->type, &td_var_int), fprintf(stderr, "type of rexpr is not int in arithmetic statement\n"));
         	SERRL(!typedesc_equals(&$3->type, &td_var_int), fprintf(stderr, "type of lexpr is not int in arithmetic statement\n"));
 			$$ = ctx_make_temp(BT_INT); gencode(quad_arith($$, $1, Q_MOD, $3)); }
@@ -383,7 +397,7 @@ void quads_print() {
 void reification(struct entry* dst, struct Boolexp_t* bexp, struct quad_list* nexto) {
 	if (!typedesc_equals(&dst->type, &td_var_bool))
 		yyerror("lvalue not boolean");
-	
+
 	quad_id_t m;
 	m = nextquad();
 	gencode(quad_cst(dst, 1));
