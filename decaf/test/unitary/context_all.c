@@ -575,10 +575,10 @@ int ctx_fprintf_test_1(void* data){
 		return 0;
 	}
 
-	ctx_fprintf(stderr, global, 0);
+	ctx_fprintf(stderr, global, 1);
 
 	fclose(fd);
-	return 0;
+	return 1;
 }
 
 int main()

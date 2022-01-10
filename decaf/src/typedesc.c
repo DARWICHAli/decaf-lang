@@ -106,6 +106,7 @@ const struct typelist* typedesc_function_args(const struct typedesc* td)
 {
 	assert(td && "Expected non-null typedesc");
 	assert(typedesc_is_function(td) && "typedesc is not a function");
+	
 	return td->dist.arg_list;
 }
 
@@ -173,8 +174,11 @@ void print_fct(FILE* fd, const struct typedesc* td)
 
 	type = typedesc_function_type(td);
 	tl = typedesc_function_args(td);
-	size_arglist = typelist_size(tl);
-
+	if(tl != NULL)
+		size_arglist = typelist_size(tl);
+	else 
+		size_arglist = 0;
+		
 	fprintf(fd, "fonction: (");
 	for (size_t i = 0; i < size_arglist; i++) {
 		if (i != size_arglist - 1) {
