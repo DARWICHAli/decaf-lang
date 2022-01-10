@@ -41,7 +41,7 @@ int main(int argc, char* argv[])
 	quad_id_t* quads = get_all_quads(&sz);
 
 	if (parameters.print_table)
-		ctx_fprintf(stdout, ctx_currentctx());
+		ctx_fprintf(stdout, ctx_currentctx(), 1);
 
 	if (parameters.ir_outfile) {
 		FILE* fir = fopen(parameters.ir_outfile, "w");

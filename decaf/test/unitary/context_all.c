@@ -507,14 +507,14 @@ int ctx_fprintf_null_entry_fd(void* data)
 	(void) data;
 	struct context* global = NULL;
 	global = ctx_pushctx();
-	ctx_fprintf(NULL, global);
+	ctx_fprintf(NULL, global, 0);
 	return 0;
 }
 
 int ctx_fprintf_null_entry_ctx(void* data)
 {
-	(void) data;
-	ctx_fprintf(stderr, NULL);
+	(void) data; 
+	ctx_fprintf(stderr, NULL, 0);
 	return 0;
 }
 
@@ -551,7 +551,8 @@ int ctx_fprintf_test_1(void* data){
 	}
 	ctx_newname(tokenize("tes1"))->type = typedesc_make_tab(BT_INT, 10);
 	ctx_newname(tokenize("tes2"))->type = typedesc_make_tab(BT_BOOL, 20);
-	
+	ctx_popctx();
+	ctx_popctx();
 	ctx_pushctx();
 	ctx_newname(tokenize("main"))->type = typedesc_make_function(BT_INT, two_int); 
 	ctx_pushctx(); // main args
@@ -574,7 +575,7 @@ int ctx_fprintf_test_1(void* data){
 		return 0;
 	}
 
-	ctx_fprintf(stderr, global);
+	ctx_fprintf(stderr, global, 0);
 
 	fclose(fd);
 	return 0;

@@ -280,7 +280,8 @@ void print_et(FILE* fd, int taille, int espace, char c)
         fprintf(fd, "%c", c);
 } 
 
-void ctx_fprintf_aux(FILE* fd, const struct context* ctx, int espace, int taille, int ignore)
+
+void ctx_fprintf_aux(FILE* fd, const struct context* ctx,int td_print, int espace, int taille, int ignore)
 {
 	assert(ctx && "ctx_fprintf expecting NON null entry");
 	assert(fd && "ctx_fprintf expecting NON null entry");
@@ -301,17 +302,36 @@ void ctx_fprintf_aux(FILE* fd, const struct context* ctx, int espace, int taille
 
     print_et(fd, 0, espace, '-');
 
-	fprintf(fd, "%s: ", global_context[idx].entries[0].id);
-	td_fprintf(fd, &global_context[idx].entries[0].type);
+	
+
+	fprintf(fd, "%s: ", ctx->entries[0].id);
+	if(td_print == 1)
+		td_fprintf(fd, &ctx->entries[0].type);
 	fprintf(fd, "\n");
 	
 	if( ignore == 1)
-		taille = strlen(global_context[idx].entries[0].id);
+		taille = strlen(ctx->entries[0].id);
 
 	size_t ret;
+	int toggle = 0;
+
+	if(strcmp(ctx->entries[0].id, "root") == 0)
+		toggle = 1;
+	struct entry *ent;
 	for(ret = 1; ret < entrysize; ret++){
+		
+		
+		if(toggle == 1 && typedesc_is_function(&ent->type)){
+			ctx_fprintf_aux(fd, ctx->entries[ret].ctx, td_print, espace,taille+espace,ignore+1);	
+			continue;
+		}
+
+		ent = ctx_nth(ctx, ret);
 		print_et(fd,taille,espace,' ');
-		fprintf(fd, "%s: ", global_context[idx].entries[ret].id);
+		fprintf(fd, "%s: ", ctx->entries[ret].id);
+		if(td_print == 1){
+			td_fprintf(fd, &ctx->entries[0].type);
+		}
 		fprintf(fd, "\n");	
 	}
 
@@ -323,13 +343,13 @@ void ctx_fprintf_aux(FILE* fd, const struct context* ctx, int espace, int taille
 		struct context* potentiel_fils = &global_context[i];
 		if (potentiel_fils->parent == ctx) { // fils de ctx
 			espace = strlen(global_context[idx].entries[0].id);
-			ctx_fprintf_aux(fd, potentiel_fils,espace,taille+espace,ignore+1);
+			ctx_fprintf_aux(fd, potentiel_fils,td_print, espace,taille+espace,ignore+1);
 			break;
 		}
 	}
 }
 
-void ctx_fprintf(FILE* fd, const struct context* ctx)
+void ctx_fprintf(FILE* fd, const struct context* ctx, int flag)
 {
-   ctx_fprintf_aux(fd, ctx, 0,0,0);
+   ctx_fprintf_aux(fd, ctx, flag, 0, 0, 0);
 }

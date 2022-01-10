@@ -216,7 +216,7 @@ void ctx_push_super_global();
  * @brief Affiche la table ctx et tout ses fils. 
  * 
  */
-void ctx_fprintf(FILE* fd, const struct context* ctx);
+void ctx_fprintf(FILE* fd, const struct context* ctx, int flag);
 
 /**
  * @}
